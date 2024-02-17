@@ -13,6 +13,8 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Random;
 
 public class Spotify {
 
@@ -66,14 +68,32 @@ public class Spotify {
 
     public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {
         if (simulationMode) {
-            return new CurrentlyPlaying.Builder()
-                    .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
-                    .setIs_playing(true)
-                    .setItem(new Track.Builder()
-                            .setId("1cqQYoFfwCisUAhEy1JoRr")
-                            .setName("I Will Wait For You")
-                            .build()
-                    ).build();
+            List<CurrentlyPlaying> tracks = List.of(new CurrentlyPlaying.Builder()
+                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
+                            .setIs_playing(true)
+                            .setItem(new Track.Builder()
+                                    .setId("1cqQYoFfwCisUAhEy1JoRr")
+                                    .setName("I Will Wait For You")
+                                    .build()
+                            ).build()
+                    , new CurrentlyPlaying.Builder()
+                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
+                            .setIs_playing(true)
+                            .setItem(new Track.Builder()
+                                    .setId("rtgh453t45hftgh45gfg54")
+                                    .setName("Testing 1-2")
+                                    .build()
+                            ).build()
+                    , new CurrentlyPlaying.Builder()
+                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
+                            .setIs_playing(true)
+                            .setItem(new Track.Builder()
+                                    .setId("454")
+                                    .setName("Undefined")
+                                    .build()
+                            ).build()
+            );
+            return tracks.get(new Random().nextInt(tracks.size()));
         }
 
         try {
