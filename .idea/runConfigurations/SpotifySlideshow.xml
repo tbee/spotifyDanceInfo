@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SpotifySlideshow" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="org.tbee.spotifySlideshow.SpotifySlideshow" />
+    <module name="spotifySlideshow" />
+    <option name="VM_PARAMETERS" value="-DspotifySlideshow.tecl=C:\Users\tom\prj\spotifySlideshow.tecl" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.tbee.spotifySlideshow.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

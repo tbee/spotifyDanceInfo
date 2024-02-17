@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.tbee.spotifySlideshow</groupId>
+    <artifactId>spotifySlideshow</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+
+        <!-- https://github.com/tbee/TECL -->
+        <dependency>
+            <groupId>org.tbee.tecl</groupId>
+            <artifactId>tecl</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+
+        <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
+        <dependency>
+            <groupId>se.michaelthelin.spotify</groupId>
+            <artifactId>spotify-web-api-java</artifactId>
+            <version>8.3.5</version>
+        </dependency>
+    </dependencies>
+
+</project>
