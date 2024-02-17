@@ -49,6 +49,11 @@ public class Spotify {
             Desktop.getDesktop().browse(authorizationCodeUri);
 
             var authorizationCode = javax.swing.JOptionPane.showInputDialog("Please copy the authorization code here");
+            if (authorizationCode == null || authorizationCode.isBlank()) {
+                String message = "Authorization code cannot be empty";
+                javax.swing.JOptionPane.showMessageDialog(null, message);
+                throw new IllegalArgumentException(message);
+            }
 
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
             spotifyApi.setAccessToken(authorizationCodeCredentials.getAccessToken());
