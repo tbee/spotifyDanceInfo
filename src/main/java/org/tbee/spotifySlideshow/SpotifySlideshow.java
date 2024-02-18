@@ -1,20 +1,22 @@
 package org.tbee.spotifySlideshow;
 
-import net.miginfocom.layout.AlignX;
-import net.miginfocom.layout.AlignY;
-import net.miginfocom.layout.CC;
+import org.jdesktop.swingx.StackLayout;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
-import org.tbee.sway.SMigPanel;
 import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -33,6 +35,7 @@ public class SpotifySlideshow {
     private Spotify spotify;
     private SLabel sImageLabel;
     private SLabel sTextLabel;
+    private SLabel sTextLabelShadow;
     private SFrame sFrame;
 
     public static void main(String[] args) {
@@ -50,25 +53,32 @@ public class SpotifySlideshow {
 
     private void run() {
 
-        spotify = new Spotify(false);
+        spotify = new Spotify(true);
         spotify.connect();
 
         try {
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
+
                 sTextLabel = SLabel.of();
+                sTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+                sTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                sTextLabel.setForeground(Color.WHITE);
+                sTextLabel.setFont(new Font("Verdana", Font.PLAIN, 80));
 
-    //            JPanel stackPanel = new JPanel(new StackLayout());
-    //            stackPanel.add(sTextLabel);
-    //            stackPanel.add(sImageLabel);
-                SMigPanel sMigPanel = SMigPanel.of()//.debug()
-                        .margin(0)
-                        .noGaps()
-                        .add(sImageLabel, new CC().grow().push().cell(0,0).alignX(AlignX.CENTER).alignY(AlignY.CENTER))
-    //                    .add(sTextLabel, new CC().grow().push().cell(0,0))
-                        ;
+                sTextLabelShadow = SLabel.of();
+                sTextLabelShadow.setForeground(Color.BLACK);
+                sTextLabelShadow.setBorder(BorderFactory.createEmptyBorder(0, 5, 3, 0)); // create a small offset
+                sTextLabelShadow.setVerticalAlignment(sTextLabel.getVerticalAlignment());
+                sTextLabelShadow.setHorizontalAlignment(sTextLabel.getHorizontalAlignment());
+                sTextLabelShadow.setFont(sTextLabel.getFont());
 
-                sFrame = SFrame.of(sMigPanel)
+                JPanel stackPanel = new JPanel(new StackLayout());
+                stackPanel.add(sImageLabel);
+                stackPanel.add(sTextLabelShadow);
+                stackPanel.add(sTextLabel);
+
+                sFrame = SFrame.of(stackPanel)
                         .exitOnClose()
                         .maximize()
                         .undecorated()
@@ -97,7 +107,7 @@ public class SpotifySlideshow {
             String dance = "undefined";
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
             String image = undefinedImage;
-            String text = "-";
+            String text = "";
             if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
             }
@@ -106,14 +116,14 @@ public class SpotifySlideshow {
                 String trackId = item.getId();
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
-                text = tecl.grp("/dances").str("id", dance, "text", "-");
+                text = tecl.grp("/dances").str("id", dance, "text", "Undefined");
 
 //                System.out.println("getCurrentlyPlayingType " + currentlyPlaying.getCurrentlyPlayingType());
                 System.out.println("| " + trackId + " | " + dance + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
             }
 
             // Load image
-            URI uri = new URI("-".equals(image) ? undefinedImage : image);
+            URI uri = new URI(image.isBlank() ? undefinedImage : image);
             int contentLength = uri.toURL().openConnection().getContentLength();
             if (contentLength == 0) {
                 throw new RuntimeException("Image not found " + uri);
@@ -123,9 +133,10 @@ public class SpotifySlideshow {
             // Update screen
             String textFinal = text;
             SwingUtilities.invokeLater(() -> {
-                sTextLabel.visible(!"-".equals(textFinal));
-                sTextLabel.setText(textFinal);
                 sImageLabel.setIcon(icon);
+
+                sTextLabel.setText("<html><body>" + textFinal + "</body></html>");
+                sTextLabelShadow.setText(sTextLabel.getText());
             });
         }
         catch (RuntimeException | URISyntaxException | IOException e) {
@@ -141,13 +152,13 @@ public class SpotifySlideshow {
             Dimension sFrameSize = sFrame.getSize();
             int width = (int) sFrameSize.getWidth();
             int height = (int) sFrameSize.getHeight();
-            BufferedImage resizedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = resizedImg.createGraphics();
+            BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2 = resizedImage.createGraphics();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2.drawImage(originalImage, 0, 0, width, height, null);
             g2.dispose();
 
-            return new ImageIcon(resizedImg);
+            return new ImageIcon(resizedImage);
         }
         catch (IOException e) {
             throw new RuntimeException(e);

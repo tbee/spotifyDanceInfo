@@ -7,6 +7,7 @@ import se.michaelthelin.spotify.enums.CurrentlyPlayingType;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import se.michaelthelin.spotify.model_objects.specification.ExternalUrl;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Spotify {
@@ -86,6 +88,7 @@ public class Spotify {
                             .setItem(new Track.Builder()
                                     .setId("1cqQYoFfwCisUAhEy1JoRr")
                                     .setName("I Will Wait For You")
+                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
                                     .build()
                             ).build()
                     , new CurrentlyPlaying.Builder()
@@ -94,6 +97,7 @@ public class Spotify {
                             .setItem(new Track.Builder()
                                     .setId("rtgh453t45hftgh45gfg54")
                                     .setName("Testing 1-2")
+                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
                                     .build()
                             ).build()
                     , new CurrentlyPlaying.Builder()
@@ -102,6 +106,7 @@ public class Spotify {
                             .setItem(new Track.Builder()
                                     .setId("454")
                                     .setName("Undefined")
+                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
                                     .build()
                             ).build()
             );
@@ -110,6 +115,7 @@ public class Spotify {
 
         try {
             CurrentlyPlaying currentlyPlaying = spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
+            // TBEERNOT se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException: The access token expired
             return currentlyPlaying;
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
