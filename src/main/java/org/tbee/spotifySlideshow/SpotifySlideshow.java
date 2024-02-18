@@ -8,9 +8,9 @@ import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -67,6 +67,8 @@ public class SpotifySlideshow {
     private void generateEvents() {
         try {
             TECL tecl = tecl();
+
+            // Determine image and text
             CurrentlyPlaying currentlyPlaying = spotify.getUsersCurrentlyPlayingTrack();
             String dance = "undefined";
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
@@ -89,21 +91,25 @@ public class SpotifySlideshow {
                 System.out.println("image " + image);
             }
 
-            String textFinal = text;
-            String imageFinal = image;
+            // Load image
+            URI uri = new URI("-".equals(image) ? undefinedImage : image);
+            int contentLength = uri.toURL().openConnection().getContentLength();
+            if (contentLength == 0) {
+                throw new RuntimeException("Image not found " + uri);
+            }
+            ImageIcon icon = new ImageIcon(uri.toURL());
 
-            URI url = new URI("-".equals(imageFinal) ? undefinedImage : image);
-            ImageIcon icon = new ImageIcon(url.toURL());
+            // Update screen
+            String textFinal = text;
             SwingUtilities.invokeLater(() -> {
                 sTextLabel.visible(!"-".equals(textFinal));
                 sTextLabel.setText(textFinal);
-
-                sImageLabel.visible(!"-".equals(imageFinal));
                 sImageLabel.setIcon(icon);
             });
         }
-        catch (RuntimeException | MalformedURLException | URISyntaxException e) {
+        catch (RuntimeException | URISyntaxException | IOException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
