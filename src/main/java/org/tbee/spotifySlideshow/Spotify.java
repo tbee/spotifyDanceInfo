@@ -66,7 +66,9 @@ public class Spotify {
 
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
                 accessToken = authorizationCodeCredentials.getAccessToken();
+                System.out.println("accessToken " + accessToken);
                 refreshToken = authorizationCodeCredentials.getRefreshToken();
+                System.out.println("refreshToken " + refreshToken);
             }
             spotifyApi.setAccessToken(accessToken);
             spotifyApi.setRefreshToken(refreshToken);
