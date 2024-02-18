@@ -34,32 +34,42 @@ public class Spotify {
         try {
             TECL tecl = SpotifySlideshow.tecl();
 
-            System.out.println("clientId " + tecl.str("/spotify/clientId"));
+            // Setup the API
+            String clientId = tecl.str("/spotify/clientId", "");
+            String clientSecret = tecl.str("/spotify/clientSecret", "");
             spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(tecl.str("/spotify/clientId"))
-                    .setClientSecret(tecl.str("/spotify/clientSecret"))
+                    .setClientId(clientId)
+                    .setClientSecret(clientSecret)
                     .setRedirectUri(new URI("https://www.tbee.org"))
                     .build();
 
-            // https://developer.spotify.com/documentation/web-api/concepts/authorization
-            // The authorizationCodeUri must be opened in the browser, the resulting code (in the redirect URL) pasted into the popup
-            // The code can only be used once to connect
-            URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
-                    .scope("user-read-playback-state,user-read-currently-playing")
-                    .build().execute();
-            System.out.println("authorizationCodeUri " + authorizationCodeUri);
-            Desktop.getDesktop().browse(authorizationCodeUri);
+            // Do we have tokens stored or need to fetch them?
+            String accessToken = tecl.str("/spotify/accessToken", "");
+            String refreshToken = tecl.str("/spotify/refreshToken", "");
+            if (accessToken.isBlank()) {
 
-            var authorizationCode = javax.swing.JOptionPane.showInputDialog("Please copy the authorization code here");
-            if (authorizationCode == null || authorizationCode.isBlank()) {
-                String message = "Authorization code cannot be empty";
-                javax.swing.JOptionPane.showMessageDialog(null, message);
-                throw new IllegalArgumentException(message);
+                // https://developer.spotify.com/documentation/web-api/concepts/authorization
+                // The authorizationCodeUri must be opened in the browser, the resulting code (in the redirect URL) pasted into the popup
+                // The code can only be used once to connect
+                URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
+                        .scope("user-read-playback-state,user-read-currently-playing")
+                        .build().execute();
+                System.out.println("authorizationCodeUri " + authorizationCodeUri);
+                Desktop.getDesktop().browse(authorizationCodeUri);
+
+                var authorizationCode = javax.swing.JOptionPane.showInputDialog("Please copy the authorization code here");
+                if (authorizationCode == null || authorizationCode.isBlank()) {
+                    String message = "Authorization code cannot be empty";
+                    javax.swing.JOptionPane.showMessageDialog(null, message);
+                    throw new IllegalArgumentException(message);
+                }
+
+                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
+                accessToken = authorizationCodeCredentials.getAccessToken();
+                refreshToken = authorizationCodeCredentials.getRefreshToken();
             }
-
-            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-            spotifyApi.setAccessToken(authorizationCodeCredentials.getAccessToken());
-            spotifyApi.setRefreshToken(authorizationCodeCredentials.getRefreshToken());
+            spotifyApi.setAccessToken(accessToken);
+            spotifyApi.setRefreshToken(refreshToken);
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem starting SportifySlideshow", e);

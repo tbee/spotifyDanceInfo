@@ -11,9 +11,9 @@ import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -69,31 +69,17 @@ public class SpotifySlideshow {
             TECL tecl = tecl();
             CurrentlyPlaying currentlyPlaying = spotify.getUsersCurrentlyPlayingTrack();
             String dance = "undefined";
-            String image = getClass().getResource("/undefined.jpg").toExternalForm();
+            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
+            String image = undefinedImage;
+            String text = "-";
             if (currentlyPlaying == null) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
             }
             else {
                 String trackId = currentlyPlaying.getItem().getId();
-                try {
-                    List<String> trackIds = tecl.list("/tracks/id", Collections.emptyList(), String.class);
-                    List<String> trackDances = tecl.list("/tracks/dance", Collections.emptyList(), String.class);
-                    int trackIndex = trackIds.indexOf(trackId);
-                    dance = trackDances.get(trackIndex);
-
-                    try {
-                        List<String> danceIds = tecl.list("/dances/id", Collections.emptyList(), String.class);
-                        List<String> danceImages = tecl.list("/dances/image", Collections.emptyList(), String.class);
-                        int danceIndex = danceIds.indexOf(dance);
-                        image = danceImages.get(danceIndex);
-                    }
-                    catch (RuntimeException e) {
-                        System.err.println("Could not find image for dance '" + dance + "'");
-                    }
-                }
-                catch (RuntimeException e) {
-                    System.err.println("Could not find track id " + trackId);
-                }
+                dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
+                image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
+                text = tecl.grp("/dances").str("id", dance, "text", "-");
 
                 System.out.println("getIs_playing " + currentlyPlaying.getIs_playing());
                 System.out.println("getCurrentlyPlayingType " + currentlyPlaying.getCurrentlyPlayingType());
@@ -103,12 +89,20 @@ public class SpotifySlideshow {
                 System.out.println("image " + image);
             }
 
-            SwingUtilities.invokeLater(() -> sTextLabel.setText(currentlyPlaying.getItem().getName()));
-            URL url = new URL(image);
-            ImageIcon icon = new ImageIcon(url);
-            SwingUtilities.invokeLater(() -> sImageLabel.setIcon(icon));
+            String textFinal = text;
+            String imageFinal = image;
+
+            URI url = new URI("-".equals(imageFinal) ? undefinedImage : image);
+            ImageIcon icon = new ImageIcon(url.toURL());
+            SwingUtilities.invokeLater(() -> {
+                sTextLabel.visible(!"-".equals(textFinal));
+                sTextLabel.setText(textFinal);
+
+                sImageLabel.visible(!"-".equals(imageFinal));
+                sImageLabel.setIcon(icon);
+            });
         }
-        catch (RuntimeException | MalformedURLException e) {
+        catch (RuntimeException | MalformedURLException | URISyntaxException e) {
             e.printStackTrace();
         }
     }
