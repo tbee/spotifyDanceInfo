@@ -14,6 +14,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
 
         <!-- https://github.com/tbee/TECL -->
@@ -41,6 +48,12 @@
             <version>8.3.5</version>
         </dependency>
 
+        <!-- https://github.com/LabyStudio/java-spotify-api -->
+        <dependency>
+            <groupId>com.github.LabyStudio</groupId>
+            <artifactId>java-spotify-api</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
 
     <build>

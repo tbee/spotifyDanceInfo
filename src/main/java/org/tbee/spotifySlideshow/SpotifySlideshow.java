@@ -3,6 +3,7 @@ package org.tbee.spotifySlideshow;
 import org.jdesktop.swingx.StackLayout;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
+import org.tbee.sway.SLookAndFeel;
 import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
@@ -52,9 +53,7 @@ public class SpotifySlideshow {
     }
 
     private void run() {
-
-        spotify = new Spotify(true);
-        spotify.connect();
+        SLookAndFeel.installDefault();
 
         try {
             SwingUtilities.invokeAndWait(() -> {
@@ -94,6 +93,10 @@ public class SpotifySlideshow {
         ImageIcon waitingIcon = readAndResizeImage(waitingUrl);
         sImageLabel.setIcon(waitingIcon);
 
+        // Connect to spotify
+        spotify = new Spotify(tecl().bool("/spotify/simulate", false));
+        spotify.connect();
+
         // Start polling
         scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyAndUpdateScreen, 1, 3, TimeUnit.SECONDS);
     }
@@ -110,6 +113,7 @@ public class SpotifySlideshow {
             String text = "";
             if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
+                System.out.println("Nothing is playing");
             }
             else {
                 IPlaylistItem item = currentlyPlaying.getItem();
@@ -117,8 +121,6 @@ public class SpotifySlideshow {
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", "Undefined");
-
-//                System.out.println("getCurrentlyPlayingType " + currentlyPlaying.getCurrentlyPlayingType());
                 System.out.println("| " + trackId + " | " + dance + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
             }
 

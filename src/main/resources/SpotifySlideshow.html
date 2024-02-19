@@ -1,0 +1,41 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+<body>
+<section class="section">
+    <h1 class="title">Spotify Slideshow</h1>
+    <h2 class="subtitle">Authorization</h2>
+    <div class="block">
+        <p>
+            The token below is what is needed to allow access to your Spotify account for the duration that the application is running.
+        </p>
+    </div>
+    <div class="notification">
+        <p id="code">
+        </p>
+    </div>
+    <div class="block" style="max-width:1000px">
+        <button class="button is-primary" onclick="copyCode()">Copy</button>
+        <p id="copyStatus">
+        </p>
+    </div>
+    <script type="application/javascript">
+        const queryString = window.location.search;
+        console.log(queryString);
+        const urlParams = new URLSearchParams(queryString);
+        const code = urlParams.get('code')
+        document.getElementById('code').innerHTML = code;
+
+        function copyCode() {
+            try {
+                navigator.clipboard.writeText(code);
+                document.getElementById('copyStatus').innerHTML = 'The code is copied to clipboard';
+            } catch (err) {
+                document.getElementById('copyStatus').innerHTML = 'Failed to copy: ' + err;
+            }
+        }
+    </script>
+</section>
+</body>
+</html>

@@ -5,12 +5,14 @@ import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.enums.CurrentlyPlayingType;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import se.michaelthelin.spotify.model_objects.specification.ExternalUrl;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
+import java.awt.Window;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,20 +37,25 @@ public class Spotify {
 
         try {
             TECL tecl = SpotifySlideshow.tecl();
+            TECL spotifyGrp = tecl.grp("/spotify");
 
             // Setup the API
-            String clientId = tecl.str("/spotify/clientId", "");
-            String clientSecret = tecl.str("/spotify/clientSecret", "");
+            String clientId = spotifyGrp.str("clientId", "");
+            String clientSecret = spotifyGrp.str("clientSecret", "");
             spotifyApi = new SpotifyApi.Builder()
                     .setClientId(clientId)
                     .setClientSecret(clientSecret)
-                    .setRedirectUri(new URI("https://www.tbee.org"))
+                    .setRedirectUri(new URI(spotifyGrp.str("redirect", "https://nyota.softworks.nl/SpotifySlideshow.html")))
                     .build();
 
             // Do we have tokens stored or need to fetch them?
-            String accessToken = tecl.str("/spotify/accessToken", "");
-            String refreshToken = tecl.str("/spotify/refreshToken", "");
-            if (accessToken.isBlank()) {
+            String accessToken;
+            String refreshToken = spotifyGrp.str("refreshToken", "");
+            if (!refreshToken.isBlank()) {
+                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+                accessToken = authorizationCodeCredentials.getAccessToken();
+            }
+            else {
 
                 // https://developer.spotify.com/documentation/web-api/concepts/authorization
                 // The authorizationCodeUri must be opened in the browser, the resulting code (in the redirect URL) pasted into the popup
@@ -62,7 +69,7 @@ public class Spotify {
                 var authorizationCode = javax.swing.JOptionPane.showInputDialog("Please copy the authorization code here");
                 if (authorizationCode == null || authorizationCode.isBlank()) {
                     String message = "Authorization code cannot be empty";
-                    javax.swing.JOptionPane.showMessageDialog(null, message);
+                    javax.swing.JOptionPane.showMessageDialog(Window.getWindows()[0], message);
                     throw new IllegalArgumentException(message);
                 }
 
@@ -114,9 +121,19 @@ public class Spotify {
         }
 
         try {
-            CurrentlyPlaying currentlyPlaying = spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
-            // TBEERNOT se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException: The access token expired
-            return currentlyPlaying;
+            try {
+                return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
+            }
+            catch (UnauthorizedException e) {
+                // Try getting new access token
+                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+                String accessToken = authorizationCodeCredentials.getAccessToken();
+                System.out.println("accessToken " + accessToken);
+                spotifyApi.setAccessToken(accessToken);
+
+                // retry
+                return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
+            }
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem starting SportifySlideshow", e);
