@@ -200,7 +200,7 @@ public class SpotifySlideshow {
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
             String image = undefinedImage;
             String text = "";
-            if (!spotifyLocalApi.hasTrack()) {
+            if (!spotifyLocalApi.hasTrack() || !spotifyLocalApi.isPlaying()) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
                 System.out.println("Nothing is playing");
             }
@@ -210,7 +210,7 @@ public class SpotifySlideshow {
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", "<div>" + track.getArtist() + "</div><div>" + track.getName() + "</div>");
-                System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + track.getArtist() + " - " + track.getName());
+                System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + track.getArtist() + " - " + track.getName() + " / https://open.spotify.com/track/" + trackId );
             }
 
             // Load image
