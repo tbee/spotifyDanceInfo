@@ -100,8 +100,13 @@ public class SpotifySlideshow {
         sImageLabel.setIcon(waitingIcon);
 
         // And go
-        startSpotifyLocalApi();
-        //startSpotifyWebapi();
+        boolean offlineMode = tecl().bool("/spotify/offline", true);
+        if (offlineMode) {
+            startSpotifyLocalApi();
+        }
+        else {
+            startSpotifyWebapi();
+        }
     }
 
     private void startSpotifyWebapi() {

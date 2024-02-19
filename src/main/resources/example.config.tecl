@@ -1,5 +1,13 @@
 @version 1
 
+spotify {
+    offline: true  # true is default
+    clientId: ...  # only in online mode
+    clientSecret: ...  # only in online mode
+    # refreshToken:  # optional in online mode to skip authorization token copy
+    simulate: false  # only in online mode
+}
+
 dances {
     | id             | image                                                              | text                             |
     | slowwalz       | file:///C:/Users/tom/Downloads/spotifySlideshow/slowwalz.jpg       | ""                               |
