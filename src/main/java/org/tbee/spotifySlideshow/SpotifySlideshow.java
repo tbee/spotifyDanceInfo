@@ -116,21 +116,21 @@ public class SpotifySlideshow {
     private void pollSpotifyWebapiAndUpdateScreen() {
         try {
             TECL tecl = tecl();
+            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
 
             // Determine image and text
             CurrentlyPlaying currentlyPlaying = spotifyWebapi.getUsersCurrentlyPlayingTrack();
-            String dance = "undefined";
-            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
-            String image = undefinedImage;
-            String text = "";
+            String image;
+            String text;
             if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
+                text = "";
                 System.out.println("Nothing is playing");
             }
             else {
                 IPlaylistItem item = currentlyPlaying.getItem();
                 String trackId = item.getId();
-                dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
+                String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", item.getName());
                 System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
@@ -140,7 +140,8 @@ public class SpotifySlideshow {
             URI uri = new URI(image.isBlank() ? undefinedImage : image);
             int contentLength = uri.toURL().openConnection().getContentLength();
             if (contentLength == 0) {
-                throw new RuntimeException("Image not found " + uri);
+                System.out.println("Image not found " + uri);
+                uri = new URI(undefinedImage);
             }
             ImageIcon icon = readAndResizeImage(uri.toURL());
 
@@ -194,30 +195,31 @@ public class SpotifySlideshow {
     private void updateScreenFromSpotifyLocalApi() {
         try {
             TECL tecl = tecl();
+            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
 
             // Determine image and text
-            String dance = "undefined";
-            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
-            String image = undefinedImage;
-            String text = "";
+            String image;
+            String text;
             if (!spotifyLocalApi.hasTrack() || !spotifyLocalApi.isPlaying()) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
+                text = "";
                 System.out.println("Nothing is playing");
             }
             else {
                 Track track = spotifyLocalApi.getTrack();
                 String trackId = track.getId();
-                dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
+                String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", "<div>" + track.getArtist() + "</div><div>" + track.getName() + "</div>");
                 System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + track.getArtist() + " - " + track.getName() + " / https://open.spotify.com/track/" + trackId );
             }
 
             // Load image
-            URI uri = new URI(image.isBlank() ? undefinedImage : image);
+            URI uri = new URI(image);
             int contentLength = uri.toURL().openConnection().getContentLength();
             if (contentLength == 0) {
-                throw new RuntimeException("Image not found " + uri);
+                System.out.println("Image not found " + uri);
+                uri = new URI(undefinedImage);
             }
             ImageIcon icon = readAndResizeImage(uri.toURL());
 
