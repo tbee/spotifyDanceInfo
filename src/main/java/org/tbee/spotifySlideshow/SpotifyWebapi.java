@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class Spotify {
+public class SpotifyWebapi {
 
     private final boolean simulationMode;
 
     private SpotifyApi spotifyApi = null;
 
-    public Spotify(boolean simulationMode) {
+    public SpotifyWebapi(boolean simulationMode) {
         this.simulationMode = simulationMode;
     }
 

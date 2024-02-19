@@ -1,5 +1,9 @@
 package org.tbee.spotifySlideshow;
 
+import de.labystudio.spotifyapi.SpotifyAPI;
+import de.labystudio.spotifyapi.SpotifyAPIFactory;
+import de.labystudio.spotifyapi.SpotifyListener;
+import de.labystudio.spotifyapi.model.Track;
 import org.jdesktop.swingx.StackLayout;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
@@ -33,7 +37,9 @@ import java.util.concurrent.TimeUnit;
 public class SpotifySlideshow {
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    private Spotify spotify;
+    private SpotifyWebapi spotifyWebapi;
+    private SpotifyAPI spotifyLocalApi;
+
     private SLabel sImageLabel;
     private SLabel sTextLabel;
     private SLabel sTextLabelShadow;
@@ -93,20 +99,26 @@ public class SpotifySlideshow {
         ImageIcon waitingIcon = readAndResizeImage(waitingUrl);
         sImageLabel.setIcon(waitingIcon);
 
-        // Connect to spotify
-        spotify = new Spotify(tecl().bool("/spotify/simulate", false));
-        spotify.connect();
-
-        // Start polling
-        scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyAndUpdateScreen, 1, 3, TimeUnit.SECONDS);
+        // And go
+        startSpotifyLocalApi();
+        //startSpotifyWebapi();
     }
 
-    private void pollSpotifyAndUpdateScreen() {
+    private void startSpotifyWebapi() {
+        // Connect to spotify
+        spotifyWebapi = new SpotifyWebapi(tecl().bool("/spotify/simulate", false));
+        spotifyWebapi.connect();
+
+        // Start polling
+        scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyWebapiAndUpdateScreen, 1, 3, TimeUnit.SECONDS);
+    }
+
+    private void pollSpotifyWebapiAndUpdateScreen() {
         try {
             TECL tecl = tecl();
 
             // Determine image and text
-            CurrentlyPlaying currentlyPlaying = spotify.getUsersCurrentlyPlayingTrack();
+            CurrentlyPlaying currentlyPlaying = spotifyWebapi.getUsersCurrentlyPlayingTrack();
             String dance = "undefined";
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
             String image = undefinedImage;
@@ -120,7 +132,7 @@ public class SpotifySlideshow {
                 String trackId = item.getId();
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
-                text = tecl.grp("/dances").str("id", dance, "text", "Undefined");
+                text = tecl.grp("/dances").str("id", dance, "text", item.getName());
                 System.out.println("| " + trackId + " | " + dance + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
             }
 
@@ -146,6 +158,85 @@ public class SpotifySlideshow {
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    private void startSpotifyLocalApi() {
+        spotifyLocalApi = SpotifyAPIFactory.create();
+        spotifyLocalApi.registerListener(new SpotifyListener() {
+            @Override
+            public void onConnect() {
+            }
+
+            @Override
+            public void onTrackChanged(Track track) {
+                updateScreenFromSpotifyLocalApi();
+            }
+
+            @Override
+            public void onPositionChanged(int position) { }
+
+            @Override
+            public void onPlayBackChanged(boolean isPlaying) {
+                updateScreenFromSpotifyLocalApi();
+            }
+
+            @Override
+            public void onSync() { }
+
+            @Override
+            public void onDisconnect(Exception exception) {
+                exception.printStackTrace();
+                spotifyLocalApi.stop();
+            }
+        });
+        spotifyLocalApi.initialize();
+    }
+
+    private void updateScreenFromSpotifyLocalApi() {
+        try {
+            TECL tecl = tecl();
+
+            // Determine image and text
+            String dance = "undefined";
+            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
+            String image = undefinedImage;
+            String text = "";
+            if (!spotifyLocalApi.hasTrack()) {
+                image = getClass().getResource("/waiting.jpg").toExternalForm();
+                System.out.println("Nothing is playing");
+            }
+            else {
+                Track track = spotifyLocalApi.getTrack();
+                String trackId = track.getId();
+                dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
+                image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
+                text = tecl.grp("/dances").str("id", dance, "text", "<div>" + track.getArtist() + "</div><div>" + track.getName() + "</div>");
+                System.out.println("| " + trackId + " | " + dance + " | # " + track.getArtist() + " - " + track.getName());
+            }
+
+            // Load image
+            URI uri = new URI(image.isBlank() ? undefinedImage : image);
+            int contentLength = uri.toURL().openConnection().getContentLength();
+            if (contentLength == 0) {
+                throw new RuntimeException("Image not found " + uri);
+            }
+            ImageIcon icon = readAndResizeImage(uri.toURL());
+
+            // Update screen
+            String textFinal = text;
+            SwingUtilities.invokeLater(() -> {
+                sImageLabel.setIcon(icon);
+
+                sTextLabel.setText("<html><body>" + textFinal + "</body></html>");
+                sTextLabelShadow.setText(sTextLabel.getText());
+            });
+        }
+        catch (RuntimeException | URISyntaxException | IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
 
     private ImageIcon readAndResizeImage(URL url) {
         try {
