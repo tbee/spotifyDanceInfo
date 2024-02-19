@@ -1,10 +1,5 @@
 @version 1
 
-spotify {
-    clientId: ...
-    clientSecret: ...
-}
-
 dances {
     | id             | image                                                              | text                             |
     | slowwalz       | file:///C:/Users/tom/Downloads/spotifySlideshow/slowwalz.jpg       | ""                               |
