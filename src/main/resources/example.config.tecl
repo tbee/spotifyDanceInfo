@@ -1,0 +1,30 @@
+@version 1
+
+spotify {
+    clientId: ...
+    clientSecret: ...
+}
+
+dances {
+    | id             | image                                                              | text                             |
+    | slowwalz       | file:///C:/Users/tom/Downloads/spotifySlideshow/slowwalz.jpg       | ""                               |
+    | tango          | file:///C:/Users/tom/Downloads/spotifySlideshow/tango.jpg          | ""                               |
+    | quickstep      | file:///C:/Users/tom/Downloads/spotifySlideshow/quickstep.jpg      | ""                               |
+    | slowfox        | file:///C:/Users/tom/Downloads/spotifySlideshow/slowfox.jpg        | "Also WCS"                       |
+    | vienneswalz    | file:///C:/Users/tom/Downloads/spotifySlideshow/vienneswalz.jpg    | ""                               |
+    | rumba          | file:///C:/Users/tom/Downloads/spotifySlideshow/rumba.jpg          | ""                               |
+    | chacha         | file:///C:/Users/tom/Downloads/spotifySlideshow/chacha.jpg         | "<p>CHA</p><p>CHA</p><p>CHA</p>" |
+    | samba          | file:///C:/Users/tom/Downloads/spotifySlideshow/samba.jpg          | ""                               |
+    | jive           | file:///C:/Users/tom/Downloads/spotifySlideshow/jive.jpg           | ""                               |
+    | pasodoble      | file:///C:/Users/tom/Downloads/spotifySlideshow/pasodoble.jpg      | ""                               |
+    | salsa          | file:///C:/Users/tom/Downloads/spotifySlideshow/salsa.jpg          | ""                               |
+    | wcs            | file:///C:/Users/tom/Downloads/spotifySlideshow/wcs.jpg            | ""                               |
+    | tangoargentine | file:///C:/Users/tom/Downloads/spotifySlideshow/tangoargentine.jpg | ""                               |
+}
+
+# To listen to the track use https://open.spotify.com/track/{trackId}
+tracks {
+    | id                     | dance                |
+    | 5k1KFuEwm1qUpLuWlT2G5P | slowfox              | # Michael Buble - Me And My Shadow
+    | 2iXBZ32Fz5VDCLeE0JIdX5 | wcs                  | # Leona Lewis - Better in Time
+}

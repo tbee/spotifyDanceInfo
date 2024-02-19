@@ -133,7 +133,7 @@ public class SpotifySlideshow {
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", item.getName());
-                System.out.println("| " + trackId + " | " + dance + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
+                System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + item.getName() + " / " + item.getExternalUrls().get("spotify"));
             }
 
             // Load image
@@ -210,7 +210,7 @@ public class SpotifySlideshow {
                 dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", "<div>" + track.getArtist() + "</div><div>" + track.getName() + "</div>");
-                System.out.println("| " + trackId + " | " + dance + " | # " + track.getArtist() + " - " + track.getName());
+                System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + track.getArtist() + " - " + track.getName());
             }
 
             // Load image
