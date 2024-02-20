@@ -82,7 +82,7 @@ public class SpotifyWebapi {
             spotifyApi.setRefreshToken(refreshToken);
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem starting SportifySlideshow", e);
+            throw new RuntimeException("Problem connecting to Sportify webapi", e);
         }
     }
 
@@ -101,8 +101,11 @@ public class SpotifyWebapi {
                 return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
             }
             catch (UnauthorizedException e) {
-                // Try getting new access token
+                // Try getting new tokens
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+                String refreshToken = authorizationCodeCredentials.getRefreshToken();
+                System.out.println("refreshToken " + refreshToken);
+                spotifyApi.setRefreshToken(refreshToken);
                 String accessToken = authorizationCodeCredentials.getAccessToken();
                 System.out.println("accessToken " + accessToken);
                 spotifyApi.setAccessToken(accessToken);
@@ -112,7 +115,7 @@ public class SpotifyWebapi {
             }
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem starting SportifySlideshow", e);
+            throw new RuntimeException("Problem fetching CurrentlyPlaying data", e);
         }
     }
 
