@@ -35,20 +35,20 @@ public class SpotifyWebapi {
 
         try {
             TECL tecl = SpotifySlideshow.tecl();
-            TECL spotifyGrp = tecl.grp("/spotify");
+            TECL webapiTecl = tecl.grp("/webapi");
 
             // Setup the API
-            String clientId = spotifyGrp.str("clientId", "");
-            String clientSecret = spotifyGrp.str("clientSecret", "");
+            String clientId = webapiTecl.str("clientId", "");
+            String clientSecret = webapiTecl.str("clientSecret", "");
             spotifyApi = new SpotifyApi.Builder()
                     .setClientId(clientId)
                     .setClientSecret(clientSecret)
-                    .setRedirectUri(new URI(spotifyGrp.str("redirect", "https://nyota.softworks.nl/SpotifySlideshow.html")))
+                    .setRedirectUri(new URI(webapiTecl.str("redirect", "https://nyota.softworks.nl/SpotifySlideshow.html")))
                     .build();
 
             // Do we have tokens stored or need to fetch them?
             String accessToken;
-            String refreshToken = spotifyGrp.str("refreshToken", "");
+            String refreshToken = webapiTecl.str("refreshToken", "");
             if (!refreshToken.isBlank()) {
                 spotifyApi.setRefreshToken(refreshToken);
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();

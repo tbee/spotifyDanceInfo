@@ -100,8 +100,9 @@ public class SpotifySlideshow {
         sImageLabel.setIcon(waitingIcon);
 
         // And go
-        boolean offlineMode = tecl().bool("/spotify/offline", true);
-        if (offlineMode) {
+        String CONNECT_LOCAL = "local";
+        String connect = tecl().str("/spotify/connect", CONNECT_LOCAL);
+        if (CONNECT_LOCAL.equalsIgnoreCase(connect)) {
             startSpotifyLocalApi();
         }
         else {
@@ -111,11 +112,11 @@ public class SpotifySlideshow {
 
     private void startSpotifyWebapi() {
         // Connect to spotify
-        spotifyWebapi = new SpotifyWebapi(tecl().bool("/spotify/simulate", false));
+        spotifyWebapi = new SpotifyWebapi(tecl().bool("/webapi/simulate", false));
         spotifyWebapi.connect();
 
         // Start polling
-        scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyWebapiAndUpdateScreen, 1, 3, TimeUnit.SECONDS);
+        scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyWebapiAndUpdateScreen, 0, 3, TimeUnit.SECONDS);
     }
 
     private void pollSpotifyWebapiAndUpdateScreen() {
