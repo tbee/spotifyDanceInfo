@@ -8,7 +8,6 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import se.michaelthelin.spotify.model_objects.specification.ExternalUrl;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class SpotifyWebapi {
@@ -90,34 +88,11 @@ public class SpotifyWebapi {
 
     public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {
         if (simulationMode) {
-            List<CurrentlyPlaying> tracks = List.of(new CurrentlyPlaying.Builder()
-                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
-                            .setIs_playing(true)
-                            .setItem(new Track.Builder()
-                                    .setId("1cqQYoFfwCisUAhEy1JoRr")
-                                    .setName("I Will Wait For You")
-                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
-                                    .build()
-                            ).build()
-                    , new CurrentlyPlaying.Builder()
-                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
-                            .setIs_playing(true)
-                            .setItem(new Track.Builder()
-                                    .setId("rtgh453t45hftgh45gfg54")
-                                    .setName("Testing 1-2")
-                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
-                                    .build()
-                            ).build()
-                    , new CurrentlyPlaying.Builder()
-                            .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
-                            .setIs_playing(true)
-                            .setItem(new Track.Builder()
-                                    .setId("454")
-                                    .setName("Undefined")
-                                    .setExternalUrls(new ExternalUrl.Builder().setExternalUrls(Map.of("spotify", "sdfsdfsdfsd")).build())
-                                    .build()
-                            ).build()
-            );
+            List<CurrentlyPlaying> tracks = List.of(
+                    currentlyPlaying("1cqQYoFfwCisUAhEy1JoRr", "I Will Wait For You"),
+                    currentlyPlaying("rtgh453t45hftgh45gfg54", "Testing 1-2"),
+                    currentlyPlaying("1111111111111111111111", "No name"),
+                    currentlyPlaying("1cqQYoFfwCireerty1JoRr", "Hello"));
             return tracks.get(new Random().nextInt(tracks.size()));
         }
 
@@ -139,5 +114,16 @@ public class SpotifyWebapi {
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem starting SportifySlideshow", e);
         }
+    }
+
+    private CurrentlyPlaying currentlyPlaying(String id, String name) {
+        return new CurrentlyPlaying.Builder()
+                .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
+                .setIs_playing(true)
+                .setItem(new Track.Builder()
+                        .setId(id)
+                        .setName(name)
+                        .build()
+                ).build();
     }
 }
