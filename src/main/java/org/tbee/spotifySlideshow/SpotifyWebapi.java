@@ -52,6 +52,7 @@ public class SpotifyWebapi {
             String accessToken;
             String refreshToken = spotifyGrp.str("refreshToken", "");
             if (!refreshToken.isBlank()) {
+                spotifyApi.setRefreshToken(refreshToken);
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
                 accessToken = authorizationCodeCredentials.getAccessToken();
             }
@@ -66,7 +67,7 @@ public class SpotifyWebapi {
                 System.out.println("authorizationCodeUri " + authorizationCodeUri);
                 Desktop.getDesktop().browse(authorizationCodeUri);
 
-                var authorizationCode = javax.swing.JOptionPane.showInputDialog("Please copy the authorization code here");
+                var authorizationCode = javax.swing.JOptionPane.showInputDialog(Window.getWindows()[0], "Please copy the authorization code here");
                 if (authorizationCode == null || authorizationCode.isBlank()) {
                     String message = "Authorization code cannot be empty";
                     javax.swing.JOptionPane.showMessageDialog(Window.getWindows()[0], message);

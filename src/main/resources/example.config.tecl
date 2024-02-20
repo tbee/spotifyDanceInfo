@@ -25,7 +25,7 @@ dances {
     | tangoargentine | file:///C:/Users/tom/Downloads/spotifySlideshow/tangoargentine.jpg | ""                               |
 }
 
-# To listen to the track use https://open.spotify.com/track/{trackId}
+# To listen to the song use https://open.spotify.com/song/{trackId}
 tracks {
     | id                     | dance                |
     | 5k1KFuEwm1qUpLuWlT2G5P | slowfox              | # Michael Buble - Me And My Shadow
