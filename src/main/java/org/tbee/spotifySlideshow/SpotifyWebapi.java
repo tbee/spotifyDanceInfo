@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 
 public class SpotifyWebapi {
 
@@ -86,16 +88,6 @@ public class SpotifyWebapi {
             }
             spotifyApi.setAccessToken(accessToken);
             spotifyApi.setRefreshToken(refreshToken);
-
-//            // fetch the playlists
-//            printUsersPlaylists();
-//
-//            // Fetch a configured playlist
-//            String playlistId = webapiTecl.str("playlist", "");
-//            if (!playlistId.isBlank()) {
-//                collectPlaylistentries(playlistId);
-//            }
-            getPlaybackQueue();
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Sportify webapi", e);
@@ -117,14 +109,17 @@ public class SpotifyWebapi {
 
     // definitely run this in the background
     // call with callback, update screen
-    private void getPlaybackQueue() throws IOException, ParseException, SpotifyWebApiException {
-        System.out.println(LocalDateTime.now());
+    public void getPlaybackQueue(Consumer<List<Song>> callback) throws IOException, ParseException, SpotifyWebApiException {
+        List<Song> songs = new ArrayList<>();
+        //System.out.println(LocalDateTime.now());
         PlaybackQueue playbackQueue = spotifyApi.getTheUsersQueue().build().execute();
         List<IPlaylistItem> playbackQueueContents = playbackQueue.getQueue();
         for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
-            System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
+            //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
+            songs.add(new Song(playlistItem.getId(), "", playlistItem.getName()));
         }
-        System.out.println(LocalDateTime.now());
+        //System.out.println(LocalDateTime.now());
+        callback.accept(songs);
     }
 
     // Definitely run this in a background thread

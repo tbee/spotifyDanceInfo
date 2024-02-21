@@ -4,11 +4,13 @@ import de.labystudio.spotifyapi.SpotifyAPI;
 import de.labystudio.spotifyapi.SpotifyAPIFactory;
 import de.labystudio.spotifyapi.SpotifyListener;
 import de.labystudio.spotifyapi.model.Track;
+import org.apache.hc.core5.http.ParseException;
 import org.jdesktop.swingx.StackLayout;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
 import org.tbee.tecl.TECL;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
@@ -48,12 +50,13 @@ public class SpotifySlideshow {
 
     private SLabel sImageLabel;
     private SLabel sTextLabel;
-    private SLabel sTextLabelShadow;
+    private SLabel sNextTextLabel;
     private SFrame sFrame;
 
     // Remember last settings to be able to refresh
     private boolean playing = false;
     private Song song = null;
+    private Song nextSong = null;
     private String logline = "";
 
     public static void main(String[] args) {
@@ -76,22 +79,22 @@ public class SpotifySlideshow {
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
+                // https://stackoverflow.com/questions/68461904/jlabel-text-shadow
                 sTextLabel = SLabel.of();
-                sTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+                sTextLabel.setVerticalAlignment(SwingConstants.TOP);
                 sTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 sTextLabel.setForeground(Color.WHITE);
                 sTextLabel.setFont(new Font("Verdana", Font.PLAIN, 80));
 
-                sTextLabelShadow = SLabel.of();
-                sTextLabelShadow.setForeground(Color.BLACK);
-                sTextLabelShadow.setBorder(BorderFactory.createEmptyBorder(0, 5, 3, 0)); // create a small offset
-                sTextLabelShadow.setVerticalAlignment(sTextLabel.getVerticalAlignment());
-                sTextLabelShadow.setHorizontalAlignment(sTextLabel.getHorizontalAlignment());
-                sTextLabelShadow.setFont(sTextLabel.getFont());
+                sNextTextLabel = SLabel.of();
+                sNextTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+                sNextTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                sNextTextLabel.setForeground(Color.WHITE);
+                sNextTextLabel.setFont(new Font("Verdana", Font.PLAIN, 40));
 
                 JPanel stackPanel = new JPanel(new StackLayout());
                 stackPanel.add(sImageLabel);
-                stackPanel.add(sTextLabelShadow);
+                stackPanel.add(sNextTextLabel);
                 stackPanel.add(sTextLabel);
 
                 sFrame = SFrame.of(stackPanel)
@@ -135,14 +138,34 @@ public class SpotifySlideshow {
         try {
             CurrentlyPlaying currentlyPlaying = spotifyWebapi.getUsersCurrentlyPlayingTrack();
             if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
-                updateScreen(false, null);
+                updateScreen(false, null, null);
             }
             else {
                 IPlaylistItem item = currentlyPlaying.getItem();
-                updateScreen(true, new Song(item.getId(), "", item.getName()));
+                Song song = new Song(item.getId(), "", item.getName());
+
+                boolean songChanges = (this.song == null || !this.song.id().equals(song.id()));
+                if (songChanges) {
+                    this.nextSong = null;
+                    scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 1, TimeUnit.SECONDS);
+                }
+                updateScreen(true, song, this.nextSong);
             }
         }
         catch (RuntimeException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void pollSpotifyWebapiAndUpdateNextSong() {
+        try {
+            spotifyWebapi.getPlaybackQueue((songs) -> {
+                this.nextSong = (songs.isEmpty() ? null : songs.get(0));
+                updateScreen();
+            });
+        }
+        catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
@@ -157,7 +180,7 @@ public class SpotifySlideshow {
 
             @Override
             public void onTrackChanged(Track track) {
-                updateScreen(true, new Song(track.getId(), track.getArtist(), track.getName()));
+                updateScreen(true, new Song(track.getId(), track.getArtist(), track.getName()), null);
             }
 
             @Override
@@ -165,7 +188,7 @@ public class SpotifySlideshow {
 
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
-                updateScreen(isPlaying, song);
+                updateScreen(isPlaying, song, nextSong);
             }
 
             @Override
@@ -181,12 +204,13 @@ public class SpotifySlideshow {
     }
 
     private void updateScreen() {
-        updateScreen(playing, song);
+        updateScreen(playing, song, nextSong);
     }
 
-    private void updateScreen(boolean playing, Song song) {
+    private void updateScreen(boolean playing, Song song, Song nextSong) {
         this.playing = playing;
         this.song = song;
+        this.nextSong = nextSong;
 
         try {
             TECL tecl = tecl();
@@ -195,18 +219,33 @@ public class SpotifySlideshow {
             // Determine image and text
             String image;
             String text;
+            String nextText;
             String logline;
             if (!playing) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
                 text = "";
+                nextText = "";
                 logline = "Nothing is playing";
             }
             else {
-                String trackId = song.id();
-                String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
-                image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
-                text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
-                logline = "| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + (song.artist().isBlank() ? "" : song.artist() + " - ") + song.name() + " / https://open.spotify.com/track/" + trackId;
+                // Get song data
+                {
+                    String trackId = song.id();
+                    String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
+                    image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
+                    text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
+                    logline = "| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + (song.artist().isBlank() ? "" : song.artist() + " - ") + song.name() + " / https://open.spotify.com/track/" + trackId;
+                }
+
+                // Get next song data
+                {
+                    nextText = "";
+                    if (nextSong != null) {
+                        String nextTrackId = nextSong.id();
+                        String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
+                        nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "text", nextSong.artist() + " " + nextSong.name());
+                    }
+                }
             }
             if (!logline.equals(this.logline)) {
                 System.out.println(logline);
@@ -224,11 +263,12 @@ public class SpotifySlideshow {
 
             // Update screen
             String textFinal = text;
+            String nextTextFinal = nextText;
             SwingUtilities.invokeLater(() -> {
                 sImageLabel.setIcon(icon);
 
                 sTextLabel.setText("<html><body>" + textFinal + "</body></html>");
-                sTextLabelShadow.setText(sTextLabel.getText());
+                sNextTextLabel.setText("<html><body>" + nextTextFinal + "</body></html>");
             });
         }
         catch (RuntimeException | URISyntaxException | IOException e) {
