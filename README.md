@@ -9,7 +9,7 @@ it primarily has two tables:
 * _**tracks**_ - associates a track id with a dance id.
 * _**dances**_ - associates the dance id with an image and a text.
 
-TODO: The slideshow will also show the upcoming tracks, if the used connection provides this information (see below).
+The slideshow will also show the upcoming track, if the used connection provides this information (see below).
 
 ## Connecting to spotify
 The connection to Spotify can be made in two ways, as shown in the spotify group in the configuration file.
