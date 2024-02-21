@@ -54,6 +54,7 @@ public class SpotifySlideshow {
     // Remember last settings to be able to refresh
     private boolean playing = false;
     private Song song = null;
+    private String logline = "";
 
     public static void main(String[] args) {
         new SpotifySlideshow().run();
@@ -164,9 +165,7 @@ public class SpotifySlideshow {
 
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
-                if (!isPlaying) {
-                    updateScreen(false, null);
-                }
+                updateScreen(isPlaying, song);
             }
 
             @Override
@@ -196,17 +195,22 @@ public class SpotifySlideshow {
             // Determine image and text
             String image;
             String text;
+            String logline;
             if (!playing) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
                 text = "";
-                System.out.println("Nothing is playing");
+                logline = "Nothing is playing";
             }
             else {
                 String trackId = song.id();
                 String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                 image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                 text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
-                System.out.println("| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + (song.artist().isBlank() ? "" : song.artist() + " - ") + song.name() + " / https://open.spotify.com/track/" + trackId );
+                logline = "| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + (song.artist().isBlank() ? "" : song.artist() + " - ") + song.name() + " / https://open.spotify.com/track/" + trackId;
+            }
+            if (!logline.equals(this.logline)) {
+                System.out.println(logline);
+                this.logline = logline;
             }
 
             // Load image
