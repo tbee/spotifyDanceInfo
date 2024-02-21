@@ -13,6 +13,7 @@ webapi {
     redirect: "https://nyota.softworks.nl/SpotifySlideshow.html"
     # refreshToken: ... # optional in online mode to skip authorization token copy
     simulate: false
+    # playlist: ... # Copy from the log when starting using the webapi
 }
 
 dances {
