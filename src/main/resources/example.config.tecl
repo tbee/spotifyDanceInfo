@@ -4,9 +4,13 @@ spotify {
     connect: webapi # local or webapi
 }
 
+# Use the Spotify manual to create an app, and copy the clientId and clientSecret here.
+# Make sure to set the same redirect URL as configured below.
+# https://developer.spotify.com/documentation/web-api/tutorials/getting-started#create-an-app
 webapi {
     clientId: ...
     clientSecret: ...
+    redirect: "https://nyota.softworks.nl/SpotifySlideshow.html"
     # refreshToken: ... # optional in online mode to skip authorization token copy
     simulate: false
 }

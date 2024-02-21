@@ -43,7 +43,7 @@ public class SpotifyWebapi {
             spotifyApi = new SpotifyApi.Builder()
                     .setClientId(clientId)
                     .setClientSecret(clientSecret)
-                    .setRedirectUri(new URI(webapiTecl.str("redirect", "https://nyota.softworks.nl/SpotifySlideshow.html")))
+                    .setRedirectUri(new URI(webapiTecl.str("redirect", "")))
                     .build();
 
             // Do we have tokens stored or need to fetch them?
