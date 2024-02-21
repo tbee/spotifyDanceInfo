@@ -24,7 +24,13 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.HierarchyBoundsListener;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -44,6 +50,10 @@ public class SpotifySlideshow {
     private SLabel sTextLabel;
     private SLabel sTextLabelShadow;
     private SFrame sFrame;
+
+    // Remember last settings to be able to refresh
+    private boolean playing = false;
+    private Song song = null;
 
     public static void main(String[] args) {
         new SpotifySlideshow().run();
@@ -88,6 +98,7 @@ public class SpotifySlideshow {
                         .maximize()
                         .undecorated()
                         .visible(true);
+                sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreen());
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -170,7 +181,14 @@ public class SpotifySlideshow {
         spotifyLocalApi.initialize();
     }
 
+    private void updateScreen() {
+        updateScreen(playing, song);
+    }
+
     private void updateScreen(boolean playing, Song song) {
+        this.playing = playing;
+        this.song = song;
+
         try {
             TECL tecl = tecl();
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
