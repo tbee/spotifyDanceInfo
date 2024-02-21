@@ -62,7 +62,7 @@ public class SpotifySlideshow {
 
     public static TECL tecl() {
         try {
-            TECL tecl = TECL.parser().findAndParse("spotifySlideshow.tecl");
+            TECL tecl = TECL.parser().findAndParse();
             return tecl;
         } catch (IOException e) {
             throw new RuntimeException(e);

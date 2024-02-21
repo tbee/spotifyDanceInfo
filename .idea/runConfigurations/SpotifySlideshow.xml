@@ -2,7 +2,7 @@
   <configuration default="false" name="SpotifySlideshow" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="org.tbee.spotifySlideshow.SpotifySlideshow" />
     <module name="spotifySlideshow" />
-    <option name="VM_PARAMETERS" value="-DspotifySlideshow.tecl=..\spotifySlideshow.tecl" />
+    <option name="VM_PARAMETERS" value="-Dconfig.tecl=..\spotifySlideshow.tecl" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.tbee.spotifySlideshow.*" />
