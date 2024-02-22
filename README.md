@@ -2,7 +2,7 @@
 
 Sportify Slideshow is a simple application that associates a track with a dance type,
 and then shows an image for that dance type.
-So suppose you have a playlist that current is playing a salsa track, then you can show -for example- on a beamer that this is a salsa.
+So suppose you have a playlist that currently is playing a salsa track, then you can show -for example on a beamer- that this is a salsa.
 
 The [example configuration file](src/main/resources/example.config.tecl) shows how this works, 
 it primarily has two tables:
