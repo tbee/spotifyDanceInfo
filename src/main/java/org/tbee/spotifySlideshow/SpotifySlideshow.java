@@ -11,7 +11,6 @@ import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
 import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
-import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
 import javax.imageio.ImageIO;
@@ -31,6 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -130,21 +130,18 @@ public class SpotifySlideshow {
     private void pollSpotifyWebapiAndUpdateScreen() {
         try {
             CurrentlyPlaying currentlyPlaying = spotifyWebapi.getUsersCurrentlyPlayingTrack();
-            if (currentlyPlaying == null || !currentlyPlaying.getIs_playing()) {
-                updateScreen(false, null, null);
-            }
-            else {
-                IPlaylistItem item = currentlyPlaying.getItem();
-                Song song = new Song(item.getId(), "", item.getName());
 
-                boolean songChanges = (this.song == null || !this.song.id().equals(song.id()));
-                if (songChanges) {
-                    this.nextSong = null;
-                    scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 1, TimeUnit.SECONDS);
-//                    scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateImage, 1, TimeUnit.SECONDS);
-                }
-                updateScreen(true, song, this.nextSong);
+            // check if the state changed
+            boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
+            Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
+            boolean stateChanged = !Objects.equals(this.playing, playing) || !Objects.equals(this.song, song);
+            if (!stateChanged) {
+                return;
             }
+
+            // Update
+            updateScreen(playing, song, null);
+            scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 0, TimeUnit.SECONDS);
         }
         catch (RuntimeException e) {
             e.printStackTrace();
@@ -159,7 +156,7 @@ public class SpotifySlideshow {
                 if (this.nextSong != null) {
                     System.out.println(logline(this.nextSong, "undefined"));
                 }
-                updateScreen();
+                updateScreenNextUp();
             });
         }
         catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
@@ -217,14 +214,14 @@ public class SpotifySlideshow {
         spotifyLocalApi.initialize();
     }
 
-    private void updateScreen() {
-        updateScreen(playing, song, nextSong);
-    }
-
     private void updateScreen(boolean playing, Song song, Song nextSong) {
         this.playing = playing;
         this.song = song;
         this.nextSong = nextSong;
+        updateScreen();
+    }
+
+    private void updateScreen() {
 
         try {
             TECL tecl = tecl();
@@ -233,12 +230,10 @@ public class SpotifySlideshow {
             // Determine image and text
             String image;
             String text;
-            String nextText;
             String logline;
             if (!playing) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
                 text = "";
-                nextText = "";
                 logline = "Nothing is playing";
             }
             else {
@@ -250,21 +245,8 @@ public class SpotifySlideshow {
                     text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
                     logline = logline(song, dance);
                 }
-
-                // Get next song data
-                {
-                    nextText = "";
-                    if (nextSong != null) {
-                        String nextTrackId = nextSong.id();
-                        String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
-                        nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
-                    }
-                }
             }
-            if (!logline.equals(this.logline)) {
-                System.out.println(logline);
-                this.logline = logline;
-            }
+            System.out.println(logline);
 
             // Load image
             URI uri = new URI(image);
@@ -277,15 +259,48 @@ public class SpotifySlideshow {
 
             // Update screen
             String textFinal = text;
-            String nextTextFinal = nextText;
             SwingUtilities.invokeLater(() -> {
                 sImageLabel.setIcon(icon);
 
                 sTextLabel.setText("<html><body>" + textFinal + "</body></html>");
+            });
+
+            // also next up
+            updateScreenNextUp();
+        }
+        catch (RuntimeException | URISyntaxException | IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateScreenNextUp() {
+
+        try {
+            TECL tecl = tecl();
+            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
+
+            // Determine image and text
+            String nextText;
+            if (!playing) {
+                nextText = "";
+            }
+            else {
+                nextText = "";
+                if (nextSong != null) {
+                    String nextTrackId = nextSong.id();
+                    String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
+                    nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
+                }
+            }
+
+            // Update screen
+            String nextTextFinal = nextText;
+            SwingUtilities.invokeLater(() -> {
                 sNextTextLabel.setText("<html><body>" + nextTextFinal + "</body></html>");
             });
         }
-        catch (RuntimeException | URISyntaxException | IOException e) {
+        catch (RuntimeException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
