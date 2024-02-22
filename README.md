@@ -24,3 +24,8 @@ But of course you are free to setup your own redirect url, as long as the code i
 
 When starting Spotify Slideshow using the webapi, it will immediately prompt for an authorization token needed to access the webapi.
 It also will automatically open a browser to obtain that token, which then needs to be copied into the prompt.
+
+## Starting
+The build produces an executeable jar. 
+So if Java is formally installed, double clicking it from the same folder where the config.tecl file is, starts the application.
+But `...\java -jar SpotifySlideshow.jar` from the command line in the folder where the config.tecl is, should always work.

@@ -10,6 +10,7 @@ import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import se.michaelthelin.spotify.model_objects.special.PlaybackQueue;
+import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
@@ -17,6 +18,7 @@ import java.awt.Window;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -101,6 +103,15 @@ public class SpotifyWebapi {
         }
         //System.out.println(LocalDateTime.now());
         callback.accept(songs);
+    }
+
+
+    public void getCoverArt(String trackId, Consumer<URL> callback) throws IOException, ParseException, SpotifyWebApiException {
+        Track track = spotifyApi.getTrack(trackId).build().execute();
+        Image[] images = track.getAlbum().getImages();
+        if (images.length > 0) {
+            callback.accept(new URL(images[0].getUrl()));
+        }
     }
 
     public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {

@@ -15,7 +15,6 @@ import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
 import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -26,13 +25,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.HierarchyBoundsListener;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -148,6 +141,7 @@ public class SpotifySlideshow {
                 if (songChanges) {
                     this.nextSong = null;
                     scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 1, TimeUnit.SECONDS);
+//                    scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateImage, 1, TimeUnit.SECONDS);
                 }
                 updateScreen(true, song, this.nextSong);
             }
@@ -160,8 +154,28 @@ public class SpotifySlideshow {
 
     private void pollSpotifyWebapiAndUpdateNextSong() {
         try {
-            spotifyWebapi.getPlaybackQueue((songs) -> {
+            spotifyWebapi.getPlaybackQueue(songs -> {
                 this.nextSong = (songs.isEmpty() ? null : songs.get(0));
+                if (this.nextSong != null) {
+                    System.out.println(logline(this.nextSong, "undefined"));
+                }
+                updateScreen();
+            });
+        }
+        catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void pollSpotifyWebapiAndUpdateImage() {
+        if (song == null) {
+            return;
+        }
+
+        try {
+            spotifyWebapi.getCoverArt(song.id(), url -> {
+                this.sImageLabel.setIcon(readAndResizeImage(url));
                 updateScreen();
             });
         }
@@ -234,7 +248,7 @@ public class SpotifySlideshow {
                     String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
                     image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
                     text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
-                    logline = "| " + trackId + " | " + (dance + "                    ").substring(0, 20) + " | # " + (song.artist().isBlank() ? "" : song.artist() + " - ") + song.name() + " / https://open.spotify.com/track/" + trackId;
+                    logline = logline(song, dance);
                 }
 
                 // Get next song data
@@ -243,7 +257,7 @@ public class SpotifySlideshow {
                     if (nextSong != null) {
                         String nextTrackId = nextSong.id();
                         String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
-                        nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "text", nextSong.artist() + " " + nextSong.name());
+                        nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
                     }
                 }
             }
@@ -277,6 +291,12 @@ public class SpotifySlideshow {
         }
     }
 
+    private String logline(Song song, String dance) {
+        dance = (dance == null ? "" : dance);
+        dance = (dance + "                    ").substring(0, 20);
+        String artist = (song.artist().isBlank() ? "" : song.artist() + " - ");
+        return "    | " + song.id() + " | " + dance + " | # " + artist + song.name() + " / https://open.spotify.com/track/" + song.id();
+    }
 
     private ImageIcon readAndResizeImage(URL url) {
         try {
