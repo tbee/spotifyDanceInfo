@@ -24,6 +24,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -37,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 public class SpotifySlideshow {
 
+    public static final String TRACKS = "/tracks";
+    public static final String DANCES = "/dances";
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     private SpotifyWebapi spotifyWebapi;
     private SpotifyAPI spotifyLocalApi;
@@ -238,10 +242,14 @@ public class SpotifySlideshow {
                 // Get song data
                 {
                     String trackId = song.id();
-                    String dance = tecl.grp("/tracks").str("id", trackId, "dance", "undefined");
-                    image = tecl.grp("/dances").str("id", dance, "image", undefinedImage);
-                    text = tecl.grp("/dances").str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
+                    String dance = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
+                    image = tecl.grp(DANCES).str("id", dance, "image", undefinedImage);
+                    text = tecl.grp(DANCES).str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
                     logline = logline(song, dance);
+
+                    if (tecl.bool("copySongLoglineToClipboard", false)) {
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
+                    }
                 }
             }
             System.out.println(logline);
@@ -276,14 +284,13 @@ public class SpotifySlideshow {
 
         try {
             TECL tecl = tecl();
-            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
 
             // Determine text
             String nextText = "";
             if (nextSong != null) {
                 String nextTrackId = nextSong.id();
-                String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
-                nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
+                String nextDance = tecl.grp(TRACKS).str("id", nextTrackId, "dance", "undefined");
+                nextText = "Next: " + tecl.grp(DANCES).str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
                 System.out.println(logline(this.nextSong, nextDance));
             }
 

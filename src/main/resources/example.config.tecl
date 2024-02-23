@@ -1,6 +1,7 @@
 @version 1
 
 # Windows: move slideshow to other monitor using Shift+Win+<arrow> keys.
+copySongLoglineToClipboard: true
 
 spotify {
     connect: webapi # local or webapi
