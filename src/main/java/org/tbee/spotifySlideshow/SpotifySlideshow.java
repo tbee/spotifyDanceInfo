@@ -46,11 +46,9 @@ public class SpotifySlideshow {
     private SLabel sNextTextLabel;
     private SFrame sFrame;
 
-    // Remember last settings to be able to refresh
-    private boolean playing = false;
+    // Current state
     private Song song = null;
     private Song nextSong = null;
-    private String logline = "";
 
     public static void main(String[] args) {
         new SpotifySlideshow().run();
@@ -95,7 +93,7 @@ public class SpotifySlideshow {
                         .maximize()
                         .undecorated()
                         .visible(true);
-                sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreen());
+                sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreenSong());
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -134,14 +132,21 @@ public class SpotifySlideshow {
             // check if the state changed
             boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
             Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
-            boolean stateChanged = !Objects.equals(this.playing, playing) || !Objects.equals(this.song, song);
-            if (!stateChanged) {
+            boolean songChanged = !Objects.equals(this.song, song);
+            if (!songChanged) {
                 return;
             }
 
-            // Update
-            updateScreen(playing, song, null);
-            scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 0, TimeUnit.SECONDS);
+            // Update screen
+            this.song = song;
+            updateScreenSong();
+            this.nextSong = null;
+            updateScreenNextUp();
+
+            // fetch the next song
+            if (song != null) {
+                scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 0, TimeUnit.SECONDS);
+            }
         }
         catch (RuntimeException e) {
             e.printStackTrace();
@@ -153,9 +158,6 @@ public class SpotifySlideshow {
         try {
             spotifyWebapi.getPlaybackQueue(songs -> {
                 this.nextSong = (songs.isEmpty() ? null : songs.get(0));
-                if (this.nextSong != null) {
-                    System.out.println(logline(this.nextSong, "undefined"));
-                }
                 updateScreenNextUp();
             });
         }
@@ -173,7 +175,6 @@ public class SpotifySlideshow {
         try {
             spotifyWebapi.getCoverArt(song.id(), url -> {
                 this.sImageLabel.setIcon(readAndResizeImage(url));
-                updateScreen();
             });
         }
         catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
@@ -191,7 +192,8 @@ public class SpotifySlideshow {
 
             @Override
             public void onTrackChanged(Track track) {
-                updateScreen(true, new Song(track.getId(), track.getArtist(), track.getName()), null);
+                SpotifySlideshow.this.song = new Song(track.getId(), track.getArtist(), track.getName());
+                updateScreenSong();
             }
 
             @Override
@@ -199,7 +201,10 @@ public class SpotifySlideshow {
 
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
-                updateScreen(isPlaying, song, nextSong);
+                if (!isPlaying) {
+                    SpotifySlideshow.this.song = null;
+                    updateScreenSong();
+                }
             }
 
             @Override
@@ -214,14 +219,7 @@ public class SpotifySlideshow {
         spotifyLocalApi.initialize();
     }
 
-    private void updateScreen(boolean playing, Song song, Song nextSong) {
-        this.playing = playing;
-        this.song = song;
-        this.nextSong = nextSong;
-        updateScreen();
-    }
-
-    private void updateScreen() {
+    private void updateScreenSong() {
 
         try {
             TECL tecl = tecl();
@@ -231,7 +229,7 @@ public class SpotifySlideshow {
             String image;
             String text;
             String logline;
-            if (!playing) {
+            if (this.song == null) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
                 text = "";
                 logline = "Nothing is playing";
@@ -280,18 +278,13 @@ public class SpotifySlideshow {
             TECL tecl = tecl();
             String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
 
-            // Determine image and text
-            String nextText;
-            if (!playing) {
-                nextText = "";
-            }
-            else {
-                nextText = "";
-                if (nextSong != null) {
-                    String nextTrackId = nextSong.id();
-                    String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
-                    nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
-                }
+            // Determine text
+            String nextText = "";
+            if (nextSong != null) {
+                String nextTrackId = nextSong.id();
+                String nextDance = tecl.grp("/tracks").str("id", nextTrackId, "dance", "undefined");
+                nextText = "Next: " + tecl.grp("/dances").str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
+                System.out.println(logline(this.nextSong, nextDance));
             }
 
             // Update screen
