@@ -27,7 +27,9 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,10 +43,14 @@ public class SpotifySlideshow {
 
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    public final URL undefinedImage;
+
+    // API
     private SpotifyWebapi spotifyWebapi;
     private SpotifyAPI spotifyLocalApi;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
+    // Screen
     private SLabel sImageLabel;
     private SLabel sTextLabel;
     private SLabel sNextTextLabel;
@@ -58,13 +64,8 @@ public class SpotifySlideshow {
         new SpotifySlideshow().run();
     }
 
-    public static TECL tecl() {
-        try {
-            TECL tecl = TECL.parser().findAndParse();
-            return tecl;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public SpotifySlideshow() {
+        undefinedImage = getClass().getResource("/undefined.jpg");
     }
 
     private void run() {
@@ -227,7 +228,6 @@ public class SpotifySlideshow {
 
         try {
             TECL tecl = tecl();
-            String undefinedImage = getClass().getResource("/undefined.jpg").toExternalForm();
 
             // Determine image and text
             String image;
@@ -243,7 +243,7 @@ public class SpotifySlideshow {
                 {
                     String trackId = song.id();
                     String dance = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
-                    image = tecl.grp(DANCES).str("id", dance, "image", undefinedImage);
+                    image = tecl.grp(DANCES).str("id", dance, "image", undefinedImage.toExternalForm());
                     text = tecl.grp(DANCES).str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
                     logline = logline(song, dance);
 
@@ -255,13 +255,7 @@ public class SpotifySlideshow {
             System.out.println(logline);
 
             // Load image
-            URI uri = new URI(image);
-            int contentLength = uri.toURL().openConnection().getContentLength();
-            if (contentLength == 0) {
-                System.out.println("Image not found " + uri);
-                uri = new URI(undefinedImage);
-            }
-            ImageIcon icon = readAndResizeImage(uri.toURL());
+            ImageIcon icon = readAndResizeImage(new URI(image).toURL());
 
             // Update screen
             String textFinal = text;
@@ -315,8 +309,26 @@ public class SpotifySlideshow {
 
     private ImageIcon readAndResizeImage(URL url) {
         try {
-            BufferedImage originalImage = ImageIO.read(url);
 
+            // Get image contents (check to see if there is any)
+            byte[] bytes = new byte[]{};
+            try (
+                InputStream inputStream = url.openStream();
+            ) {
+                bytes = inputStream.readAllBytes();
+            }
+            catch (IOException e) {
+                System.out.println("Error loading image " + e.getMessage());
+            }
+            if (bytes.length == 0) {
+                bytes = undefinedImage.openStream().readAllBytes();
+            }
+
+            // Read image
+            BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(bytes));
+
+            // Resize to match frame
+            // TODO: maintain aspect ratio
             Dimension sFrameSize = sFrame.getSize();
             int width = (int) sFrameSize.getWidth();
             int height = (int) sFrameSize.getHeight();
@@ -326,9 +338,19 @@ public class SpotifySlideshow {
             g2.drawImage(originalImage, 0, 0, width, height, null);
             g2.dispose();
 
+            // Return as image icon
             return new ImageIcon(resizedImage);
         }
         catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static TECL tecl() {
+        try {
+            TECL tecl = TECL.parser().findAndParse();
+            return tecl;
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
