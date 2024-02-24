@@ -56,8 +56,8 @@ public class SpotifySlideshow {
 
     // Screen
     private SLabel sImageLabel;
-    private SLabel sTextLabel;
-    private SLabel sNextTextLabel;
+    private ShadowLabel sTextLabel;
+    private ShadowLabel sNextTextLabel;
     private SFrame sFrame;
 
     // Current state
@@ -79,17 +79,18 @@ public class SpotifySlideshow {
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
-                // https://stackoverflow.com/questions/68461904/jlabel-text-shadow
-                sTextLabel = SLabel.of();
+                sTextLabel = new ShadowLabel(); //SLabel.of();
                 sTextLabel.setVerticalAlignment(SwingConstants.TOP);
                 sTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 sTextLabel.setForeground(Color.WHITE);
+                sTextLabel.setBackground(Color.DARK_GRAY);
                 sTextLabel.setFont(new Font("Verdana", Font.PLAIN, 80));
 
-                sNextTextLabel = SLabel.of();
+                sNextTextLabel = new ShadowLabel();
                 sNextTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
                 sNextTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 sNextTextLabel.setForeground(Color.WHITE);
+                sNextTextLabel.setBackground(Color.DARK_GRAY);
                 sNextTextLabel.setFont(new Font("Verdana", Font.PLAIN, 40));
 
                 JPanel stackPanel = new JPanel(new StackLayout());
