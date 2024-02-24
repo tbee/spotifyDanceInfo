@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -65,6 +66,12 @@ public class SpotifySlideshow {
     private Song nextSong = null;
 
     public static void main(String[] args) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+
+        System.out.print("Available fonts: ");
+        Arrays.stream(ge.getAvailableFontFamilyNames()).forEach(f -> System.out.print(f + ", "));
+        System.out.println();
+
         new SpotifySlideshow().run();
     }
 
@@ -74,6 +81,7 @@ public class SpotifySlideshow {
 
     private void run() {
         SLookAndFeel.installDefault();
+        TECL tecl = tecl();
 
         try {
             SwingUtilities.invokeAndWait(() -> {
@@ -84,14 +92,18 @@ public class SpotifySlideshow {
                 sTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 sTextLabel.setForeground(Color.WHITE);
                 sTextLabel.setBackground(Color.DARK_GRAY);
-                sTextLabel.setFont(new Font("Verdana", Font.PLAIN, 80));
+                Font songFont = new Font(tecl.str("/screen/songFont", "Arial"), Font.PLAIN, tecl.integer("/screen/songFontSize", 80));
+                System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
+                sTextLabel.setFont(songFont);
 
                 sNextTextLabel = new ShadowLabel();
                 sNextTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
                 sNextTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 sNextTextLabel.setForeground(Color.WHITE);
                 sNextTextLabel.setBackground(Color.DARK_GRAY);
-                sNextTextLabel.setFont(new Font("Verdana", Font.PLAIN, 40));
+                Font nextFont = new Font(tecl.str("/screen/nextFont", "Arial"), Font.PLAIN, tecl.integer("/screen/nextFontSize", 40));
+                System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
+                sNextTextLabel.setFont(nextFont);
 
                 JPanel stackPanel = new JPanel(new StackLayout());
                 stackPanel.add(sImageLabel);
@@ -364,17 +376,21 @@ public class SpotifySlideshow {
             }
 
             // Read image
-            BufferedImage originalImage = ImageIO.read(new ByteArrayInputStream(bytes));
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
+            double imageHeight = (double)image.getHeight();
+            double imageWidth = (double)image.getWidth();
 
-            // Resize to match frame
-            // TODO: maintain aspect ratio
+            // Resize to match frame, but maintain aspect ratio
             Dimension sFrameSize = sFrame.getSize();
-            int width = (int) sFrameSize.getWidth();
-            int height = (int) sFrameSize.getHeight();
-            BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            double widthScaleFactor = sFrameSize.getWidth() / imageWidth;
+            double heightScaleFactor = sFrameSize.getHeight() / imageHeight;
+            double scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
+            int newWidth = (int)(imageWidth * scaleFactor);
+            int newHeight = (int)(imageHeight * scaleFactor);
+            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2 = resizedImage.createGraphics();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage(originalImage, 0, 0, width, height, null);
+            g2.drawImage(image, 0, 0, newWidth, newHeight, null);
             g2.dispose();
 
             // Return as image icon

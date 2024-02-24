@@ -1,6 +1,7 @@
 @version 1
 
 # Windows: move slideshow to other monitor using Shift+Win+<arrow> keys.
+
 copySongLoglineToClipboard: true
 
 spotify {
@@ -15,8 +16,13 @@ webapi {
     clientSecret: ...
     redirect: "https://nyota.softworks.nl/SpotifySlideshow.html"
     # refreshToken: ... # optional in online mode to skip authorization token copy
-    simulate: false
-    # playlist: ... # Copy from the log when starting using the webapi
+}
+
+screen {
+    # songFont: Arial
+    # songFontSize: 80
+    # nextFont: Arial
+    # nextFontSize: 40
 }
 
 dances {
