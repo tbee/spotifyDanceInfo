@@ -26,6 +26,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,6 +36,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -99,6 +103,21 @@ public class SpotifySlideshow {
                         .undecorated()
                         .visible(true);
                 sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreenSong());
+                sFrame.addKeyListener(new KeyListener() {
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                        if (e.getKeyChar() == 'r') {
+                            updateScreenSong();
+                            updateScreenNextUp();
+                        }
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {}
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {}
+                });
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -230,21 +249,28 @@ public class SpotifySlideshow {
             TECL tecl = tecl();
 
             // Determine image and text
+            final StringBuilder text = new StringBuilder();
             String image;
-            String text;
             String logline;
             if (this.song == null) {
                 image = getClass().getResource("/waiting.jpg").toExternalForm();
-                text = "";
                 logline = "Nothing is playing";
             }
             else {
                 // Get song data
                 {
                     String trackId = song.id();
-                    String dance = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
-                    image = tecl.grp(DANCES).str("id", dance, "image", undefinedImage.toExternalForm());
-                    text = tecl.grp(DANCES).str("id", dance, "text", "<div>" + song.artist() + "</div><div>" + song.name() + "</div>");
+                    List<String> dances = dances(tecl, trackId);
+                    String dance = dances.getFirst();
+                    image = image(tecl, dance);
+                    text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
+                        .append(song.name())
+                        .append("<br><hr>")
+                        .append(text(tecl, dance));
+                    for (String otherDance : dances.subList(1, dances.size())) {
+                        String otherText = text(tecl, otherDance);
+                        text.append(otherText.isBlank() ? "" : "<br>" + otherText);
+                    }
                     logline = logline(song, dance);
 
                     if (tecl.bool("copySongLoglineToClipboard", false)) {
@@ -258,15 +284,10 @@ public class SpotifySlideshow {
             ImageIcon icon = readAndResizeImage(new URI(image).toURL());
 
             // Update screen
-            String textFinal = text;
             SwingUtilities.invokeLater(() -> {
                 sImageLabel.setIcon(icon);
-
-                sTextLabel.setText("<html><body>" + textFinal + "</body></html>");
+                sTextLabel.setText("<html><body><div style=\"text-align:center;\">" + text.toString() + "</div></body></html>");
             });
-
-            // also next up
-            updateScreenNextUp();
         }
         catch (RuntimeException | URISyntaxException | IOException e) {
             e.printStackTrace();
@@ -280,24 +301,41 @@ public class SpotifySlideshow {
             TECL tecl = tecl();
 
             // Determine text
-            String nextText = "";
+            StringBuilder text = new StringBuilder();
             if (nextSong != null) {
-                String nextTrackId = nextSong.id();
-                String nextDance = tecl.grp(TRACKS).str("id", nextTrackId, "dance", "undefined");
-                nextText = "Next: " + tecl.grp(DANCES).str("id", nextDance, "nextUpText", nextSong.artist() + " " + nextSong.name());
-                System.out.println(logline(this.nextSong, nextDance));
+                String trackId = nextSong.id();
+                List<String> dances = dances(tecl, trackId);
+                String dance = dances.getFirst();
+                text.append("Next:")
+                        .append("<br>")
+                        .append((nextSong.artist() + " " + nextSong.name()).trim())
+                        .append("<br>")
+                        .append(text(tecl, dance));
+                System.out.println(logline(this.nextSong, dance));
             }
 
             // Update screen
-            String nextTextFinal = nextText;
             SwingUtilities.invokeLater(() -> {
-                sNextTextLabel.setText("<html><body>" + nextTextFinal + "</body></html>");
+                sNextTextLabel.setText("<html><body><div style=\"text-align:center;\">" + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private static String text(TECL tecl, String dance) {
+        return tecl.grp(DANCES).str("id", dance, "text", "");
+    }
+
+    private String image(TECL tecl, String dance) {
+        return tecl.grp(DANCES).str("id", dance, "image", undefinedImage.toExternalForm());
+    }
+
+    private List<String> dances(TECL tecl, String trackId) {
+        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
+        return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
     }
 
     private String logline(Song song, String dance) {
