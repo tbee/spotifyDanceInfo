@@ -309,7 +309,7 @@ public class SpotifySlideshow {
                 sTextLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
             });
 
-            if (tecl.bool("/screen/useCovertArt", true)) {
+            if (spotifyWebapi != null && tecl.bool("/screen/useCovertArt", true)) {
                 pollSpotifyWebapiAndUpdateImage();
             }
             else {
