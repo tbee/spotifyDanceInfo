@@ -19,6 +19,7 @@ webapi {
 }
 
 screen {
+    # useCovertArt: false
     songText {
         # font: Verdana
         # fontSize: 80

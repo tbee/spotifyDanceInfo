@@ -92,7 +92,7 @@ public class SpotifyWebapi {
         }
     }
 
-    public void getPlaybackQueue(Consumer<List<Song>> callback) throws IOException, ParseException, SpotifyWebApiException {
+    synchronized public void getPlaybackQueue(Consumer<List<Song>> callback) throws IOException, ParseException, SpotifyWebApiException {
         List<Song> songs = new ArrayList<>();
         //System.out.println(LocalDateTime.now());
         PlaybackQueue playbackQueue = spotifyApi.getTheUsersQueue().build().execute();
@@ -106,15 +106,14 @@ public class SpotifyWebapi {
     }
 
 
-    public void getCoverArt(String trackId, Consumer<URL> callback) throws IOException, ParseException, SpotifyWebApiException {
+    synchronized public void getCoverArt(String trackId, Consumer<URL> callback) throws IOException, ParseException, SpotifyWebApiException {
         Track track = spotifyApi.getTrack(trackId).build().execute();
         Image[] images = track.getAlbum().getImages();
-        if (images.length > 0) {
-            callback.accept(new URL(images[0].getUrl()));
-        }
+        //Arrays.stream(images).forEach(i -> System.out.println(i.getUrl() + " " + i.getWidth() + "x" + i.getHeight()));
+        callback.accept(images.length == 0 ? null : new URL(images[0].getUrl()));
     }
 
-    public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {
+    synchronized public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {
         if (simulationMode) {
             List<CurrentlyPlaying> tracks = List.of(
                     currentlyPlaying("1cqQYoFfwCisUAhEy1JoRr", "I Will Wait For You"),

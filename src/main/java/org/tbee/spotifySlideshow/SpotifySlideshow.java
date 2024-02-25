@@ -28,7 +28,6 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -48,7 +47,8 @@ public class SpotifySlideshow {
 
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
-    public final URL undefinedImage;
+    public final URL waitingImageUrl;
+    public final URL undefinedImageUrl;
 
     // API
     private SpotifyWebapi spotifyWebapi;
@@ -76,7 +76,8 @@ public class SpotifySlideshow {
     }
 
     public SpotifySlideshow() {
-        undefinedImage = getClass().getResource("/undefined.jpg");
+        waitingImageUrl = getClass().getResource("/waiting.jpg");
+        undefinedImageUrl = getClass().getResource("/undefined.jpg");
     }
 
     private void run() {
@@ -91,7 +92,7 @@ public class SpotifySlideshow {
                 System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
                 sTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
-                        .hAlign(HAlign.CENTER)
+                        .hAlign(HAlign.LEFT)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(songFont);
@@ -100,7 +101,7 @@ public class SpotifySlideshow {
                 System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
                 sNextTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
-                        .hAlign(HAlign.CENTER)
+                        .hAlign(HAlign.RIGHT)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(nextFont);
@@ -113,23 +114,9 @@ public class SpotifySlideshow {
                         .undecorated()
                         .title("Spotify Slideshow")
                         .iconImage(read(getClass().getResource("/icon.png")))
+                        .onKeyTyped(this::updateScreenOnKeypress)
+                        .onPropertyChange("graphicsConfiguration", e -> updateScreenSong())
                         .visible(true);
-                sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreenSong());
-                sFrame.addKeyListener(new KeyListener() {
-                    @Override
-                    public void keyTyped(KeyEvent e) {
-                        if (e.getKeyChar() == 'r') {
-                            updateScreenSong();
-                            updateScreenNextUp();
-                        }
-                    }
-
-                    @Override
-                    public void keyPressed(KeyEvent e) {}
-
-                    @Override
-                    public void keyReleased(KeyEvent e) {}
-                });
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -137,8 +124,7 @@ public class SpotifySlideshow {
         }
 
         // Load initial image
-        URL waitingUrl = getClass().getResource("/waiting.jpg");
-        ImageIcon waitingIcon = readAndResizeImage(waitingUrl);
+        ImageIcon waitingIcon = readAndResizeImageFilling(waitingImageUrl);
         sImageLabel.setIcon(waitingIcon);
 
         // And go
@@ -149,6 +135,13 @@ public class SpotifySlideshow {
         }
         else {
             startSpotifyWebapi();
+        }
+    }
+
+    private void updateScreenOnKeypress(KeyEvent e) {
+        if (e.getKeyChar() == 'r') {
+            updateScreenSong();
+            updateScreenNextUp();
         }
     }
 
@@ -209,12 +202,33 @@ public class SpotifySlideshow {
 
     private void pollSpotifyWebapiAndUpdateImage() {
         if (song == null) {
+            this.sImageLabel.setIcon(readAndResizeImageFilling(waitingImageUrl));
             return;
         }
 
         try {
             spotifyWebapi.getCoverArt(song.id(), url -> {
-                this.sImageLabel.setIcon(readAndResizeImage(url));
+                BufferedImage image = read(url);
+
+                Dimension frameSize = sFrame.getSize();
+                int width = (int) frameSize.getWidth();
+                int height = (int) frameSize.getHeight();
+
+                BufferedImage resizedFillingImage = resizeFilling(image, frameSize);
+                BufferedImage resizedFittingImage = resizeFitting(image, frameSize);
+
+                resizedFillingImage = ImageUtil.addNoise(40.0, resizedFillingImage);
+
+                Graphics2D g2 = resizedFillingImage.createGraphics();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                int centeredX = (resizedFillingImage.getWidth() - resizedFittingImage.getWidth()) / 2;
+                int centeredY = (resizedFillingImage.getHeight() - resizedFittingImage.getHeight()) / 2;
+                g2.drawImage(resizedFittingImage, centeredX, centeredY, null);
+                g2.dispose();
+
+                //resizedFillingImage = ImageUtil.addGaussianBlur(resizedFillingImage, 2.0);
+
+                this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
             });
         }
         catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
@@ -222,6 +236,7 @@ public class SpotifySlideshow {
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private void startSpotifyLocalApi() {
         spotifyLocalApi = SpotifyAPIFactory.create();
@@ -266,10 +281,8 @@ public class SpotifySlideshow {
 
             // Determine image and text
             final StringBuilder text = new StringBuilder();
-            String image;
             String logline;
             if (this.song == null) {
-                image = getClass().getResource("/waiting.jpg").toExternalForm();
                 logline = "Nothing is playing";
             }
             else {
@@ -278,7 +291,6 @@ public class SpotifySlideshow {
                     String trackId = song.id();
                     List<String> dances = dances(tecl, trackId);
                     String dance = dances.getFirst();
-                    image = image(tecl, dance);
                     text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
                         .append(song.name())
                         .append("<br><hr>")
@@ -296,13 +308,47 @@ public class SpotifySlideshow {
             }
             System.out.println(logline);
 
+            // Update screen
+            SwingUtilities.invokeLater(() -> {
+                sTextLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
+            });
+
+            if (tecl.bool("/screen/useCovertArt", true)) {
+                pollSpotifyWebapiAndUpdateImage();
+            }
+            else {
+                updateScreenSongImageFromConfig();
+            }
+        }
+        catch (RuntimeException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateScreenSongImageFromConfig() {
+
+        try {
+            TECL tecl = tecl();
+
+            // Determine image and text
+            String image;
+            if (this.song == null) {
+                image = waitingImageUrl.toExternalForm();
+            }
+            else {
+                String trackId = song.id();
+                List<String> dances = dances(tecl, trackId);
+                String dance = dances.getFirst();
+                image = image(tecl, dance);
+            }
+
             // Load image
-            ImageIcon icon = readAndResizeImage(new URI(image).toURL());
+            ImageIcon icon = readAndResizeImageFilling(new URI(image).toURL());
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
                 sImageLabel.setIcon(icon);
-                sTextLabel.setText("<html><body><div style=\"text-align:center;\">" + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException | URISyntaxException | IOException e) {
@@ -323,16 +369,16 @@ public class SpotifySlideshow {
                 List<String> dances = dances(tecl, trackId);
                 String dance = dances.getFirst();
                 text.append("Next:")
-                        .append("<br>")
-                        .append((nextSong.artist() + " " + nextSong.name()).trim())
-                        .append("<br>")
-                        .append(text(tecl, dance));
+                    .append(" ")
+                    .append((nextSong.artist() + " " + nextSong.name()).trim())
+                    .append("<br>")
+                    .append(text(tecl, dance));
                 System.out.println(logline(this.nextSong, dance));
             }
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                sNextTextLabel.setText("<html><body><div style=\"text-align:center;\">" + text.toString() + "</div></body></html>");
+                sNextTextLabel.setText("<html><body><div style=\"text-align:right;\">" + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {
@@ -346,7 +392,7 @@ public class SpotifySlideshow {
     }
 
     private String image(TECL tecl, String dance) {
-        return tecl.grp(DANCES).str("id", dance, "image", undefinedImage.toExternalForm());
+        return tecl.grp(DANCES).str("id", dance, "image", undefinedImageUrl.toExternalForm());
     }
 
     private List<String> dances(TECL tecl, String trackId) {
@@ -361,9 +407,9 @@ public class SpotifySlideshow {
         return "    | " + song.id() + " | " + dance + " | # " + artist + song.name() + " / https://open.spotify.com/track/" + song.id();
     }
 
-    private ImageIcon readAndResizeImage(URL url) {
+    private ImageIcon readAndResizeImageFilling(URL url) {
         BufferedImage image = read(url);
-        BufferedImage resizedImage = resize(image, sFrame.getSize());
+        BufferedImage resizedImage = resizeFilling(image, sFrame.getSize());
         return new ImageIcon(resizedImage);
     }
 
@@ -381,7 +427,7 @@ public class SpotifySlideshow {
             }
             if (bytes.length == 0) {
                 try (
-                    InputStream inputStream = undefinedImage.openStream();
+                        InputStream inputStream = undefinedImageUrl.openStream();
                 ) {
                     bytes = inputStream.readAllBytes();
                 }
@@ -395,22 +441,51 @@ public class SpotifySlideshow {
         }
     }
 
-    private BufferedImage resize(BufferedImage image, Dimension targetSize) {
+    private BufferedImage resizeFilling(BufferedImage image, Dimension targetSize) {
         // Read image
         double imageHeight = (double)image.getHeight();
         double imageWidth = (double)image.getWidth();
 
-        // Resize to match frame, but maintain aspect ratio
+        // Resize to fill (probably overflow) the target size, but maintain aspect ratio
         double widthScaleFactor = targetSize.getWidth() / imageWidth;
         double heightScaleFactor = targetSize.getHeight() / imageHeight;
         double scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
         int newWidth = (int)(imageWidth * scaleFactor);
         int newHeight = (int)(imageHeight * scaleFactor);
 
+        // Paint full size (possibly overflowing the target)
         BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = resizedImage.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.drawImage(image, 0, 0, newWidth, newHeight, null);
+        g2.drawImage(image, 0, 0, newWidth, newHeight, null); // draw and scale image
+        g2.dispose();
+
+        // clip to target size
+        int targetWidth = (int) targetSize.getWidth();
+        int targetHeight = (int) targetSize.getHeight();
+        int clipX = Math.max(0, (newWidth - targetWidth) / 2);
+        int clipY = Math.max(0, (newHeight - targetHeight) / 2);
+        int clipWidth = Math.min(resizedImage.getWidth(), targetWidth);
+        int clipHeight = Math.min(resizedImage.getHeight(), targetHeight);
+        return resizedImage.getSubimage(clipX, clipY, clipWidth, clipHeight);
+    }
+
+    private BufferedImage resizeFitting(BufferedImage image, Dimension targetSize) {
+        // Read image
+        double imageHeight = (double)image.getHeight();
+        double imageWidth = (double)image.getWidth();
+
+        // Resize to fit inside the target size, but maintain aspect ratio
+        double widthScaleFactor = targetSize.getWidth() / imageWidth;
+        double heightScaleFactor = targetSize.getHeight() / imageHeight;
+        double scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+        int newWidth = (int)(imageWidth * scaleFactor);
+        int newHeight = (int)(imageHeight * scaleFactor);
+
+        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = resizedImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(image, 0, 0, newWidth, newHeight, null); // draw and scale image
         g2.dispose();
 
         return resizedImage;
