@@ -41,7 +41,7 @@ public class SpotifyWebapi {
 
         try {
             TECL tecl = SpotifySlideshow.tecl();
-            TECL webapiTecl = tecl.grp("/webapi");
+            TECL webapiTecl = tecl.grp("/spotify/webapi");
 
             // Setup the API
             String clientId = webapiTecl.str("clientId", "");

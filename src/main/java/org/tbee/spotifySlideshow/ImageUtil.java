@@ -1,13 +1,82 @@
 package org.tbee.spotifySlideshow;
 
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.WritableRaster;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ImageUtil {
+
+    public static byte[] read(URL url) {
+        byte[] bytes = new byte[]{};
+        try (
+                InputStream inputStream = url.openStream();
+        ) {
+            bytes = inputStream.readAllBytes();
+        }
+        catch (IOException e) {
+            System.out.println("Error loading image " + e.getMessage());
+        }
+        return bytes;
+    }
+
+    static public BufferedImage resizeFilling(BufferedImage image, Dimension targetSize) {
+        // Read image
+        double imageHeight = (double)image.getHeight();
+        double imageWidth = (double)image.getWidth();
+
+        // Resize to fill (probably overflow) the target size, but maintain aspect ratio
+        double widthScaleFactor = targetSize.getWidth() / imageWidth;
+        double heightScaleFactor = targetSize.getHeight() / imageHeight;
+        double scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
+        int newWidth = (int)(imageWidth * scaleFactor);
+        int newHeight = (int)(imageHeight * scaleFactor);
+
+        // Paint full size (possibly overflowing the target)
+        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = resizedImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(image, 0, 0, newWidth, newHeight, null); // draw and scale image
+        g2.dispose();
+
+        // clip to target size
+        int targetWidth = (int) targetSize.getWidth();
+        int targetHeight = (int) targetSize.getHeight();
+        int clipX = Math.max(0, (newWidth - targetWidth) / 2);
+        int clipY = Math.max(0, (newHeight - targetHeight) / 2);
+        int clipWidth = Math.min(resizedImage.getWidth(), targetWidth);
+        int clipHeight = Math.min(resizedImage.getHeight(), targetHeight);
+        return resizedImage.getSubimage(clipX, clipY, clipWidth, clipHeight);
+    }
+
+    static public BufferedImage resizeFitting(BufferedImage image, Dimension targetSize) {
+        // Read image
+        double imageHeight = (double)image.getHeight();
+        double imageWidth = (double)image.getWidth();
+
+        // Resize to fit inside the target size, but maintain aspect ratio
+        double widthScaleFactor = targetSize.getWidth() / imageWidth;
+        double heightScaleFactor = targetSize.getHeight() / imageHeight;
+        double scaleFactor = Math.min(widthScaleFactor, heightScaleFactor);
+        int newWidth = (int)(imageWidth * scaleFactor);
+        int newHeight = (int)(imageHeight * scaleFactor);
+
+        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = resizedImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(image, 0, 0, newWidth, newHeight, null); // draw and scale image
+        g2.dispose();
+
+        return resizedImage;
+    }
+
     static public BufferedImage addGaussianBlur(BufferedImage image, double radius) {
         return getGaussianBlurOp(radius).filter(image, null);
     }
