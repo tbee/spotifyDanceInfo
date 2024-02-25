@@ -19,10 +19,14 @@ webapi {
 }
 
 screen {
-    # songFont: Arial
-    # songFontSize: 80
-    # nextFont: Arial
-    # nextFontSize: 40
+    songText {
+        # font: Verdana
+        # fontSize: 80
+    }
+    nextText {
+        # font: Calibri
+        # fontSize: 10
+    }
 }
 
 dances {

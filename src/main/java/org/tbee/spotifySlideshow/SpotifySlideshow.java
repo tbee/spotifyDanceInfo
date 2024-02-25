@@ -5,10 +5,12 @@ import de.labystudio.spotifyapi.SpotifyAPIFactory;
 import de.labystudio.spotifyapi.SpotifyListener;
 import de.labystudio.spotifyapi.model.Track;
 import org.apache.hc.core5.http.ParseException;
-import org.jdesktop.swingx.StackLayout;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
+import org.tbee.sway.SStackedPanel;
+import org.tbee.sway.support.HAlign;
+import org.tbee.sway.support.VAlign;
 import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
@@ -16,8 +18,6 @@ import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -57,8 +57,8 @@ public class SpotifySlideshow {
 
     // Screen
     private SLabel sImageLabel;
-    private ShadowLabel sTextLabel;
-    private ShadowLabel sNextTextLabel;
+    private SLabel sTextLabel;
+    private SLabel sNextTextLabel;
     private SFrame sFrame;
 
     // Current state
@@ -87,33 +87,32 @@ public class SpotifySlideshow {
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
-                sTextLabel = new ShadowLabel(); //SLabel.of();
-                sTextLabel.setVerticalAlignment(SwingConstants.TOP);
-                sTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                sTextLabel.setForeground(Color.WHITE);
-                sTextLabel.setBackground(Color.DARK_GRAY);
-                Font songFont = new Font(tecl.str("/screen/songFont", "Arial"), Font.PLAIN, tecl.integer("/screen/songFontSize", 80));
+                Font songFont = font(tecl.grp("/screen/songText"), 80);
                 System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
-                sTextLabel.setFont(songFont);
+                sTextLabel = ShadowLabel.of()
+                        .vAlign(VAlign.TOP)
+                        .hAlign(HAlign.CENTER)
+                        .foreground(Color.WHITE)
+                        .background(Color.DARK_GRAY)
+                        .font(songFont);
 
-                sNextTextLabel = new ShadowLabel();
-                sNextTextLabel.setVerticalAlignment(SwingConstants.BOTTOM);
-                sNextTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                sNextTextLabel.setForeground(Color.WHITE);
-                sNextTextLabel.setBackground(Color.DARK_GRAY);
-                Font nextFont = new Font(tecl.str("/screen/nextFont", "Arial"), Font.PLAIN, tecl.integer("/screen/nextFontSize", 40));
+                Font nextFont = font(tecl.grp("/screen/nextText"), 40);
                 System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
-                sNextTextLabel.setFont(nextFont);
+                sNextTextLabel = ShadowLabel.of()
+                        .vAlign(VAlign.BOTTOM)
+                        .hAlign(HAlign.CENTER)
+                        .foreground(Color.WHITE)
+                        .background(Color.DARK_GRAY)
+                        .font(nextFont);
 
-                JPanel stackPanel = new JPanel(new StackLayout());
-                stackPanel.add(sImageLabel);
-                stackPanel.add(sNextTextLabel);
-                stackPanel.add(sTextLabel);
+                SStackedPanel stackPanel = SStackedPanel.of(sImageLabel, sNextTextLabel, sTextLabel);
 
                 sFrame = SFrame.of(stackPanel)
                         .exitOnClose()
                         .maximize()
                         .undecorated()
+                        .title("Spotify Slideshow")
+                        .iconImage(read(getClass().getResource("/icon.png")))
                         .visible(true);
                 sFrame.addPropertyChangeListener("graphicsConfiguration", e -> updateScreenSong());
                 sFrame.addKeyListener(new KeyListener() {
@@ -151,6 +150,10 @@ public class SpotifySlideshow {
         else {
             startSpotifyWebapi();
         }
+    }
+
+    private Font font(TECL tecl, int defaultSize) {
+        return new Font(tecl.str("font", "Arial"), Font.PLAIN, tecl.integer("fontSize", defaultSize));
     }
 
     private void startSpotifyWebapi() {
@@ -359,8 +362,13 @@ public class SpotifySlideshow {
     }
 
     private ImageIcon readAndResizeImage(URL url) {
-        try {
+        BufferedImage image = read(url);
+        BufferedImage resizedImage = resize(image, sFrame.getSize());
+        return new ImageIcon(resizedImage);
+    }
 
+    private BufferedImage read(URL url) {
+        try {
             // Get image contents (check to see if there is any)
             byte[] bytes = new byte[]{};
             try (
@@ -372,33 +380,40 @@ public class SpotifySlideshow {
                 System.out.println("Error loading image " + e.getMessage());
             }
             if (bytes.length == 0) {
-                bytes = undefinedImage.openStream().readAllBytes();
+                try (
+                    InputStream inputStream = undefinedImage.openStream();
+                ) {
+                    bytes = inputStream.readAllBytes();
+                }
             }
 
             // Read image
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
-            double imageHeight = (double)image.getHeight();
-            double imageWidth = (double)image.getWidth();
-
-            // Resize to match frame, but maintain aspect ratio
-            Dimension sFrameSize = sFrame.getSize();
-            double widthScaleFactor = sFrameSize.getWidth() / imageWidth;
-            double heightScaleFactor = sFrameSize.getHeight() / imageHeight;
-            double scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
-            int newWidth = (int)(imageWidth * scaleFactor);
-            int newHeight = (int)(imageHeight * scaleFactor);
-            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = resizedImage.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage(image, 0, 0, newWidth, newHeight, null);
-            g2.dispose();
-
-            // Return as image icon
-            return new ImageIcon(resizedImage);
+            return ImageIO.read(new ByteArrayInputStream(bytes));
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private BufferedImage resize(BufferedImage image, Dimension targetSize) {
+        // Read image
+        double imageHeight = (double)image.getHeight();
+        double imageWidth = (double)image.getWidth();
+
+        // Resize to match frame, but maintain aspect ratio
+        double widthScaleFactor = targetSize.getWidth() / imageWidth;
+        double heightScaleFactor = targetSize.getHeight() / imageHeight;
+        double scaleFactor = Math.max(widthScaleFactor, heightScaleFactor);
+        int newWidth = (int)(imageWidth * scaleFactor);
+        int newHeight = (int)(imageHeight * scaleFactor);
+
+        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = resizedImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(image, 0, 0, newWidth, newHeight, null);
+        g2.dispose();
+
+        return resizedImage;
     }
 
     public static TECL tecl() {

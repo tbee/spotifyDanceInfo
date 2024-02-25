@@ -1,12 +1,11 @@
 package org.tbee.spotifySlideshow;
 
-import javax.swing.JLabel;
+import org.tbee.sway.SLabel;
+
 import java.awt.Color;
 import java.awt.Graphics;
 
-public class ShadowLabel extends JLabel {
-
-    private boolean invertColors = false;
+public class ShadowLabel extends SLabel {
 
     public ShadowLabel() {
         super();
@@ -27,7 +26,7 @@ public class ShadowLabel extends JLabel {
         super.paintComponent(g);
     }
 
-    public void setInvertColors(boolean invertColors) {
-        this.invertColors = invertColors;
+    static public ShadowLabel of() {
+        return new ShadowLabel();
     }
 }
