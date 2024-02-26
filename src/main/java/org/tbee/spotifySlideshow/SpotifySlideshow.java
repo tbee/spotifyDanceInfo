@@ -428,6 +428,10 @@ public class SpotifySlideshow {
     public static TECL tecl() {
         try {
             TECL tecl = TECL.parser().findAndParse();
+            if (tecl == null) {
+                tecl = new TECL("notfound");
+                tecl.populateConvertFunctions();
+            }
             return tecl;
         } catch (IOException e) {
             throw new RuntimeException(e);
