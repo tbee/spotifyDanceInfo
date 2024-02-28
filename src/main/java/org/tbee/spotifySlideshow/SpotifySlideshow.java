@@ -1,6 +1,5 @@
 package org.tbee.spotifySlideshow;
 
-import de.labystudio.spotifyapi.SpotifyAPI;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
@@ -39,7 +38,6 @@ public class SpotifySlideshow {
 
     // API
     private Spotify spotify;
-    private SpotifyAPI spotifyLocalApi;
 
     // Screen
     private SLabel sImageLabel;
@@ -49,7 +47,7 @@ public class SpotifySlideshow {
 
     // Current state
     private Song song = null;
-    private Song nextSong = null;
+    private List<Song> nextUpSongs = null;
 
     public static void main(String[] args) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -138,12 +136,12 @@ public class SpotifySlideshow {
     private void updateCurrentlyPlaying(Song song) {
         this.song = song;
         updateScreenSong();
-        this.nextSong = null;
+        this.nextUpSongs = List.of();
         updateScreenNextUp();
     }
 
     private void updateNextUp(List<Song> songs) {
-        this.nextSong = (songs.isEmpty() ? null : songs.get(0));
+        this.nextUpSongs = songs;
         updateScreenNextUp();
     }
 
@@ -225,6 +223,7 @@ public class SpotifySlideshow {
 
             // Determine text
             StringBuilder text = new StringBuilder();
+            Song nextSong = (nextUpSongs.isEmpty() ? null : nextUpSongs.get(0));
             if (nextSong != null) {
                 String trackId = nextSong.id();
                 List<String> dances = dances(tecl, trackId);
@@ -234,7 +233,7 @@ public class SpotifySlideshow {
                     .append((nextSong.artist() + " " + nextSong.name()).trim())
                     .append("<br>")
                     .append(text(tecl, dance));
-                System.out.println(logline(this.nextSong, dance));
+                //System.out.println(logline(nextSong, dance));
             }
 
             // Update screen
@@ -250,10 +249,6 @@ public class SpotifySlideshow {
 
     private static String text(TECL tecl, String dance) {
         return tecl.grp(DANCES).str("id", dance, "text", "");
-    }
-
-    private String image(TECL tecl, String dance) {
-        return tecl.grp(DANCES).str("id", dance, "image", undefinedImageUrl.toExternalForm());
     }
 
     private List<String> dances(TECL tecl, String trackId) {
