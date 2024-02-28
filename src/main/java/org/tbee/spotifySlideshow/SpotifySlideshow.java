@@ -248,7 +248,7 @@ public class SpotifySlideshow {
     }
 
     private static String text(TECL tecl, String dance) {
-        return tecl.grp(DANCES).str("id", dance, "text", "");
+        return tecl.grp(DANCES).str("id", dance, "text", dance);
     }
 
     private List<String> dances(TECL tecl, String trackId) {
