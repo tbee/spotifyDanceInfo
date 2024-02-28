@@ -3,42 +3,52 @@ package org.tbee.spotifySlideshow;
 import org.apache.hc.core5.http.ParseException;
 import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.SpotifyApi;
-import se.michaelthelin.spotify.enums.CurrentlyPlayingType;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
-import se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
-import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import se.michaelthelin.spotify.model_objects.special.PlaybackQueue;
 import se.michaelthelin.spotify.model_objects.specification.Image;
-import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
 import java.awt.Window;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class SpotifyWebapi {
+public class SpotifyWebapi implements Spotify {
 
-    private final boolean simulationMode;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+
+    private Consumer<Song> currentlyPlayingCallback = song -> {};
+    private Consumer<List<Song>> nextUpCallback = songs -> {};
+    private Consumer<URL> coverArtCallback = url -> {};
 
     private SpotifyApi spotifyApi = null;
+    private Song currentPlayingSong = null;
 
-    public SpotifyWebapi(boolean simulationMode) {
-        this.simulationMode = simulationMode;
+
+    public SpotifyWebapi currentlyPlayingCallback(Consumer<Song> currentlyPlayingCallback) {
+        this.currentlyPlayingCallback = currentlyPlayingCallback;
+        return this;
+    }
+    public SpotifyWebapi nextUpCallback(Consumer<List<Song>> nextUpCallback) {
+        this.nextUpCallback = nextUpCallback;
+        return this;
+    }
+    public SpotifyWebapi coverArtCallback(Consumer<URL> coverArtCallback) {
+        this.coverArtCallback = coverArtCallback;
+        return this;
     }
 
     public void connect() {
-        if (simulationMode) {
-            return;
-        }
-
         try {
             TECL tecl = SpotifySlideshow.tecl();
             TECL webapiTecl = tecl.grp("/spotify/webapi");
@@ -86,74 +96,76 @@ public class SpotifyWebapi {
             }
             spotifyApi.setAccessToken(accessToken);
             spotifyApi.setRefreshToken(refreshToken);
+
+            // Start polling
+            scheduledExecutorService.scheduleAtFixedRate(this::pollCurrentlyPlaying, 0, 3, TimeUnit.SECONDS);
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Sportify webapi", e);
         }
     }
 
-    synchronized public void getPlaybackQueue(Consumer<List<Song>> callback) throws IOException, ParseException, SpotifyWebApiException {
-        List<Song> songs = new ArrayList<>();
-        //System.out.println(LocalDateTime.now());
-        PlaybackQueue playbackQueue = spotifyApi.getTheUsersQueue().build().execute();
-        List<IPlaylistItem> playbackQueueContents = playbackQueue.getQueue();
-        for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
-            //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
-            songs.add(new Song(playlistItem.getId(), "", playlistItem.getName()));
-        }
-        //System.out.println(LocalDateTime.now());
-        callback.accept(songs);
+
+    public void pollCurrentlyPlaying() {
+        spotifyApi.getUsersCurrentlyPlayingTrack().build().executeAsync()
+                .exceptionally(t -> {
+                    t.printStackTrace();
+                    return null;
+                })
+                .thenAccept(currentlyPlaying -> {
+                    boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
+                    Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
+
+                    boolean songChanged = !Objects.equals(this.currentPlayingSong, song);
+                    if (!songChanged) {
+                        return;
+                    }
+                    currentPlayingSong = song;
+
+                    System.out.println("callback");
+                    currentlyPlayingCallback.accept(song);
+                    if (song == null) {
+                        coverArtCallback.accept(null);
+                        nextUpCallback.accept(List.of());
+                    }
+                    else {
+                        scheduledExecutorService.schedule(() -> pollCovertArt(song.id()), 0, TimeUnit.SECONDS);
+                        scheduledExecutorService.schedule(this::pollNextUp, 0, TimeUnit.SECONDS);
+                    }
+                });
     }
 
-
-    synchronized public void getCoverArt(String trackId, Consumer<URL> callback) throws IOException, ParseException, SpotifyWebApiException {
-        Track track = spotifyApi.getTrack(trackId).build().execute();
-        Image[] images = track.getAlbum().getImages();
-        //Arrays.stream(images).forEach(i -> System.out.println(i.getUrl() + " " + i.getWidth() + "x" + i.getHeight()));
-        callback.accept(images.length == 0 ? null : new URL(images[0].getUrl()));
+    public void pollNextUp() {
+        spotifyApi.getTheUsersQueue().build().executeAsync()
+                .exceptionally(t -> {
+                    t.printStackTrace();
+                    return null;
+                })
+                .thenAccept(playbackQueue -> {
+                    List<Song> songs = new ArrayList<>();
+                    for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
+                        //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
+                        songs.add(new Song(playlistItem.getId(), "", playlistItem.getName()));
+                    }
+                    //System.out.println(LocalDateTime.now());
+                    nextUpCallback.accept(songs);
+                });
     }
 
-    synchronized public CurrentlyPlaying getUsersCurrentlyPlayingTrack() {
-        if (simulationMode) {
-            List<CurrentlyPlaying> tracks = List.of(
-                    currentlyPlaying("1cqQYoFfwCisUAhEy1JoRr", "I Will Wait For You"),
-                    currentlyPlaying("rtgh453t45hftgh45gfg54", "Testing 1-2"),
-                    currentlyPlaying("1111111111111111111111", "No name"),
-                    currentlyPlaying("1cqQYoFfwCireerty1JoRr", "Hello"));
-            return tracks.get(new Random().nextInt(tracks.size()));
-        }
-
-        try {
-            try {
-                return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
-            }
-            catch (UnauthorizedException e) {
-                // Try getting new tokens
-                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
-                String refreshToken = authorizationCodeCredentials.getRefreshToken();
-                System.out.println("refreshToken " + refreshToken);
-                spotifyApi.setRefreshToken(refreshToken);
-                String accessToken = authorizationCodeCredentials.getAccessToken();
-                System.out.println("accessToken " + accessToken);
-                spotifyApi.setAccessToken(accessToken);
-
-                // retry
-                return spotifyApi.getUsersCurrentlyPlayingTrack().build().execute();
-            }
-        }
-        catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem fetching CurrentlyPlaying data", e);
-        }
-    }
-
-    private CurrentlyPlaying currentlyPlaying(String id, String name) {
-        return new CurrentlyPlaying.Builder()
-                .setCurrentlyPlayingType(CurrentlyPlayingType.TRACK)
-                .setIs_playing(true)
-                .setItem(new Track.Builder()
-                        .setId(id)
-                        .setName(name)
-                        .build()
-                ).build();
+    public void pollCovertArt(String id) {
+        spotifyApi.getTrack(id).build().executeAsync()
+                .exceptionally(t -> {
+                    t.printStackTrace();
+                    return null;
+                })
+                .thenAccept(track -> {
+                    try {
+                        Image[] images = track.getAlbum().getImages();
+                        //Arrays.stream(images).forEach(i -> System.out.println(i.getUrl() + " " + i.getWidth() + "x" + i.getHeight()));
+                        coverArtCallback.accept(images.length == 0 ? null : new URL(images[0].getUrl()));
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }

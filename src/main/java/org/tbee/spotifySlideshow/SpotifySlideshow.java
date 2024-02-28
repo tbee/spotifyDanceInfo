@@ -1,10 +1,6 @@
 package org.tbee.spotifySlideshow;
 
 import de.labystudio.spotifyapi.SpotifyAPI;
-import de.labystudio.spotifyapi.SpotifyAPIFactory;
-import de.labystudio.spotifyapi.SpotifyListener;
-import de.labystudio.spotifyapi.model.Track;
-import org.apache.hc.core5.http.ParseException;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
@@ -12,8 +8,6 @@ import org.tbee.sway.SStackedPanel;
 import org.tbee.sway.support.HAlign;
 import org.tbee.sway.support.VAlign;
 import org.tbee.tecl.TECL;
-import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
-import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -32,15 +26,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class SpotifySlideshow {
 
@@ -50,9 +38,8 @@ public class SpotifySlideshow {
     public final URL undefinedImageUrl;
 
     // API
-    private SpotifyWebapi spotifyWebapi;
+    private Spotify spotify;
     private SpotifyAPI spotifyLocalApi;
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     // Screen
     private SLabel sImageLabel;
@@ -129,12 +116,12 @@ public class SpotifySlideshow {
         // And go
         String CONNECT_LOCAL = "local";
         String connect = tecl().str("/spotify/connect", CONNECT_LOCAL);
-        if (CONNECT_LOCAL.equalsIgnoreCase(connect)) {
-            startSpotifyLocalApi();
-        }
-        else {
-            startSpotifyWebapi();
-        }
+
+        spotify = CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi();
+        spotify .currentlyPlayingCallback(song -> updateCurrentlyPlaying(song))
+                .nextUpCallback(songs -> updateNextUp(songs))
+                .coverArtCallback(url -> generateAndUpdateImage(url));
+        spotify.connect();
     }
 
     private void updateScreenOnKeypress(KeyEvent e) {
@@ -148,126 +135,42 @@ public class SpotifySlideshow {
         return new Font(tecl.str("font", "Arial"), Font.PLAIN, tecl.integer("fontSize", defaultSize));
     }
 
-    private void startSpotifyWebapi() {
-        // Connect to spotify
-        spotifyWebapi = new SpotifyWebapi(tecl().bool("/spotify/webapi/simulate", false));
-        spotifyWebapi.connect();
-
-        // Start polling
-        scheduledExecutorService.scheduleAtFixedRate(this::pollSpotifyWebapiAndUpdateScreen, 0, 3, TimeUnit.SECONDS);
+    private void updateCurrentlyPlaying(Song song) {
+        this.song = song;
+        updateScreenSong();
+        this.nextSong = null;
+        updateScreenNextUp();
     }
 
-    private void pollSpotifyWebapiAndUpdateScreen() {
-        try {
-            CurrentlyPlaying currentlyPlaying = spotifyWebapi.getUsersCurrentlyPlayingTrack();
-
-            // check if the state changed
-            boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
-            Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
-            boolean songChanged = !Objects.equals(this.song, song);
-            if (!songChanged) {
-                return;
-            }
-
-            // Update screen
-            this.song = song;
-            updateScreenSong();
-            this.nextSong = null;
-            updateScreenNextUp();
-
-            // fetch the next song
-            if (song != null) {
-                scheduledExecutorService.schedule(this::pollSpotifyWebapiAndUpdateNextSong, 0, TimeUnit.SECONDS);
-            }
-        }
-        catch (RuntimeException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
-        }
+    private void updateNextUp(List<Song> songs) {
+        this.nextSong = (songs.isEmpty() ? null : songs.get(0));
+        updateScreenNextUp();
     }
 
-    private void pollSpotifyWebapiAndUpdateNextSong() {
-        try {
-            spotifyWebapi.getPlaybackQueue(songs -> {
-                this.nextSong = (songs.isEmpty() ? null : songs.get(0));
-                updateScreenNextUp();
-            });
-        }
-        catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void pollSpotifyWebapiAndUpdateImage() {
-        if (song == null) {
+    private void generateAndUpdateImage(URL url) {
+        if (url == null) {
             this.sImageLabel.setIcon(readAndResizeImageFilling(waitingImageUrl));
             return;
         }
 
-        try {
-            spotifyWebapi.getCoverArt(song.id(), url -> {
-                BufferedImage image = read(url);
+        BufferedImage image = read(url);
 
-                Dimension frameSize = sFrame.getSize();
-                BufferedImage resizedFillingImage = ImageUtil.resizeFilling(image, frameSize);
-                BufferedImage resizedFittingImage = ImageUtil.resizeFitting(image, frameSize);
+        Dimension frameSize = sFrame.getSize();
+        BufferedImage resizedFillingImage = ImageUtil.resizeFilling(image, frameSize);
+        BufferedImage resizedFittingImage = ImageUtil.resizeFitting(image, frameSize);
 
-                ImageUtil.addNoise(40.0, resizedFillingImage);
+        ImageUtil.addNoise(40.0, resizedFillingImage);
 
-                Graphics2D g2 = resizedFillingImage.createGraphics();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                int centeredX = (resizedFillingImage.getWidth() - resizedFittingImage.getWidth()) / 2;
-                int centeredY = (resizedFillingImage.getHeight() - resizedFittingImage.getHeight()) / 2;
-                g2.drawImage(resizedFittingImage, centeredX, centeredY, null);
-                g2.dispose();
+        Graphics2D g2 = resizedFillingImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        int centeredX = (resizedFillingImage.getWidth() - resizedFittingImage.getWidth()) / 2;
+        int centeredY = (resizedFillingImage.getHeight() - resizedFittingImage.getHeight()) / 2;
+        g2.drawImage(resizedFittingImage, centeredX, centeredY, null);
+        g2.dispose();
 
-                //resizedFillingImage = ImageUtil.addGaussianBlur(resizedFillingImage, 2.0);
+        //resizedFillingImage = ImageUtil.addGaussianBlur(resizedFillingImage, 2.0);
 
-                this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
-            });
-        }
-        catch (RuntimeException | IOException | ParseException | SpotifyWebApiException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-
-    private void startSpotifyLocalApi() {
-        spotifyLocalApi = SpotifyAPIFactory.create();
-        spotifyLocalApi.registerListener(new SpotifyListener() {
-            @Override
-            public void onConnect() {
-            }
-
-            @Override
-            public void onTrackChanged(Track track) {
-                SpotifySlideshow.this.song = new Song(track.getId(), track.getArtist(), track.getName());
-                updateScreenSong();
-            }
-
-            @Override
-            public void onPositionChanged(int position) { }
-
-            @Override
-            public void onPlayBackChanged(boolean isPlaying) {
-                if (!isPlaying) {
-                    SpotifySlideshow.this.song = null;
-                    updateScreenSong();
-                }
-            }
-
-            @Override
-            public void onSync() { }
-
-            @Override
-            public void onDisconnect(Exception exception) {
-                exception.printStackTrace();
-                spotifyLocalApi.stop();
-            }
-        });
-        spotifyLocalApi.initialize();
+        this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
     }
 
     private void updateScreenSong() {
@@ -308,46 +211,8 @@ public class SpotifySlideshow {
             SwingUtilities.invokeLater(() -> {
                 sTextLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
             });
-
-            if (spotifyWebapi != null && tecl.bool("/screen/useCovertArt", true)) {
-                pollSpotifyWebapiAndUpdateImage();
-            }
-            else {
-                updateScreenSongImageFromConfig();
-            }
         }
         catch (RuntimeException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void updateScreenSongImageFromConfig() {
-
-        try {
-            TECL tecl = tecl();
-
-            // Determine image and text
-            String image;
-            if (this.song == null) {
-                image = waitingImageUrl.toExternalForm();
-            }
-            else {
-                String trackId = song.id();
-                List<String> dances = dances(tecl, trackId);
-                String dance = dances.getFirst();
-                image = image(tecl, dance);
-            }
-
-            // Load image
-            ImageIcon icon = readAndResizeImageFilling(new URI(image).toURL());
-
-            // Update screen
-            SwingUtilities.invokeLater(() -> {
-                sImageLabel.setIcon(icon);
-            });
-        }
-        catch (RuntimeException | URISyntaxException | IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }

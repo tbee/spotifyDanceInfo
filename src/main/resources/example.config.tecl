@@ -19,7 +19,6 @@ spotify {
 }
 
 screen {
-    # useCovertArt: false
     songText {
         # font: Verdana
         # fontSize: 80
@@ -32,20 +31,20 @@ screen {
 
 # When using covert art the images are not used
 dances {
-    | id             | image                                                              | text                  |
-    | slowwalz       | file:///C:/Users/tom/Downloads/spotifySlideshow/slowwalz.jpg       | "Slow Walz"           |
-    | tango          | file:///C:/Users/tom/Downloads/spotifySlideshow/tango.jpg          | "Tango"               |
-    | quickstep      | file:///C:/Users/tom/Downloads/spotifySlideshow/quickstep.jpg      | "Quickstep"           |
-    | slowfox        | file:///C:/Users/tom/Downloads/spotifySlideshow/slowfox.jpg        | "Slow Foxtrot"        |
-    | vienneswalz    | file:///C:/Users/tom/Downloads/spotifySlideshow/vienneswalz.jpg    | "Viennes Walz"        |
-    | rumba          | file:///C:/Users/tom/Downloads/spotifySlideshow/rumba.jpg          | "Rumba"               |
-    | chacha         | file:///C:/Users/tom/Downloads/spotifySlideshow/chacha.jpg         | "CHA CHA CHA"         |
-    | samba          | file:///C:/Users/tom/Downloads/spotifySlideshow/samba.jpg          | "Samba"               |
-    | jive           | file:///C:/Users/tom/Downloads/spotifySlideshow/jive.jpg           | "Jive"                |
-    | pasodoble      | file:///C:/Users/tom/Downloads/spotifySlideshow/pasodoble.jpg      | "Paso Doble"          |
-    | salsa          | file:///C:/Users/tom/Downloads/spotifySlideshow/salsa.jpg          | "Salsa"               |
-    | wcs            | file:///C:/Users/tom/Downloads/spotifySlideshow/wcs.jpg            | "West Coast Swing"    |
-    | tangoargentine | file:///C:/Users/tom/Downloads/spotifySlideshow/tangoargentine.jpg | "Tango Argentine"     |
+    | id             | text                  |
+    | slowwalz       | "Slow Walz"           |
+    | tango          | "Tango"               |
+    | quickstep      | "Quickstep"           |
+    | slowfox        | "Slow Foxtrot"        |
+    | vienneswalz    | "Viennes Walz"        |
+    | rumba          | "Rumba"               |
+    | chacha         | "CHA CHA CHA"         |
+    | samba          | "Samba"               |
+    | jive           | "Jive"                |
+    | pasodoble      | "Paso Doble"          |
+    | salsa          | "Salsa"               |
+    | wcs            | "West Coast Swing"    |
+    | tangoargentine | "Tango Argentine"     |
 }
 
 # To listen to the song use https://open.spotify.com/song/{trackId}
