@@ -114,12 +114,11 @@ public class SpotifySlideshow {
         // And go
         String CONNECT_LOCAL = "local";
         String connect = tecl().str("/spotify/connect", CONNECT_LOCAL);
-
-        spotify = CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi();
-        spotify .currentlyPlayingCallback(song -> updateCurrentlyPlaying(song))
-                .nextUpCallback(songs -> updateNextUp(songs))
-                .coverArtCallback(url -> generateAndUpdateImage(url));
-        spotify.connect();
+        (CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi())
+                .currentlyPlayingCallback(this::updateCurrentlyPlaying)
+                .nextUpCallback(this::updateNextUp)
+                .coverArtCallback(this::generateAndUpdateImage)
+                .connect();
     }
 
     private void updateScreenOnKeypress(KeyEvent e) {
@@ -127,10 +126,6 @@ public class SpotifySlideshow {
             updateScreenSong();
             updateScreenNextUp();
         }
-    }
-
-    private Font font(TECL tecl, int defaultSize) {
-        return new Font(tecl.str("font", "Arial"), Font.PLAIN, tecl.integer("fontSize", defaultSize));
     }
 
     private void updateCurrentlyPlaying(Song song) {
@@ -247,22 +242,6 @@ public class SpotifySlideshow {
         }
     }
 
-    private static String text(TECL tecl, String dance) {
-        return tecl.grp(DANCES).str("id", dance, "text", dance);
-    }
-
-    private List<String> dances(TECL tecl, String trackId) {
-        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
-        return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
-    }
-
-    private String logline(Song song, String dance) {
-        dance = (dance == null ? "" : dance);
-        dance = (dance + "                    ").substring(0, 20);
-        String artist = (song.artist().isBlank() ? "" : song.artist() + " - ");
-        return "    | " + song.id() + " | " + dance + " | # " + artist + song.name() + " / https://open.spotify.com/track/" + song.id();
-    }
-
     private ImageIcon readAndResizeImageFilling(URL url) {
         BufferedImage image = read(url);
         BufferedImage resizedImage = ImageUtil.resizeFilling(image, sFrame.getSize());
@@ -290,11 +269,31 @@ public class SpotifySlideshow {
             TECL tecl = TECL.parser().findAndParse();
             if (tecl == null) {
                 tecl = new TECL("notfound");
-                tecl.populateConvertFunctions();
+                tecl.populateConvertFunctions(); // TBEERNOT can we remove this?
             }
             return tecl;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Font font(TECL tecl, int defaultSize) {
+        return new Font(tecl.str("font", "Arial"), Font.PLAIN, tecl.integer("fontSize", defaultSize));
+    }
+
+    private static String text(TECL tecl, String dance) {
+        return tecl.grp(DANCES).str("id", dance, "text", dance);
+    }
+
+    private List<String> dances(TECL tecl, String trackId) {
+        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
+        return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
+    }
+
+    private String logline(Song song, String dance) {
+        dance = (dance == null ? "" : dance);
+        dance = (dance + "                    ").substring(0, 20);
+        String artist = (song.artist().isBlank() ? "" : song.artist() + " - ");
+        return "    | " + song.id() + " | " + dance + " | # " + artist + song.name() + " / https://open.spotify.com/track/" + song.id();
     }
 }

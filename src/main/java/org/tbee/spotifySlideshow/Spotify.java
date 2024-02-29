@@ -4,9 +4,28 @@ import java.net.URL;
 import java.util.List;
 import java.util.function.Consumer;
 
-public interface Spotify {
-    void connect();
-    Spotify currentlyPlayingCallback(Consumer<Song> currentlyPlayingCallback);
-    Spotify nextUpCallback(Consumer<List<Song>> nextUpCallback);
-    Spotify coverArtCallback(Consumer<URL> coverArtCallback);
+public abstract class Spotify {
+
+    abstract Spotify  connect();
+
+    protected Consumer<Song> currentlyPlayingCallback = song -> {};
+    protected Consumer<List<Song>> nextUpCallback = songs -> {};
+    protected Consumer<URL> coverArtCallback = url -> {};
+
+    protected Song currentPlayingSong = null;
+
+    public Spotify currentlyPlayingCallback(Consumer<Song> currentlyPlayingCallback) {
+        this.currentlyPlayingCallback = currentlyPlayingCallback;
+        return this;
+    }
+
+    public Spotify nextUpCallback(Consumer<List<Song>> nextUpCallback) {
+        this.nextUpCallback = nextUpCallback;
+        return this;
+    }
+
+    public Spotify coverArtCallback(Consumer<URL> coverArtCallback) {
+        this.coverArtCallback = coverArtCallback;
+        return this;
+    }
 }

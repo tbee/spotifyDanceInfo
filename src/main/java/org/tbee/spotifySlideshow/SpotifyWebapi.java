@@ -21,34 +21,14 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
-public class SpotifyWebapi implements Spotify {
+public class SpotifyWebapi extends Spotify {
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
-    private Consumer<Song> currentlyPlayingCallback = song -> {};
-    private Consumer<List<Song>> nextUpCallback = songs -> {};
-    private Consumer<URL> coverArtCallback = url -> {};
-
     private SpotifyApi spotifyApi = null;
-    private Song currentPlayingSong = null;
 
-
-    public SpotifyWebapi currentlyPlayingCallback(Consumer<Song> currentlyPlayingCallback) {
-        this.currentlyPlayingCallback = currentlyPlayingCallback;
-        return this;
-    }
-    public SpotifyWebapi nextUpCallback(Consumer<List<Song>> nextUpCallback) {
-        this.nextUpCallback = nextUpCallback;
-        return this;
-    }
-    public SpotifyWebapi coverArtCallback(Consumer<URL> coverArtCallback) {
-        this.coverArtCallback = coverArtCallback;
-        return this;
-    }
-
-    public void connect() {
+    public Spotify connect() {
         try {
             TECL tecl = SpotifySlideshow.tecl();
             TECL webapiTecl = tecl.grp("/spotify/webapi");
@@ -99,6 +79,8 @@ public class SpotifyWebapi implements Spotify {
 
             // Start polling
             scheduledExecutorService.scheduleAtFixedRate(this::pollCurrentlyPlaying, 0, 3, TimeUnit.SECONDS);
+
+            return this;
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Sportify webapi", e);
@@ -108,10 +90,7 @@ public class SpotifyWebapi implements Spotify {
 
     public void pollCurrentlyPlaying() {
         spotifyApi.getUsersCurrentlyPlayingTrack().build().executeAsync()
-                .exceptionally(t -> {
-                    t.printStackTrace();
-                    return null;
-                })
+                .exceptionally(this::logException)
                 .thenAccept(currentlyPlaying -> {
                     boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
                     Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
@@ -129,18 +108,15 @@ public class SpotifyWebapi implements Spotify {
                         nextUpCallback.accept(List.of());
                     }
                     else {
-                        scheduledExecutorService.schedule(() -> pollCovertArt(song.id()), 0, TimeUnit.SECONDS);
-                        scheduledExecutorService.schedule(this::pollNextUp, 0, TimeUnit.SECONDS);
+                        pollCovertArt(song.id());
+                        pollNextUp();
                     }
                 });
     }
 
     public void pollNextUp() {
         spotifyApi.getTheUsersQueue().build().executeAsync()
-                .exceptionally(t -> {
-                    t.printStackTrace();
-                    return null;
-                })
+                .exceptionally(this::logException)
                 .thenAccept(playbackQueue -> {
                     List<Song> songs = new ArrayList<>();
                     for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
@@ -154,10 +130,7 @@ public class SpotifyWebapi implements Spotify {
 
     public void pollCovertArt(String id) {
         spotifyApi.getTrack(id).build().executeAsync()
-                .exceptionally(t -> {
-                    t.printStackTrace();
-                    return null;
-                })
+                .exceptionally(this::logException)
                 .thenAccept(track -> {
                     try {
                         Image[] images = track.getAlbum().getImages();
@@ -167,5 +140,10 @@ public class SpotifyWebapi implements Spotify {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    private <T> T logException(Throwable t) {
+        t.printStackTrace();
+        return null;
     }
 }
