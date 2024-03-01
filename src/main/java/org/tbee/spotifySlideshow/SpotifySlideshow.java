@@ -186,7 +186,7 @@ public class SpotifySlideshow {
                     }
                     logline = logline(song, dance);
 
-                    if (tecl.bool("copySongLoglineToClipboard", false)) {
+                    if (tecl.bool("copyTrackLoglineToClipboard", false)) {
                         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
                     }
                 }
@@ -224,10 +224,12 @@ public class SpotifySlideshow {
                 String trackId = nextSong.id();
                 text.append("<br><br>")
                     .append((nextSong.artist() + " " + nextSong.name()).trim());
-                dances(tecl, trackId).forEach(dance -> {
-                    text.append("<br>")
-                        .append(text(tecl, dance));
-                });
+                dances(tecl, trackId).stream()
+                    .filter(dance -> dance != null && !dance.isBlank())
+                    .forEach(dance -> {
+                        text.append("<br>")
+                            .append(text(tecl, dance));
+                    });
             });
 
             // Update screen
@@ -285,7 +287,7 @@ public class SpotifySlideshow {
     }
 
     private List<String> dances(TECL tecl, String trackId) {
-        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "undefined");
+        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "");
         return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
     }
 

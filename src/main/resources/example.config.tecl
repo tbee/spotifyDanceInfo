@@ -2,10 +2,10 @@
 
 # Windows: move slideshow to other monitor using Shift+Win+<arrow> keys.
 
-copySongLoglineToClipboard: true
+copyTrackLoglineToClipboard: false
 
 spotify {
-    connect: webapi # local or webapi
+    connect: local # local or webapi
 
     # Use the Spotify manual to create an app, and copy the clientId and clientSecret here.
     # Make sure to set the same redirect URL as configured below.
@@ -30,27 +30,29 @@ screen {
     }
 }
 
-# When using covert art the images are not used
 dances {
-    | id             | text                  |
-    | slowwalz       | "Slow Walz"           |
-    | tango          | "Tango"               |
-    | quickstep      | "Quickstep"           |
-    | slowfox        | "Slow Foxtrot"        |
-    | vienneswalz    | "Viennes Walz"        |
-    | rumba          | "Rumba"               |
-    | chacha         | "CHA CHA CHA"         |
-    | samba          | "Samba"               |
-    | jive           | "Jive"                |
-    | pasodoble      | "Paso Doble"          |
-    | salsa          | "Salsa"               |
-    | wcs            | "West Coast Swing"    |
-    | tangoargentine | "Tango Argentine"     |
+    | id  | text                  |
+    | sw  | "Slow Walz"           |
+    | ta  | "Tango"               |
+    | qs  | "Quick step"          |
+    | sf  | "Slow Foxtrot"        |
+    | vw  | "Viennes Walz"        |
+    | ru  | "Rumba"               |
+    | cc  | "CHA CHA CHA"         |
+    | sa  | "sa"                  |
+    | ji  | "Jive"                |
+    | pd  | "Paso Doble"          |
+    | sal | "Salsa"               |
+    | wcs | "West Coast Swing"    |
+    | taa | "ta Argentine"        |
 }
 
-# To listen to the song use https://open.spotify.com/song/{trackId}
 tracks {
-    | id                     | dance                |
-    | 5k1KFuEwm1qUpLuWlT2G5P | slowfox              | # Michael Buble - Me And My Shadow
-    | 2iXBZ32Fz5VDCLeE0JIdX5 | chacha,wcs           | # Leona Lewis - Better in Time
+    | id                     | dance             |
+    | 7AslBsiVLQAGrmFmi79ZeK | ru                | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
+    | 2Br0Vp8EgpFcOVWc0NL5yt | cc                | # Swing Supreme / https://open.spotify.com/track/2Br0Vp8EgpFcOVWc0NL5yt
+    | 0OBwxFLu6Yj61s2OagYbgY |                   | # Gimme All Your Lovin' / https://open.spotify.com/track/0OBwxFLu6Yj61s2OagYbgY
+    | 11dAtktxQQzipxuLqljEfY | sf,cc             | # Baby, What a Big Surprise - Edit / https://open.spotify.com/track/11dAtktxQQzipxuLqljEfY
+    | 4qjrCkcVbsYlitCqbBkeKe | ru,sf             | # Colors Of The Wind - End Title / https://open.spotify.com/track/4qjrCkcVbsYlitCqbBkeKe
+    | 6s8nHXTJVqFjXE4yVZPDHR | "Cha Cha"         | # Troublemaker (feat. Flo Rida) / https://open.spotify.com/track/6s8nHXTJVqFjXE4yVZPDHR
 }
