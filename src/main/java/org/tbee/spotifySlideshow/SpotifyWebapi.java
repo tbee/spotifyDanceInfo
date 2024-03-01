@@ -93,6 +93,7 @@ public class SpotifyWebapi extends Spotify {
                 .exceptionally(this::logException)
                 .thenAccept(currentlyPlaying -> {
                     boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
+                    // TODO: get artist name
                     Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
 
                     boolean songChanged = !Objects.equals(this.currentPlayingSong, song);
@@ -101,7 +102,6 @@ public class SpotifyWebapi extends Spotify {
                     }
                     currentPlayingSong = song;
 
-                    System.out.println("callback");
                     currentlyPlayingCallback.accept(song);
                     if (song == null) {
                         coverArtCallback.accept(null);
@@ -144,6 +144,17 @@ public class SpotifyWebapi extends Spotify {
 
     private <T> T logException(Throwable t) {
         t.printStackTrace();
+        if (t.getMessage().contains("The access token expired")) {
+            try {
+                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+                String accessToken = authorizationCodeCredentials.getAccessToken();
+                spotifyApi.setAccessToken(accessToken);
+                System.out.println("accessToken renewed " + accessToken);
+
+            } catch (IOException | SpotifyWebApiException | ParseException e) {
+                e.printStackTrace();
+            }
+        }
         return null;
     }
 }

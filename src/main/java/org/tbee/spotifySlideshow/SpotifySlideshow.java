@@ -72,16 +72,16 @@ public class SpotifySlideshow {
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
-                Font songFont = font(tecl.grp("/screen/songText"), 80);
-                System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
+                Font songTecl = font(tecl.grp("/screen/song"), 80);
+                System.out.println("Using songFont "+ songTecl.getFontName() + " " + songTecl.getSize());
                 sTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
                         .hAlign(HAlign.LEFT)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
-                        .font(songFont);
+                        .font(songTecl);
 
-                Font nextFont = font(tecl.grp("/screen/nextText"), 40);
+                Font nextFont = font(tecl.grp("/screen/next"), 40);
                 System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
                 sNextTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
@@ -99,7 +99,7 @@ public class SpotifySlideshow {
                         .title("Spotify Slideshow")
                         .iconImage(read(getClass().getResource("/icon.png")))
                         .onKeyTyped(this::updateScreenOnKeypress)
-                        .onPropertyChange("graphicsConfiguration", e -> updateScreenSong())
+                        .onPropertyChange("graphicsConfiguration", e -> updateCurrentlyPlaying())
                         .visible(true);
             });
         }
@@ -123,21 +123,9 @@ public class SpotifySlideshow {
 
     private void updateScreenOnKeypress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
-            updateScreenSong();
-            updateScreenNextUp();
+            updateCurrentlyPlaying();
+            updateNextUp();
         }
-    }
-
-    private void updateCurrentlyPlaying(Song song) {
-        this.song = song;
-        updateScreenSong();
-        this.nextUpSongs = List.of();
-        updateScreenNextUp();
-    }
-
-    private void updateNextUp(List<Song> songs) {
-        this.nextUpSongs = songs;
-        updateScreenNextUp();
     }
 
     private void generateAndUpdateImage(URL url) {
@@ -166,7 +154,12 @@ public class SpotifySlideshow {
         this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
     }
 
-    private void updateScreenSong() {
+    private void updateCurrentlyPlaying(Song song) {
+        this.song = song;
+        updateCurrentlyPlaying();
+    }
+
+    private void updateCurrentlyPlaying() {
 
         try {
             TECL tecl = tecl();
@@ -211,25 +204,31 @@ public class SpotifySlideshow {
         }
     }
 
-    private void updateScreenNextUp() {
+    private void updateNextUp(List<Song> songs) {
+        this.nextUpSongs = songs;
+        updateNextUp();
+    }
+
+    private void updateNextUp() {
 
         try {
             TECL tecl = tecl();
 
+            int count = tecl.integer("/screen/nextUp/count", 3);
+            List<Song> songs = nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count));
+
             // Determine text
             StringBuilder text = new StringBuilder();
-            Song nextSong = (nextUpSongs.isEmpty() ? null : nextUpSongs.get(0));
-            if (nextSong != null) {
+            text.append("Next up:");
+            songs.forEach(nextSong -> {
                 String trackId = nextSong.id();
-                List<String> dances = dances(tecl, trackId);
-                String dance = dances.getFirst();
-                text.append("Next:")
-                    .append(" ")
-                    .append((nextSong.artist() + " " + nextSong.name()).trim())
-                    .append("<br>")
-                    .append(text(tecl, dance));
-                //System.out.println(logline(nextSong, dance));
-            }
+                text.append("<br><br>")
+                    .append((nextSong.artist() + " " + nextSong.name()).trim());
+                dances(tecl, trackId).forEach(dance -> {
+                    text.append("<br>")
+                        .append(text(tecl, dance));
+                });
+            });
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
@@ -278,7 +277,7 @@ public class SpotifySlideshow {
     }
 
     private Font font(TECL tecl, int defaultSize) {
-        return new Font(tecl.str("font", "Arial"), Font.PLAIN, tecl.integer("fontSize", defaultSize));
+        return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
     }
 
     private static String text(TECL tecl, String dance) {

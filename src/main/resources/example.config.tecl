@@ -19,11 +19,12 @@ spotify {
 }
 
 screen {
-    songText {
-        # font: Verdana
+    song {
+        # font: Calibri
         # fontSize: 80
     }
-    nextText {
+    nextUp {
+        count: 3
         # font: Calibri
         # fontSize: 10
     }
