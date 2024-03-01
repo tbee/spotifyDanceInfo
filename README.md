@@ -31,6 +31,6 @@ But `...\java -jar SpotifySlideshow.jar` from the command line in the folder whe
 If there is no config.tecl, the application connects in local mode to spotify and just lists the currently playing song.
 
 ## Support
-There is no formal support for Sway: this library is an open source hobby project and no claims can be made.
+There is no formal support for this application: this library is an open source hobby project and no claims can be made.
 Asking for help is always an option. But so is participating, creating pull requests, and other ways of contributing.
 
