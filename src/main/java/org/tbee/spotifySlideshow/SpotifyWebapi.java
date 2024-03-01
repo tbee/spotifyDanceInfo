@@ -143,17 +143,18 @@ public class SpotifyWebapi extends Spotify {
     }
 
     private <T> T logException(Throwable t) {
-        t.printStackTrace();
         if (t.getMessage().contains("The access token expired")) {
             try {
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
                 String accessToken = authorizationCodeCredentials.getAccessToken();
                 spotifyApi.setAccessToken(accessToken);
                 System.out.println("accessToken renewed " + accessToken);
-
             } catch (IOException | SpotifyWebApiException | ParseException e) {
                 e.printStackTrace();
             }
+        }
+        else {
+            t.printStackTrace();
         }
         return null;
     }
