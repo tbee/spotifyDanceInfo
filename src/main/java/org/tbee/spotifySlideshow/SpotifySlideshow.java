@@ -171,24 +171,21 @@ public class SpotifySlideshow {
                 logline = "Nothing is playing";
             }
             else {
-                // Get song data
-                {
-                    String trackId = song.id();
-                    List<String> dances = dances(tecl, trackId);
-                    String dance = dances.getFirst();
-                    text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
-                        .append(song.name())
-                        .append("<br><hr>")
-                        .append(text(tecl, dance));
-                    for (String otherDance : dances.subList(1, dances.size())) {
-                        String otherText = text(tecl, otherDance);
-                        text.append(otherText.isBlank() ? "" : "<br>" + otherText);
-                    }
-                    logline = logline(song, dance);
+                String trackId = song.id();
+                List<String> dances = dances(tecl, trackId);
+                String dance = dances.getFirst();
+                text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
+                    .append(song.name())
+                    .append("<br><hr>")
+                    .append(text(tecl, dance));
+                for (String otherDance : dances.subList(1, dances.size())) {
+                    String otherText = text(tecl, otherDance);
+                    text.append(otherText.isBlank() ? "" : "<br>" + otherText);
+                }
+                logline = logline(song, dance);
 
-                    if (tecl.bool("copyTrackLoglineToClipboard", false)) {
-                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
-                    }
+                if (tecl.bool("copyTrackLoglineToClipboard", false)) {
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
                 }
             }
             System.out.println(logline);
@@ -219,11 +216,11 @@ public class SpotifySlideshow {
 
             // Determine text
             StringBuilder text = new StringBuilder();
-            text.append("Next up:");
             songs.forEach(nextSong -> {
                 String trackId = nextSong.id();
                 text.append("<br><br>")
-                    .append((nextSong.artist() + " " + nextSong.name()).trim());
+                    .append(nextSong.artist().isBlank() ? "" : nextSong.artist() + " - ")
+                    .append(nextSong.name());
                 dances(tecl, trackId).stream()
                     .filter(dance -> dance != null && !dance.isBlank())
                     .forEach(dance -> {
@@ -234,7 +231,7 @@ public class SpotifySlideshow {
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                sNextTextLabel.setText("<html><body><div style=\"text-align:right;\">" + text.toString() + "</div></body></html>");
+                sNextTextLabel.setText("<html><body><div style=\"text-align:right;\">" + (text.isEmpty() ? "" : "Next up:") + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {

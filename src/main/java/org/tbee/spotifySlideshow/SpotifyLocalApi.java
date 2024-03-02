@@ -11,6 +11,8 @@ public class SpotifyLocalApi extends Spotify {
 
     private SpotifyAPI spotifyLocalApi;
 
+    protected Song lastPlayingSong = null;
+
     public Spotify connect() {
         URL waitingImageUrl = getClass().getResource("/waiting.jpg");
         URL undefinedImageUrl = getClass().getResource("/undefined.jpg");
@@ -23,8 +25,8 @@ public class SpotifyLocalApi extends Spotify {
 
             @Override
             public void onTrackChanged(Track track) {
-                currentPlayingSong = new Song(track.getId(), track.getArtist(), track.getName());
-                currentlyPlayingCallback.accept(currentPlayingSong);
+                lastPlayingSong = new Song(track.getId(), track.getArtist(), track.getName());
+                currentlyPlayingCallback.accept(lastPlayingSong);
 
                 coverArtCallback.accept(undefinedImageUrl);
             }
@@ -34,7 +36,7 @@ public class SpotifyLocalApi extends Spotify {
 
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
-                currentlyPlayingCallback.accept(!isPlaying ? null : currentPlayingSong);
+                currentlyPlayingCallback.accept(!isPlaying ? null : lastPlayingSong);
                 coverArtCallback.accept(!isPlaying ? waitingImageUrl : undefinedImageUrl);
             }
 
