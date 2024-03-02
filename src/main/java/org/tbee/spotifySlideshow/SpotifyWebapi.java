@@ -34,16 +34,15 @@ public class SpotifyWebapi extends Spotify {
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
 
-    private void nextUp(List<Song> nextUp) {
-        this.nextUp = nextUp;
-        nextUpCallback.accept(nextUp);
-    }
-
-    private void currentlyPlayingSong(Song song) {
+    private void currentlyPlaying(Song song) {
         currentlyPlaying = song;
         currentlyPlayingCallback.accept(song);
     }
 
+    private void nextUp(List<Song> nextUp) {
+        this.nextUp = nextUp;
+        nextUpCallback.accept(nextUp);
+    }
 
     public Spotify connect() {
         try {
@@ -107,29 +106,31 @@ public class SpotifyWebapi extends Spotify {
     public void pollCurrentlyPlaying() {
         spotifyApi.getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(this::logException)
-                .thenAccept(currentlyPlaying -> {
-                    boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
-                    Song song = (!playing ? null : new Song(currentlyPlaying.getItem().getId(), "", currentlyPlaying.getItem().getName()));
+                .thenAccept(track -> {
+                    synchronized (SpotifyWebapi.this) {
 
-                    // The artist changes afterward, so we cannot do an equals on the songs
-                    String currentlyPlayingId = this.currentlyPlaying == null ? "" : this.currentlyPlaying.id();
-                    String songId = song == null ? "" : song.id();
-                    boolean songChanged = !Objects.equals(currentlyPlayingId, songId);
-                    if (!songChanged) {
-                        return;
-                    }
+                        boolean playing = (track != null && track.getIs_playing());
+                        Song song = (!playing ? null : new Song(track.getItem().getId(), "", track.getItem().getName()));
 
-                    currentlyPlayingSong(song);
+                        // The artist changes afterward, so we cannot do an equals on the songs
+                        String currentlyPlayingId = currentlyPlaying == null ? "" : currentlyPlaying.id();
+                        String songId = song == null ? "" : song.id();
+                        boolean songChanged = !Objects.equals(currentlyPlayingId, songId);
+                        if (!songChanged) {
+                            return;
+                        }
 
-                    if (song == null) {
-                        coverArtCallback.accept(null);
-                        nextUp(List.of());
-                    }
-                    else {
-                        String id = song.id();
-                        pollCovertArt(id);
-                        pollNextUp(id);
-                        pollArtist(id, track -> updateCurrentlyPlayingArtist(id, track));
+                        currentlyPlaying(song);
+
+                        if (song == null) {
+                            coverArtCallback.accept(null);
+                            nextUp(List.of());
+                        } else {
+                            String id = song.id();
+                            pollCovertArt(id);
+                            pollNextUp(id);
+                            pollArtist(id, t -> updateCurrentlyPlayingArtist(id, t));
+                        }
                     }
                 });
     }
@@ -148,7 +149,7 @@ public class SpotifyWebapi extends Spotify {
             }
             String name = artists[0].getName();
             Song song = currentlyPlaying.withArtist(name);
-            currentlyPlayingSong(song);
+            currentlyPlaying(song);
         });
     }
 
@@ -165,7 +166,7 @@ public class SpotifyWebapi extends Spotify {
                         nextUp(songs);
 
                         // Update artist
-                        songs.forEach(song -> pollArtist(song.id(), track -> updateNextUpArtist(song.id(), track)));
+                        songs.forEach(song -> pollArtist(song.id(), t -> updateNextUpArtist(song.id(), t)));
                     });
                 });
     }
@@ -177,7 +178,7 @@ public class SpotifyWebapi extends Spotify {
         }
         String name = artists[0].getName();
 
-        synchronized (this) {
+        synchronized (SpotifyWebapi.this) {
             nextUp.stream()
                     .filter(s -> s.id().equals(id))
                     .forEach(s -> {
@@ -223,7 +224,7 @@ public class SpotifyWebapi extends Spotify {
     }
 
     protected void ifSongIsStillPlaying(String id, Runnable runnable) {
-        synchronized (this) {
+        synchronized (SpotifyWebapi.this) {
             if (currentlyPlaying != null && currentlyPlaying.id().equals(id)) {
                 runnable.run();
             }
