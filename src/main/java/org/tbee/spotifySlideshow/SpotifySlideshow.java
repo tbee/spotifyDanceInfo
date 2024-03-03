@@ -9,7 +9,6 @@ import org.tbee.sway.support.VAlign;
 import org.tbee.tecl.TECL;
 
 import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -81,7 +80,7 @@ public class SpotifySlideshow {
                 sTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
                         .hAlign(HAlign.LEFT)
-                        .border(BorderFactory.createEmptyBorder(10, 10, 0, 0))
+                        .margin(10, 10, 0, 0)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(songTecl);
@@ -91,7 +90,7 @@ public class SpotifySlideshow {
                 sNextTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
                         .hAlign(HAlign.RIGHT)
-                        .border(BorderFactory.createEmptyBorder(0, 0, 10, 10))
+                        .margin(0, 0, 10, 10)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(nextFont);
