@@ -4,8 +4,14 @@ import org.tbee.sway.SLabel;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.List;
 
 public class ShadowLabel extends SLabel {
+
+    public static final List<offset> OFFSETS = List.of(
+            new offset(3, 2), new offset(-3, 2), new offset(3, -2), new offset(-3, -2),
+            new offset(3, 0), new offset(-3, 0),
+            new offset(0, 2), new offset(0, -2));
 
     public ShadowLabel() {
         super();
@@ -18,13 +24,18 @@ public class ShadowLabel extends SLabel {
 
         setForeground(background);
         setBackground(foreground);
-        super.paintComponent(g);
+        OFFSETS.forEach(o -> {
+            g.translate(o.x, o.y);
+            super.paintComponent(g);
+            g.translate(-1 * o.x, -1 * o.y);
+        });
 
         setForeground(foreground);
         setBackground(background);
-        g.translate(-3, -2);
         super.paintComponent(g);
     }
+
+    record offset(int x, int y) {}
 
     static public ShadowLabel of() {
         return new ShadowLabel();

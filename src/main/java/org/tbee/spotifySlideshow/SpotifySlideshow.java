@@ -9,6 +9,7 @@ import org.tbee.sway.support.VAlign;
 import org.tbee.tecl.TECL;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -33,8 +34,11 @@ public class SpotifySlideshow {
 
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
-    public final URL waitingImageUrl;
-    public final URL undefinedImageUrl;
+
+    private final URL waitingImageUrl;
+    private final URL undefinedImageUrl;
+
+    private TECL tecl;
 
     // API
     private Spotify spotify;
@@ -77,6 +81,7 @@ public class SpotifySlideshow {
                 sTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
                         .hAlign(HAlign.LEFT)
+                        .border(BorderFactory.createEmptyBorder(10, 10, 0, 0))
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(songTecl);
@@ -86,6 +91,7 @@ public class SpotifySlideshow {
                 sNextTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
                         .hAlign(HAlign.RIGHT)
+                        .border(BorderFactory.createEmptyBorder(0, 0, 10, 10))
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
                         .font(nextFont);
@@ -114,7 +120,7 @@ public class SpotifySlideshow {
         // And go
         String CONNECT_LOCAL = "local";
         String connect = tecl().str("/spotify/connect", CONNECT_LOCAL);
-        (CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi())
+        (CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi(tecl))
                 .currentlyPlayingCallback(this::updateCurrentlyPlaying)
                 .nextUpCallback(this::updateNextUp)
                 .coverArtCallback(this::generateAndUpdateImage)
@@ -123,6 +129,7 @@ public class SpotifySlideshow {
 
     private void updateScreenOnKeypress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
+            tecl = null; // force reload
             updateCurrentlyPlaying();
             updateNextUp();
         }
@@ -262,7 +269,11 @@ public class SpotifySlideshow {
         }
     }
 
-    public static TECL tecl() {
+    public TECL tecl() {
+        if (tecl != null) {
+            return tecl;
+        }
+
         try {
             TECL tecl = TECL.parser().findAndParse();
             if (tecl == null) {

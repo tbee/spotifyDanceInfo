@@ -31,10 +31,16 @@ public class SpotifyWebapi extends Spotify {
     public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
+    private final TECL tecl;
+
     private SpotifyApi spotifyApi = null;
 
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
+
+    public SpotifyWebapi(TECL tecl) {
+        this.tecl = tecl;
+    }
 
     private void currentlyPlaying(Song song) {
         currentlyPlaying = song;
@@ -48,7 +54,6 @@ public class SpotifyWebapi extends Spotify {
 
     public Spotify connect() {
         try {
-            TECL tecl = SpotifySlideshow.tecl();
             TECL webapiTecl = tecl.grp("/spotify/webapi");
 
             // Setup the API
@@ -61,7 +66,6 @@ public class SpotifyWebapi extends Spotify {
                     .build();
 
             // Do we have tokens stored or need to fetch them?
-            String accessToken;
             String refreshToken = webapiTecl.str("refreshToken", "");
             if (!refreshToken.isBlank()) {
                 spotifyApi.setRefreshToken(refreshToken);
@@ -228,7 +232,7 @@ public class SpotifyWebapi extends Spotify {
 
         Integer expiresIn = authorizationCodeCredentials.getExpiresIn();
         scheduledExecutorService.schedule(this::refreshAccessToken, expiresIn - EXPIRE_MARGIN, TimeUnit.SECONDS);
-        System.out.println("accessToken expires in " + expiresIn + " seconds (" + LocalDateTime.now().plusSeconds(expiresIn).withNano(0) + ")");
+        System.out.println("new accessToken, expires in " + expiresIn + " seconds (" + LocalDateTime.now().plusSeconds(expiresIn).withNano(0) + ")");
     }
 
     protected void ifSongIsStillPlaying(String id, Runnable runnable) {
