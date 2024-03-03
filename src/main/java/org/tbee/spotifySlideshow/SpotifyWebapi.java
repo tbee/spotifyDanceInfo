@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +28,7 @@ import java.util.function.Consumer;
 
 public class SpotifyWebapi extends Spotify {
 
+    public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     private SpotifyApi spotifyApi = null;
@@ -63,8 +65,9 @@ public class SpotifyWebapi extends Spotify {
             String refreshToken = webapiTecl.str("refreshToken", "");
             if (!refreshToken.isBlank()) {
                 spotifyApi.setRefreshToken(refreshToken);
+
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
-                accessToken = authorizationCodeCredentials.getAccessToken();
+                setAccessToken(authorizationCodeCredentials);
             }
             else {
 
@@ -85,12 +88,10 @@ public class SpotifyWebapi extends Spotify {
                 }
 
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-                accessToken = authorizationCodeCredentials.getAccessToken();
-                System.out.println("accessToken " + accessToken);
                 refreshToken = authorizationCodeCredentials.getRefreshToken();
                 System.out.println("refreshToken " + refreshToken);
+                setAccessToken(authorizationCodeCredentials);
             }
-            spotifyApi.setAccessToken(accessToken);
             spotifyApi.setRefreshToken(refreshToken);
 
             // Start polling
@@ -207,20 +208,27 @@ public class SpotifyWebapi extends Spotify {
     }
 
     private <T> T logException(Throwable t) {
-        if (t.getMessage().contains("The access token expired")) {
-            try {
-                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
-                String accessToken = authorizationCodeCredentials.getAccessToken();
-                spotifyApi.setAccessToken(accessToken);
-                System.out.println("accessToken renewed " + accessToken);
-            } catch (IOException | SpotifyWebApiException | ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        else {
-            t.printStackTrace();
-        }
+        t.printStackTrace();
         return null;
+    }
+
+    private void refreshAccessToken() {
+        try {
+            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+            setAccessToken(authorizationCodeCredentials);
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            logException(e);
+        }
+    }
+
+    private void setAccessToken(AuthorizationCodeCredentials authorizationCodeCredentials) {
+        String accessToken = authorizationCodeCredentials.getAccessToken();
+        spotifyApi.setAccessToken(accessToken);
+        //System.out.println("accessToken " + accessToken);
+
+        Integer expiresIn = authorizationCodeCredentials.getExpiresIn();
+        scheduledExecutorService.schedule(this::refreshAccessToken, expiresIn - EXPIRE_MARGIN, TimeUnit.SECONDS);
+        System.out.println("accessToken expires in " + expiresIn + " seconds (" + LocalDateTime.now().plusSeconds(expiresIn).withNano(0) + ")");
     }
 
     protected void ifSongIsStillPlaying(String id, Runnable runnable) {
