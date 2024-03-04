@@ -213,6 +213,12 @@ public class SpotifyWebapi extends Spotify {
 
     private <T> T logException(Throwable t) {
         t.printStackTrace();
+
+        // just in case something went wrong with scheduled refreshing
+        if (t.getMessage().contains("The access token expired")) {
+            refreshAccessToken();
+        }
+        
         return null;
     }
 
