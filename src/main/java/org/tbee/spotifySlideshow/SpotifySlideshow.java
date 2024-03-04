@@ -135,8 +135,9 @@ public class SpotifySlideshow {
     }
 
     private void generateAndUpdateImage(URL url) {
-        if (url == null) {
-            this.sImageLabel.setIcon(readAndResizeImageFilling(waitingImageUrl));
+        boolean useCoverArt = tecl().bool("/screen/useCovertArt", true);
+        if (url == null || !useCoverArt) {
+            this.sImageLabel.setIcon(readAndResizeImageFilling(undefinedImageUrl));
             return;
         }
 

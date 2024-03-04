@@ -19,6 +19,7 @@ spotify {
 }
 
 screen {
+    # useCovertArt: false
     song {
         # font: Calibri
         # fontSize: 80
