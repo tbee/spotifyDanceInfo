@@ -39,19 +39,22 @@ dances {
     | sf  | "Slow Foxtrot"        |
     | vw  | "Viennes Walz"        |
     | ru  | "Rumba"               |
-    | cc  | "CHA CHA CHA"         |
-    | sa  | "sa"                  |
+    | cc  | "Cha Cha Cha"         |
+    | sa  | "Samba"               |
     | ji  | "Jive"                |
     | pd  | "Paso Doble"          |
     | sal | "Salsa"               |
+    | bac | "Bachata"             |
+    | zou | "Zouk"                |
+    | kiz | "Kizomba"             |
     | wcs | "West Coast Swing"    |
-    | taa | "ta Argentine"        |
+    | taa | "Tango Argentine"     |
 }
 
 tracks {
     | id                     | dance                |
     | 7AslBsiVLQAGrmFmi79ZeK | ru                   | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
-    | 2Br0Vp8EgpFcOVWc0NL5yt | cc                   | # Swing Supreme / https://open.spotify.com/track/2Br0Vp8EgpFcOVWc0NL5yt
+    | 2Br0Vp8EgpFcOVWc0NL5yt | sf                   | # Swing Supreme / https://open.spotify.com/track/2Br0Vp8EgpFcOVWc0NL5yt
     | 0OBwxFLu6Yj61s2OagYbgY |                      | # Gimme All Your Lovin' / https://open.spotify.com/track/0OBwxFLu6Yj61s2OagYbgY
     | 11dAtktxQQzipxuLqljEfY | sf,cc                | # Baby, What a Big Surprise - Edit / https://open.spotify.com/track/11dAtktxQQzipxuLqljEfY
     | 4qjrCkcVbsYlitCqbBkeKe | ru,sf                | # Colors Of The Wind - End Title / https://open.spotify.com/track/4qjrCkcVbsYlitCqbBkeKe
