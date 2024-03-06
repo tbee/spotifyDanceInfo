@@ -1,8 +1,13 @@
 package org.tbee.spotifySlideshow;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
+import org.tbee.sway.SOptionPane;
 import org.tbee.sway.SStackedPanel;
 import org.tbee.sway.support.HAlign;
 import org.tbee.sway.support.VAlign;
@@ -24,10 +29,18 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SpotifySlideshow {
 
@@ -38,9 +51,7 @@ public class SpotifySlideshow {
     private final URL undefinedImageUrl;
 
     private TECL tecl;
-
-    // API
-    private Spotify spotify;
+    private Map<String, List<String>> songIdToDanceNames = Map.of();
 
     // Screen
     private SLabel sImageLabel;
@@ -269,20 +280,78 @@ public class SpotifySlideshow {
         }
     }
 
-    public TECL tecl() {
+    private TECL tecl() {
         if (tecl != null) {
             return tecl;
         }
 
         try {
-            TECL tecl = TECL.parser().findAndParse();
+            tecl = TECL.parser().findAndParse();
             if (tecl == null) {
                 tecl = new TECL("notfound");
                 tecl.populateConvertFunctions(); // TBEERNOT can we remove this?
             }
+            readMoreTracks(tecl);
             return tecl;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
+        Map<String, List<String>> songIdToDanceNames = new HashMap<>();
+
+        List<TECL> moreTracks = tecl.grps("/moreTracks");
+        for (TECL moreTrack : moreTracks) {
+            String type = moreTrack.str("type");
+            if ("TSV".equalsIgnoreCase(type)) {
+                readMoreTracksTSV(moreTrack, songIdToDanceNames);
+            }
+            else {
+                SOptionPane.ofError(sFrame, "More Tracks", "Don't understand moreTracks type '" + type + "'");
+            }
+        }
+        System.out.println(songIdToDanceNames);
+        this.songIdToDanceNames = songIdToDanceNames;
+    }
+
+    private void readMoreTracksTSV(TECL moreTrack, Map<String, List<String>> songIdToDanceNames) { // can't use the tecl() call here
+        String uri = moreTrack.str("uri");
+        System.out.println("Reading " + uri);
+        try {
+            String contents = "";
+            try (
+                HttpClient httpClient = HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.ALWAYS)
+                        .build();
+            ) {
+                HttpRequest request = HttpRequest.newBuilder(new URI(uri)).GET().build();
+                HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                contents = httpResponse.body();
+                System.out.println(contents);
+            }
+
+            CSVParser parser = new CSVParserBuilder()
+                    .withSeparator('\t')
+                    .withIgnoreQuotations(true)
+                    .build();
+            try (
+                CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
+                        .withSkipLines(1)
+                        .withCSVParser(parser)
+                        .build();
+            ) {
+                csvReader.forEach(line -> {
+                    String id = line[0];
+                    String dancesText = line[1];
+                    List<String> dances = dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
+                    songIdToDanceNames.put(id, dances);
+                });
+            }
+        } catch (URISyntaxException | IOException | InterruptedException e) {
+            e.printStackTrace();
+            SOptionPane.ofError(sFrame, "More Tracks", e.getMessage());
+            return;
         }
     }
 
@@ -296,7 +365,12 @@ public class SpotifySlideshow {
 
     private List<String> dances(TECL tecl, String trackId) {
         String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "");
-        return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
+        if (!danceConfig.isBlank()) {
+            return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
+        }
+
+        List<String> dances = songIdToDanceNames.get(trackId);
+        return dances == null ? List.of("") : dances;
     }
 
     private String logline(Song song, String dance) {

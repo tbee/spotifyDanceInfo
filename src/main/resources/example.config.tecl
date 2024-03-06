@@ -48,6 +48,11 @@ dances {
     | taa | "ta Argentine"        |
 }
 
+moreTracks {
+    | type | uri                                                                                                                                              |
+    | TSV  | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
+}
+
 tracks {
     | id                     | dance                |
     | 7AslBsiVLQAGrmFmi79ZeK | ru                   | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
