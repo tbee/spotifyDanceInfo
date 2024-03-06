@@ -51,11 +51,6 @@ dances {
     | taa | "Tango Argentine"     |
 }
 
-moreTracks {
-    | type | uri                                                                                                                                              |
-    | TSV  | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
-}
-
 tracks {
     | id                     | dance                |
     | 7AslBsiVLQAGrmFmi79ZeK | ru                   | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
@@ -64,4 +59,12 @@ tracks {
     | 11dAtktxQQzipxuLqljEfY | sf,cc                | # Baby, What a Big Surprise - Edit / https://open.spotify.com/track/11dAtktxQQzipxuLqljEfY
     | 4qjrCkcVbsYlitCqbBkeKe | ru,sf                | # Colors Of The Wind - End Title / https://open.spotify.com/track/4qjrCkcVbsYlitCqbBkeKe
     | 6s8nHXTJVqFjXE4yVZPDHR | "Cha Cha"            | # Troublemaker (feat. Flo Rida) / https://open.spotify.com/track/6s8nHXTJVqFjXE4yVZPDHR
+}
+
+# moreTracks includes sources that also contain track mappings, so id and dance, like in the tracks table above.
+# For type the following values are supported:
+# - TSV (tab separated values, because the dance field may contain comma separated dances).
+moreTracks {
+    | type | idIdx | danceIdx | uri                                                                                                                                              |
+    | TSV  | 0     | 1        | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
 }

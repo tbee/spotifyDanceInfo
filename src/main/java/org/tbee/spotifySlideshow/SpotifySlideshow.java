@@ -301,24 +301,27 @@ public class SpotifySlideshow {
     private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
         Map<String, List<String>> songIdToDanceNames = new HashMap<>();
 
-        List<TECL> moreTracks = tecl.grps("/moreTracks");
-        for (TECL moreTrack : moreTracks) {
-            String type = moreTrack.str("type");
+        // Loop over the moreTrack configurations
+        tecl.grps("/moreTracks").forEach(moreTrackTecl -> {
+            String type = moreTrackTecl.str("type", "");
             if ("TSV".equalsIgnoreCase(type)) {
-                readMoreTracksTSV(moreTrack, songIdToDanceNames);
+                readMoreTracksTSV(moreTrackTecl, songIdToDanceNames);
             }
             else {
                 SOptionPane.ofError(sFrame, "More Tracks", "Don't understand moreTracks type '" + type + "'");
             }
-        }
-        System.out.println(songIdToDanceNames);
+        });
+
+        // Replace with new data
         this.songIdToDanceNames = songIdToDanceNames;
     }
 
-    private void readMoreTracksTSV(TECL moreTrack, Map<String, List<String>> songIdToDanceNames) { // can't use the tecl() call here
+    private void readMoreTracksTSV(TECL moreTrack, Map<String, List<String>> songIdToDanceNames) { // can't use the tecl() call here otherwise there would be an endless loop
         String uri = moreTrack.str("uri");
-        System.out.println("Reading " + uri);
+        int idIdx = moreTrack.integer("idIdx", 0);
+        int danceIdx = moreTrack.integer("danceIdx", 1);
         try {
+            // First read the URI contents
             String contents = "";
             try (
                 HttpClient httpClient = HttpClient.newBuilder()
@@ -328,25 +331,32 @@ public class SpotifySlideshow {
                 HttpRequest request = HttpRequest.newBuilder(new URI(uri)).GET().build();
                 HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 contents = httpResponse.body();
-                System.out.println(contents);
             }
 
+            // Parse the contents
             CSVParser parser = new CSVParserBuilder()
-                    .withSeparator('\t')
+                    .withSeparator('\t') // TSV
                     .withIgnoreQuotations(true)
                     .build();
             try (
                 CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
-                        .withSkipLines(1)
+                        .withSkipLines(1) // skip header
                         .withCSVParser(parser)
                         .build();
             ) {
                 csvReader.forEach(line -> {
-                    String id = line[0];
-                    String dancesText = line[1];
+
+                    // Extract id and dance
+                    String id = line[idIdx];
+                    String dancesText = line[danceIdx];
+
+                    // Possibly split on comma
                     List<String> dances = dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
+
+                    // Store
                     songIdToDanceNames.put(id, dances);
                 });
+                System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
             e.printStackTrace();
@@ -369,6 +379,7 @@ public class SpotifySlideshow {
             return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
         }
 
+        // also look in the moreTracks
         List<String> dances = songIdToDanceNames.get(trackId);
         return dances == null ? List.of("") : dances;
     }
