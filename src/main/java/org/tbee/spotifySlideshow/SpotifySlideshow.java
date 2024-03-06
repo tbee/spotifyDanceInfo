@@ -114,7 +114,7 @@ public class SpotifySlideshow {
                         .undecorated()
                         .title("Spotify Slideshow")
                         .iconImage(read(getClass().getResource("/icon.png")))
-                        .onKeyTyped(this::updateScreenOnKeypress)
+                        .onKeyTyped(this::reactToKeyPress)
                         .onPropertyChange("graphicsConfiguration", e -> updateCurrentlyPlaying())
                         .visible(true);
             });
@@ -137,11 +137,14 @@ public class SpotifySlideshow {
                 .connect();
     }
 
-    private void updateScreenOnKeypress(KeyEvent e) {
+    private void reactToKeyPress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
             tecl = null; // force reload
             updateCurrentlyPlaying();
             updateNextUp();
+        }
+        else if (e.getKeyChar() == 'q') {
+            System.exit(0);
         }
     }
 
