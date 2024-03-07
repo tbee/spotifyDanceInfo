@@ -1,4 +1,4 @@
-package org.tbee.spotifySlideshow;
+package org.tbee.spotifyDanceInfo;
 
 import de.labystudio.spotifyapi.SpotifyAPI;
 import de.labystudio.spotifyapi.SpotifyAPIFactory;

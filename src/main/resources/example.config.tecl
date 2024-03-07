@@ -1,6 +1,6 @@
 @version 1
 
-# Windows: move slideshow to other monitor using Shift+Win+<arrow> keys.
+# Windows: move window to other monitor using Shift+Win+<arrow> keys.
 
 copyTrackLoglineToClipboard: false
 

@@ -1,4 +1,4 @@
-package org.tbee.spotifySlideshow;
+package org.tbee.spotifyDanceInfo;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -42,7 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SpotifySlideshow {
+public class SpotifyDanceInfo {
 
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
@@ -70,10 +70,10 @@ public class SpotifySlideshow {
         Arrays.stream(ge.getAvailableFontFamilyNames()).forEach(f -> System.out.print(f + ", "));
         System.out.println();
 
-        new SpotifySlideshow().run();
+        new SpotifyDanceInfo().run();
     }
 
-    public SpotifySlideshow() {
+    public SpotifyDanceInfo() {
         waitingImageUrl = getClass().getResource("/waiting.jpg");
         undefinedImageUrl = getClass().getResource("/undefined.jpg");
     }
@@ -145,6 +145,13 @@ public class SpotifySlideshow {
         }
         else if (e.getKeyChar() == 'q') {
             System.exit(0);
+        }
+        else {
+            SOptionPane.ofInfo(sFrame, "Supported keys",
+                        """
+                        (q)uit
+                        (r)eload configuration
+                        """);
         }
     }
 

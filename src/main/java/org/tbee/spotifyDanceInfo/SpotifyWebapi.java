@@ -1,4 +1,4 @@
-package org.tbee.spotifySlideshow;
+package org.tbee.spotifyDanceInfo;
 
 import org.apache.hc.core5.http.ParseException;
 import org.tbee.tecl.TECL;

@@ -1,4 +1,4 @@
-package org.tbee.spotifySlideshow;
+package org.tbee.spotifyDanceInfo;
 
 public record Song(String id, String artist, String name) {
 

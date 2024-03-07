@@ -1,4 +1,4 @@
-package org.tbee.spotifySlideshow;
+package org.tbee.spotifyDanceInfo;
 
 import org.tbee.sway.SLabel;
 
