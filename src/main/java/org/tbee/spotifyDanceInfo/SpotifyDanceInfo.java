@@ -47,8 +47,13 @@ public class SpotifyDanceInfo {
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
 
-    private final URL waitingImageUrl;
-    private final URL undefinedImageUrl;
+    public static final URL WAITING_IMAGE_URL;
+    public static final URL UNDEFINED_IMAGE_URL;
+
+    static {
+        WAITING_IMAGE_URL = SpotifyDanceInfo.class.getResource("/waiting.png");
+        UNDEFINED_IMAGE_URL = SpotifyDanceInfo.class.getResource("/undefined.png");
+    }
 
     private TECL tecl;
     private Map<String, List<String>> songIdToDanceNames = Map.of();
@@ -71,11 +76,6 @@ public class SpotifyDanceInfo {
         System.out.println();
 
         new SpotifyDanceInfo().run();
-    }
-
-    public SpotifyDanceInfo() {
-        waitingImageUrl = getClass().getResource("/waiting.png");
-        undefinedImageUrl = getClass().getResource("/undefined.png");
     }
 
     private void run() {
@@ -124,7 +124,7 @@ public class SpotifyDanceInfo {
         }
 
         // Load initial image
-        ImageIcon waitingIcon = readAndResizeImageFilling(waitingImageUrl);
+        ImageIcon waitingIcon = readAndResizeImageFilling(WAITING_IMAGE_URL);
         sImageLabel.setIcon(waitingIcon);
 
         // And go
@@ -158,7 +158,7 @@ public class SpotifyDanceInfo {
     private void generateAndUpdateImage(URL url) {
         boolean useCoverArt = tecl().bool("/screen/useCovertArt", true);
         if (url == null || !useCoverArt) {
-            this.sImageLabel.setIcon(readAndResizeImageFilling(undefinedImageUrl));
+            this.sImageLabel.setIcon(readAndResizeImageFilling(UNDEFINED_IMAGE_URL));
             return;
         }
 
@@ -277,7 +277,7 @@ public class SpotifyDanceInfo {
             // Get image contents (check to see if there is any)
             byte[] bytes = ImageUtil.read(url);
             if (bytes.length == 0) {
-                bytes = ImageUtil.read(undefinedImageUrl);
+                bytes = ImageUtil.read(UNDEFINED_IMAGE_URL);
             }
 
             // Create image

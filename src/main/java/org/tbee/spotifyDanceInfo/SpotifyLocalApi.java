@@ -5,8 +5,6 @@ import de.labystudio.spotifyapi.SpotifyAPIFactory;
 import de.labystudio.spotifyapi.SpotifyListener;
 import de.labystudio.spotifyapi.model.Track;
 
-import java.net.URL;
-
 public class SpotifyLocalApi extends Spotify {
 
     private SpotifyAPI spotifyLocalApi;
@@ -14,8 +12,6 @@ public class SpotifyLocalApi extends Spotify {
     protected Song lastPlayingSong = null;
 
     public Spotify connect() {
-        URL waitingImageUrl = getClass().getResource("/waiting.png");
-        URL undefinedImageUrl = getClass().getResource("/undefined.png");
 
         spotifyLocalApi = SpotifyAPIFactory.create();
         spotifyLocalApi.registerListener(new SpotifyListener() {
@@ -28,7 +24,7 @@ public class SpotifyLocalApi extends Spotify {
                 lastPlayingSong = new Song(track.getId(), track.getArtist(), track.getName());
                 currentlyPlayingCallback.accept(lastPlayingSong);
 
-                coverArtCallback.accept(undefinedImageUrl);
+                coverArtCallback.accept(SpotifyDanceInfo.UNDEFINED_IMAGE_URL);
             }
 
             @Override
@@ -37,7 +33,7 @@ public class SpotifyLocalApi extends Spotify {
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
                 currentlyPlayingCallback.accept(!isPlaying ? null : lastPlayingSong);
-                coverArtCallback.accept(!isPlaying ? waitingImageUrl : undefinedImageUrl);
+                coverArtCallback.accept(!isPlaying ? SpotifyDanceInfo.WAITING_IMAGE_URL : SpotifyDanceInfo.UNDEFINED_IMAGE_URL);
             }
 
             @Override

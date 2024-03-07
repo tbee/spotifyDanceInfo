@@ -109,6 +109,7 @@ public class SpotifyWebapi extends Spotify {
     }
 
     public void pollCurrentlyPlaying() {
+
         spotifyApi.getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(this::logException)
                 .thenAccept(track -> {
@@ -128,7 +129,7 @@ public class SpotifyWebapi extends Spotify {
                         currentlyPlaying(song);
 
                         if (song == null) {
-                            coverArtCallback.accept(null);
+                            coverArtCallback.accept(SpotifyDanceInfo.WAITING_IMAGE_URL);
                             nextUp(List.of());
                         } else {
                             String id = song.id();
