@@ -13,7 +13,7 @@ spotify {
     webapi {
         clientId: ...
         clientSecret: ...
-        redirect: "https://nyota.softworks.nl/SpotifySlideshow.html"
+        redirect: "https://nyota.softworks.nl/SpotifyDanceInfo.html"
         # refreshToken: ... # optional in online mode to skip authorization token copy
     }
 }

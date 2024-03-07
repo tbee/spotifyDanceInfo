@@ -112,7 +112,7 @@ public class SpotifyDanceInfo {
                         .exitOnClose()
                         .maximize()
                         .undecorated()
-                        .title("Spotify Slideshow")
+                        .title("Spotify Dance Info")
                         .iconImage(readImage(getClass().getResource("/icon.png")))
                         .onKeyTyped(this::reactToKeyPress)
                         .onPropertyChange("graphicsConfiguration", e -> updateCurrentlyPlaying())
