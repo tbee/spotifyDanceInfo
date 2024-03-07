@@ -113,7 +113,7 @@ public class SpotifySlideshow {
                         .maximize()
                         .undecorated()
                         .title("Spotify Slideshow")
-                        .iconImage(read(getClass().getResource("/icon.png")))
+                        .iconImage(readImage(getClass().getResource("/icon.png")))
                         .onKeyTyped(this::reactToKeyPress)
                         .onPropertyChange("graphicsConfiguration", e -> updateCurrentlyPlaying())
                         .visible(true);
@@ -155,7 +155,7 @@ public class SpotifySlideshow {
             return;
         }
 
-        BufferedImage image = read(url);
+        BufferedImage image = readImage(url);
 
         Dimension frameSize = sFrame.getSize();
         BufferedImage resizedFillingImage = ImageUtil.resizeFilling(image, frameSize);
@@ -193,17 +193,15 @@ public class SpotifySlideshow {
             }
             else {
                 String trackId = song.id();
-                List<String> dances = dances(tecl, trackId);
-                String dance = dances.getFirst();
+                List<String> danceIds = trackIdToDanceIds(tecl, trackId);
                 text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
                     .append(song.name())
-                    .append("<br><hr>")
-                    .append(text(tecl, dance));
-                for (String otherDance : dances.subList(1, dances.size())) {
-                    String otherText = text(tecl, otherDance);
-                    text.append(otherText.isBlank() ? "" : "<br>" + otherText);
+                    .append("<br>");
+                for (String danceId : danceIds) {
+                    String screenText = danceIdToScreenText(tecl, danceId);
+                    text.append(screenText.isBlank() ? "" : "<br>" + screenText);
                 }
-                logline = logline(song, dance);
+                logline = logline(song, danceIds.isEmpty() ? "" : danceIds.getFirst());
 
                 if (tecl.bool("copyTrackLoglineToClipboard", false)) {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
@@ -242,11 +240,11 @@ public class SpotifySlideshow {
                 text.append("<br><br>")
                     .append(nextSong.artist().isBlank() ? "" : nextSong.artist() + " - ")
                     .append(nextSong.name());
-                dances(tecl, trackId).stream()
+                trackIdToDanceIds(tecl, trackId).stream()
                     .filter(dance -> dance != null && !dance.isBlank())
-                    .forEach(dance -> {
+                    .forEach(danceId -> {
                         text.append("<br>")
-                            .append(text(tecl, dance));
+                            .append(danceIdToScreenText(tecl, danceId));
                     });
             });
 
@@ -262,12 +260,12 @@ public class SpotifySlideshow {
     }
 
     private ImageIcon readAndResizeImageFilling(URL url) {
-        BufferedImage image = read(url);
+        BufferedImage image = readImage(url);
         BufferedImage resizedImage = ImageUtil.resizeFilling(image, sFrame.getSize());
         return new ImageIcon(resizedImage);
     }
 
-    private BufferedImage read(URL url) {
+    private BufferedImage readImage(URL url) {
         try {
             // Get image contents (check to see if there is any)
             byte[] bytes = ImageUtil.read(url);
@@ -351,10 +349,10 @@ public class SpotifySlideshow {
 
                     // Extract id and dance
                     String id = line[idIdx];
-                    String dancesText = line[danceIdx];
+                    String danceText = line[danceIdx];
 
                     // Possibly split on comma
-                    List<String> dances = dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
+                    List<String> dances = danceTextToDances(danceText);
 
                     // Store
                     songIdToDanceNames.put(id, dances);
@@ -368,18 +366,22 @@ public class SpotifySlideshow {
         }
     }
 
+    private static List<String> danceTextToDances(String dancesText) {
+        return dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
+    }
+
     private Font font(TECL tecl, int defaultSize) {
         return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
     }
 
-    private static String text(TECL tecl, String dance) {
-        return tecl.grp(DANCES).str("id", dance, "text", dance);
+    private static String danceIdToScreenText(TECL tecl, String danceId) {
+        return tecl.grp(DANCES).str("id", danceId, "text", danceId);
     }
 
-    private List<String> dances(TECL tecl, String trackId) {
-        String danceConfig = tecl.grp(TRACKS).str("id", trackId, "dance", "");
-        if (!danceConfig.isBlank()) {
-            return danceConfig.contains(",") ? Arrays.asList(danceConfig.split(",")) : List.of(danceConfig);
+    private List<String> trackIdToDanceIds(TECL tecl, String trackId) {
+        String danceText = tecl.grp(TRACKS).str("id", trackId, "dance", "");
+        if (!danceText.isBlank()) {
+            return danceTextToDances(danceText);
         }
 
         // also look in the moreTracks
