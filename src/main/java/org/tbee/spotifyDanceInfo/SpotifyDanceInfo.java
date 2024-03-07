@@ -61,7 +61,7 @@ public class SpotifyDanceInfo {
 
     // Current state
     private Song song = null;
-    private List<Song> nextUpSongs = null;
+    private List<Song> nextUpSongs = List.of();
 
     public static void main(String[] args) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -74,8 +74,8 @@ public class SpotifyDanceInfo {
     }
 
     public SpotifyDanceInfo() {
-        waitingImageUrl = getClass().getResource("/waiting.jpg");
-        undefinedImageUrl = getClass().getResource("/undefined.jpg");
+        waitingImageUrl = getClass().getResource("/waiting.png");
+        undefinedImageUrl = getClass().getResource("/undefined.png");
     }
 
     private void run() {
@@ -146,13 +146,13 @@ public class SpotifyDanceInfo {
         else if (e.getKeyChar() == 'q') {
             System.exit(0);
         }
-        else {
-            SOptionPane.ofInfo(sFrame, "Supported keys",
-                        """
-                        (q)uit
-                        (r)eload configuration
-                        """);
-        }
+//        else {
+//            SOptionPane.ofInfo(sFrame, "Supported keys",
+//                        """
+//                        (q)uit
+//                        (r)eload configuration
+//                        """);
+//        }
     }
 
     private void generateAndUpdateImage(URL url) {

@@ -14,8 +14,8 @@ public class SpotifyLocalApi extends Spotify {
     protected Song lastPlayingSong = null;
 
     public Spotify connect() {
-        URL waitingImageUrl = getClass().getResource("/waiting.jpg");
-        URL undefinedImageUrl = getClass().getResource("/undefined.jpg");
+        URL waitingImageUrl = getClass().getResource("/waiting.png");
+        URL undefinedImageUrl = getClass().getResource("/undefined.png");
 
         spotifyLocalApi = SpotifyAPIFactory.create();
         spotifyLocalApi.registerListener(new SpotifyListener() {
