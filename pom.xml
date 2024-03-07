@@ -75,10 +75,11 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.2.2</version>
                 <configuration>
-                    <classifier>boot</classifier>
+                    <!-- <classifier>boot</classifier> -->
                     <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
                     <attach>false</attach>
                     <excludeDevtools>true</excludeDevtools>
+                    <finalName>${project.name}</finalName>
                 </configuration>
                 <executions>
                     <execution>
