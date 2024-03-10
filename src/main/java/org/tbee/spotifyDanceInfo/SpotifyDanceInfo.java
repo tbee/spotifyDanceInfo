@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -47,13 +48,8 @@ public class SpotifyDanceInfo {
     public static final String TRACKS = "/tracks";
     public static final String DANCES = "/dances";
 
-    public static final URL WAITING_IMAGE_URL;
-    public static final URL UNDEFINED_IMAGE_URL;
-
-    static {
-        WAITING_IMAGE_URL = SpotifyDanceInfo.class.getResource("/waiting.png");
-        UNDEFINED_IMAGE_URL = SpotifyDanceInfo.class.getResource("/undefined.png");
-    }
+    public static URL WAITING_IMAGE_URL;
+    public static URL BACKGROUND_IMAGE_URL;
 
     private TECL tecl;
     private Map<String, List<String>> songIdToDanceNames = Map.of();
@@ -67,6 +63,7 @@ public class SpotifyDanceInfo {
     // Current state
     private Song song = null;
     private List<Song> nextUpSongs = List.of();
+    private URL covertArtUrl;
 
     public static void main(String[] args) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -83,6 +80,9 @@ public class SpotifyDanceInfo {
         TECL tecl = tecl();
 
         try {
+            WAITING_IMAGE_URL = new URI(tecl.str("/screen/waitingImageUri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI().toString())).toURL();
+            BACKGROUND_IMAGE_URL = new URI(tecl.str("/screen/backgroundImageUri", SpotifyDanceInfo.class.getResource("/background.png").toURI().toString())).toURL();
+
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
@@ -119,7 +119,7 @@ public class SpotifyDanceInfo {
                         .visible(true);
             });
         }
-        catch (InterruptedException | InvocationTargetException e) {
+        catch (InterruptedException | InvocationTargetException | URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e);
         }
 
@@ -142,6 +142,7 @@ public class SpotifyDanceInfo {
             tecl = null; // force reload
             updateCurrentlyPlaying();
             updateNextUp();
+            generateAndUpdateImage();
         }
         else if (e.getKeyChar() == 'q') {
             System.exit(0);
@@ -156,13 +157,18 @@ public class SpotifyDanceInfo {
     }
 
     private void generateAndUpdateImage(URL url) {
+        this.covertArtUrl = url;
+        generateAndUpdateImage();
+    }
+
+    private void generateAndUpdateImage() {
         boolean useCoverArt = tecl().bool("/screen/useCovertArt", true);
-        if (url == null || !useCoverArt) {
-            this.sImageLabel.setIcon(readAndResizeImageFilling(UNDEFINED_IMAGE_URL));
+        if (covertArtUrl == null || !useCoverArt) {
+            this.sImageLabel.setIcon(readAndResizeImageFilling(BACKGROUND_IMAGE_URL));
             return;
         }
 
-        BufferedImage image = readImage(url);
+        BufferedImage image = readImage(covertArtUrl);
 
         Dimension frameSize = sFrame.getSize();
         BufferedImage resizedFillingImage = ImageUtil.resizeFilling(image, frameSize);
@@ -277,7 +283,7 @@ public class SpotifyDanceInfo {
             // Get image contents (check to see if there is any)
             byte[] bytes = ImageUtil.read(url);
             if (bytes.length == 0) {
-                bytes = ImageUtil.read(UNDEFINED_IMAGE_URL);
+                bytes = ImageUtil.read(BACKGROUND_IMAGE_URL);
             }
 
             // Create image

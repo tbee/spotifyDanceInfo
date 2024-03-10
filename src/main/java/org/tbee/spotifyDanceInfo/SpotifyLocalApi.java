@@ -24,7 +24,7 @@ public class SpotifyLocalApi extends Spotify {
                 lastPlayingSong = new Song(track.getId(), track.getArtist(), track.getName());
                 currentlyPlayingCallback.accept(lastPlayingSong);
 
-                coverArtCallback.accept(SpotifyDanceInfo.UNDEFINED_IMAGE_URL);
+                coverArtCallback.accept(SpotifyDanceInfo.BACKGROUND_IMAGE_URL);
             }
 
             @Override
@@ -33,7 +33,7 @@ public class SpotifyLocalApi extends Spotify {
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
                 currentlyPlayingCallback.accept(!isPlaying ? null : lastPlayingSong);
-                coverArtCallback.accept(!isPlaying ? SpotifyDanceInfo.WAITING_IMAGE_URL : SpotifyDanceInfo.UNDEFINED_IMAGE_URL);
+                coverArtCallback.accept(!isPlaying ? SpotifyDanceInfo.WAITING_IMAGE_URL : SpotifyDanceInfo.BACKGROUND_IMAGE_URL);
             }
 
             @Override

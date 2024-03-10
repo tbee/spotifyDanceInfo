@@ -14,20 +14,28 @@ spotify {
         clientId: ...
         clientSecret: ...
         redirect: "https://nyota.softworks.nl/SpotifyDanceInfo.html"
-        # refreshToken: ... # optional in online mode to skip authorization token copy
+        #refreshToken: ... # optional in online mode to skip authorization token copy
     }
 }
 
 screen {
-    # useCovertArt: false
+    # The waiting image is shown when nothing is playing.
+    # Replace the default waiting image using the line below.
+    #waitingImageUri: "file://C:/.../waiting.jpg"
+
+    #useCovertArt: false
+    # The background image is shown when a track is playing and cover art is not used.
+    # Replace the default background image using the line below.
+    #backgroundImageUri: "file:///C:/.../background.jpg"
+
     song {
-        # font: Calibri
-        # fontSize: 80
+        #font: Calibri
+        #fontSize: 80
     }
     nextUp {
         count: 3
-        # font: Calibri
-        # fontSize: 10
+        #font: Calibri
+        #fontSize: 10
     }
 }
 
