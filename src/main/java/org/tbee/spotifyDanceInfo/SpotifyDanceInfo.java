@@ -80,8 +80,8 @@ public class SpotifyDanceInfo {
         TECL tecl = tecl();
 
         try {
-            WAITING_IMAGE_URL = new URI(tecl.str("/screen/waitingImageUri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI().toString())).toURL();
-            BACKGROUND_IMAGE_URL = new URI(tecl.str("/screen/backgroundImageUri", SpotifyDanceInfo.class.getResource("/background.png").toURI().toString())).toURL();
+            WAITING_IMAGE_URL = tecl.uri("/screen/waitingImageUri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI()).toURL();
+            BACKGROUND_IMAGE_URL = tecl.uri("/screen/backgroundImageUri", SpotifyDanceInfo.class.getResource("/background.png").toURI()).toURL();
 
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
@@ -144,14 +144,14 @@ public class SpotifyDanceInfo {
             updateNextUp();
             generateAndUpdateImage();
         }
-        else if (e.getKeyChar() == 'q') {
+        else if (e.getKeyChar() == 'q' || e.getKeyChar() == KeyEvent.VK_ESCAPE) {
             System.exit(0);
         }
 //        else {
 //            SOptionPane.ofInfo(sFrame, "Supported keys",
 //                        """
-//                        (q)uit
-//                        (r)eload configuration
+//                        [q]uit
+//                        [r]eload configuration (also: [esc])
 //                        """);
 //        }
     }
