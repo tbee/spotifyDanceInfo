@@ -28,6 +28,7 @@ public class Cfg {
     private static final String CONNECT_LOCAL = "local";
     private static final String WEBAPI = "/spotify/webapi";
     private static final String SCREEN = "/screen";
+    private static final String BACKGROUNDIMAGE = SCREEN + "/backgroundImage";
     private static final String TRACKS = "/tracks";
     private static final String DANCES = "/dances";
 
@@ -119,7 +120,7 @@ public class Cfg {
 
     public URL waitingImageUrl() {
         try {
-            return tecl.uri("/screen/waitingImageUri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI()).toURL();
+            return tecl.uri(SCREEN + "/waitingImage/uri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI()).toURL();
         }
         catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
@@ -128,18 +129,21 @@ public class Cfg {
 
     public URL backgroundImageUrl() {
         try {
-            return tecl.uri("/screen/backgroundImageUri", SpotifyDanceInfo.class.getResource("/background.png").toURI()).toURL();
+            return tecl.uri(BACKGROUNDIMAGE + "/uri", SpotifyDanceInfo.class.getResource("/background.png").toURI()).toURL();
         }
         catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
+    public int backgroundImageNoise() {
+        return tecl.integer(BACKGROUNDIMAGE + "/moise", 0);
+    }
 
     public Font songFont() {
-        return font(tecl.grp("/screen/song"), 80);
+        return font(tecl.grp(SCREEN + "/song"), 80);
     }
     public Font nextFont() {
-        return font(tecl.grp("/screen/next"), 40);
+        return font(tecl.grp(SCREEN + "/next"), 40);
     }
     private Font font(TECL tecl, int defaultSize) {
         return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
@@ -165,7 +169,7 @@ public class Cfg {
     }
 
     public boolean useCoverArt() {
-        return tecl.bool(SCREEN + "/useCovertArt", true);
+        return tecl.bool(BACKGROUNDIMAGE + "/useCovertArt", true);
     }
 
     List<String> trackIdToDanceIds(String trackId) {
@@ -188,7 +192,7 @@ public class Cfg {
     }
 
     public int nextUpCount() {
-        return tecl.integer("/screen/nextUp/count", 3);
+        return tecl.integer(SCREEN + "/nextUp/count", 3);
     }
 
     public boolean copyTrackLoglineToClipboard() {

@@ -161,7 +161,7 @@ public class SpotifyDanceInfo {
         g2.drawImage(resizedFittingImage, centeredX, centeredY, null);
         g2.dispose();
 
-        //resizedFillingImage = ImageUtil.addGaussianBlur(resizedFillingImage, 2.0);
+        ImageUtil.addNoise(cfg.backgroundImageNoise(), resizedFillingImage);
 
         this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
     }

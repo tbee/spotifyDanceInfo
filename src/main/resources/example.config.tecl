@@ -20,13 +20,20 @@ spotify {
 
 screen {
     # The waiting image is shown when nothing is playing.
-    # Replace the default waiting image using the line below.
-    #waitingImageUri: "file://C:/.../waiting.jpg"
+    waitingImage {
+        # Replace the default waiting image using the line below.
+        #uri: "file://C:/.../waiting.jpg"
+    }
 
-    #useCovertArt: false
     # The background image is shown when a track is playing and cover art is not used.
-    # Replace the default background image using the line below.
-    #backgroundImageUri: "file:///C:/.../background.jpg"
+    backgroundImage {
+        #useCovertArt: false
+        # Noise reduces visual conflict between text on the covert art and the song/nextUp texts
+        #noise: 80
+
+        # Replace the default background image using the line below.
+        #uri: "file:///C:/.../background.jpg"
+    }
 
     song {
         #font: Calibri
