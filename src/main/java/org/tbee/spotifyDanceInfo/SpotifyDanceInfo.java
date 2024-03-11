@@ -1,9 +1,5 @@
 package org.tbee.spotifyDanceInfo;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
@@ -11,7 +7,6 @@ import org.tbee.sway.SOptionPane;
 import org.tbee.sway.SStackedPanel;
 import org.tbee.sway.support.HAlign;
 import org.tbee.sway.support.VAlign;
-import org.tbee.tecl.TECL;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -29,31 +24,17 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SpotifyDanceInfo {
-
-    public static final String TRACKS = "/tracks";
-    public static final String DANCES = "/dances";
 
     public static URL WAITING_IMAGE_URL;
     public static URL BACKGROUND_IMAGE_URL;
 
-    private TECL tecl;
-    private Map<String, List<String>> songIdToDanceNames = Map.of();
-
+    private Cfg cfg;
     // Screen
     private SLabel sImageLabel;
     private SLabel sTextLabel;
@@ -77,26 +58,26 @@ public class SpotifyDanceInfo {
 
     private void run() {
         SLookAndFeel.installDefault();
-        TECL tecl = tecl();
+        Cfg cfg = cfg();
 
         try {
-            WAITING_IMAGE_URL = tecl.uri("/screen/waitingImageUri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI()).toURL();
-            BACKGROUND_IMAGE_URL = tecl.uri("/screen/backgroundImageUri", SpotifyDanceInfo.class.getResource("/background.png").toURI()).toURL();
+            WAITING_IMAGE_URL = cfg.waitingImageUrl();
+            BACKGROUND_IMAGE_URL = cfg.backgroundImageUrl();
 
             SwingUtilities.invokeAndWait(() -> {
                 sImageLabel = SLabel.of();
 
-                Font songTecl = font(tecl.grp("/screen/song"), 80);
-                System.out.println("Using songFont "+ songTecl.getFontName() + " " + songTecl.getSize());
+                Font songFont = cfg.songFont();
+                System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
                 sTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
                         .hAlign(HAlign.LEFT)
                         .margin(10, 10, 0, 0)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY)
-                        .font(songTecl);
+                        .font(songFont);
 
-                Font nextFont = font(tecl.grp("/screen/next"), 40);
+                Font nextFont = cfg.nextFont();
                 System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
                 sNextTextLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
@@ -119,7 +100,7 @@ public class SpotifyDanceInfo {
                         .visible(true);
             });
         }
-        catch (InterruptedException | InvocationTargetException | URISyntaxException | MalformedURLException e) {
+        catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
 
@@ -128,9 +109,7 @@ public class SpotifyDanceInfo {
         sImageLabel.setIcon(waitingIcon);
 
         // And go
-        String CONNECT_LOCAL = "local";
-        String connect = tecl().str("/spotify/connect", CONNECT_LOCAL);
-        (CONNECT_LOCAL.equalsIgnoreCase(connect) ? new SpotifyLocalApi() : new SpotifyWebapi(tecl))
+        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapi(cfg))
                 .currentlyPlayingCallback(this::updateCurrentlyPlaying)
                 .nextUpCallback(this::updateNextUp)
                 .coverArtCallback(this::generateAndUpdateImage)
@@ -139,21 +118,21 @@ public class SpotifyDanceInfo {
 
     private void reactToKeyPress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
-            tecl = null; // force reload
+            cfg = null; // force reload
             updateCurrentlyPlaying();
             updateNextUp();
             generateAndUpdateImage();
         }
-        else if (e.getKeyChar() == 'q' || e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+        else if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
             System.exit(0);
         }
-//        else {
-//            SOptionPane.ofInfo(sFrame, "Supported keys",
-//                        """
-//                        [q]uit
-//                        [r]eload configuration (also: [esc])
-//                        """);
-//        }
+        else if (e.getKeyChar() == ' ') {
+            SOptionPane.ofInfo(sFrame, "Supported keys",
+                        """
+                        [esc] = Quit the application
+                        [r] = Reload configuration, but does not reconnect (if that was changed in the configuration).
+                        """);
+        }
     }
 
     private void generateAndUpdateImage(URL url) {
@@ -162,8 +141,7 @@ public class SpotifyDanceInfo {
     }
 
     private void generateAndUpdateImage() {
-        boolean useCoverArt = tecl().bool("/screen/useCovertArt", true);
-        if (covertArtUrl == null || !useCoverArt) {
+        if (covertArtUrl == null || !cfg().useCoverArt()) {
             this.sImageLabel.setIcon(readAndResizeImageFilling(BACKGROUND_IMAGE_URL));
             return;
         }
@@ -196,7 +174,7 @@ public class SpotifyDanceInfo {
     private void updateCurrentlyPlaying() {
 
         try {
-            TECL tecl = tecl();
+            Cfg cfg = cfg();
 
             // Determine image and text
             final StringBuilder text = new StringBuilder();
@@ -206,17 +184,17 @@ public class SpotifyDanceInfo {
             }
             else {
                 String trackId = song.id();
-                List<String> danceIds = trackIdToDanceIds(tecl, trackId);
+                List<String> danceIds = cfg.trackIdToDanceIds(trackId);
                 text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
                     .append(song.name())
                     .append("<br>");
                 for (String danceId : danceIds) {
-                    String screenText = danceIdToScreenText(tecl, danceId);
+                    String screenText = cfg.danceIdToScreenText(danceId);
                     text.append(screenText.isBlank() ? "" : "<br>" + screenText);
                 }
                 logline = logline(song, danceIds.isEmpty() ? "" : danceIds.getFirst());
 
-                if (tecl.bool("copyTrackLoglineToClipboard", false)) {
+                if (cfg.copyTrackLoglineToClipboard()) {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
                 }
             }
@@ -241,9 +219,9 @@ public class SpotifyDanceInfo {
     private void updateNextUp() {
 
         try {
-            TECL tecl = tecl();
+            Cfg cfg = cfg();
 
-            int count = tecl.integer("/screen/nextUp/count", 3);
+            int count = cfg.nextUpCount();
             List<Song> songs = nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count));
 
             // Determine text
@@ -253,11 +231,11 @@ public class SpotifyDanceInfo {
                 text.append("<br><br>")
                     .append(nextSong.artist().isBlank() ? "" : nextSong.artist() + " - ")
                     .append(nextSong.name());
-                trackIdToDanceIds(tecl, trackId).stream()
+                cfg.trackIdToDanceIds(trackId).stream()
                     .filter(dance -> dance != null && !dance.isBlank())
                     .forEach(danceId -> {
                         text.append("<br>")
-                            .append(danceIdToScreenText(tecl, danceId));
+                            .append(cfg.danceIdToScreenText(danceId));
                     });
             });
 
@@ -294,113 +272,13 @@ public class SpotifyDanceInfo {
         }
     }
 
-    private TECL tecl() {
-        if (tecl != null) {
-            return tecl;
+    private Cfg cfg() {
+        if (cfg == null) {
+            cfg = new Cfg();
         }
-
-        try {
-            tecl = TECL.parser().findAndParse();
-            if (tecl == null) {
-                tecl = new TECL("notfound");
-                tecl.populateConvertFunctions(); // TBEERNOT can we remove this?
-            }
-            readMoreTracks(tecl);
-            return tecl;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return cfg;
     }
 
-    private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
-        Map<String, List<String>> songIdToDanceNames = new HashMap<>();
-
-        // Loop over the moreTrack configurations
-        tecl.grps("/moreTracks").forEach(moreTrackTecl -> {
-            String type = moreTrackTecl.str("type", "");
-            if ("TSV".equalsIgnoreCase(type)) {
-                readMoreTracksTSV(moreTrackTecl, songIdToDanceNames);
-            }
-            else {
-                SOptionPane.ofError(sFrame, "More Tracks", "Don't understand moreTracks type '" + type + "'");
-            }
-        });
-
-        // Replace with new data
-        this.songIdToDanceNames = songIdToDanceNames;
-    }
-
-    private void readMoreTracksTSV(TECL moreTrack, Map<String, List<String>> songIdToDanceNames) { // can't use the tecl() call here otherwise there would be an endless loop
-        String uri = moreTrack.str("uri");
-        int idIdx = moreTrack.integer("idIdx", 0);
-        int danceIdx = moreTrack.integer("danceIdx", 1);
-        try {
-            // First read the URI contents
-            String contents = "";
-            try (
-                HttpClient httpClient = HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.ALWAYS)
-                        .build();
-            ) {
-                HttpRequest request = HttpRequest.newBuilder(new URI(uri)).GET().build();
-                HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                contents = httpResponse.body();
-            }
-
-            // Parse the contents
-            CSVParser parser = new CSVParserBuilder()
-                    .withSeparator('\t') // TSV
-                    .withIgnoreQuotations(true)
-                    .build();
-            try (
-                CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
-                        .withSkipLines(1) // skip header
-                        .withCSVParser(parser)
-                        .build();
-            ) {
-                csvReader.forEach(line -> {
-
-                    // Extract id and dance
-                    String id = line[idIdx];
-                    String danceText = line[danceIdx];
-
-                    // Possibly split on comma
-                    List<String> dances = danceTextToDances(danceText);
-
-                    // Store
-                    songIdToDanceNames.put(id, dances);
-                });
-                System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            e.printStackTrace();
-            SOptionPane.ofError(sFrame, "More Tracks", e.getMessage());
-            return;
-        }
-    }
-
-    private static List<String> danceTextToDances(String dancesText) {
-        return dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
-    }
-
-    private Font font(TECL tecl, int defaultSize) {
-        return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
-    }
-
-    private static String danceIdToScreenText(TECL tecl, String danceId) {
-        return tecl.grp(DANCES).str("id", danceId, "text", danceId);
-    }
-
-    private List<String> trackIdToDanceIds(TECL tecl, String trackId) {
-        String danceText = tecl.grp(TRACKS).str("id", trackId, "dance", "");
-        if (!danceText.isBlank()) {
-            return danceTextToDances(danceText);
-        }
-
-        // also look in the moreTracks
-        List<String> dances = songIdToDanceNames.get(trackId);
-        return dances == null ? List.of("") : dances;
-    }
 
     private String logline(Song song, String dance) {
         dance = (dance == null ? "" : dance);

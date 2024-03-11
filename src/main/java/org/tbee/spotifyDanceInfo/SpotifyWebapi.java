@@ -1,7 +1,6 @@
 package org.tbee.spotifyDanceInfo;
 
 import org.apache.hc.core5.http.ParseException;
-import org.tbee.tecl.TECL;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
@@ -31,15 +30,15 @@ public class SpotifyWebapi extends Spotify {
     public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
-    private final TECL tecl;
+    private final Cfg cfg;
 
     private SpotifyApi spotifyApi = null;
 
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
 
-    public SpotifyWebapi(TECL tecl) {
-        this.tecl = tecl;
+    public SpotifyWebapi(Cfg cfg) {
+        this.cfg = cfg;
     }
 
     private void currentlyPlaying(Song song) {
@@ -54,19 +53,15 @@ public class SpotifyWebapi extends Spotify {
 
     public Spotify connect() {
         try {
-            TECL webapiTecl = tecl.grp("/spotify/webapi");
-
             // Setup the API
-            String clientId = webapiTecl.str("clientId", "");
-            String clientSecret = webapiTecl.str("clientSecret", "");
             spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(clientId)
-                    .setClientSecret(clientSecret)
-                    .setRedirectUri(new URI(webapiTecl.str("redirect", "")))
+                    .setClientId(cfg.webapiClientId())
+                    .setClientSecret(cfg.webapiClientSecret())
+                    .setRedirectUri(new URI(cfg.webapiRedirect()))
                     .build();
 
             // Do we have tokens stored or need to fetch them?
-            String refreshToken = webapiTecl.str("refreshToken", "");
+            String refreshToken = cfg.webapiRefreshToken();
             if (!refreshToken.isBlank()) {
                 spotifyApi.setRefreshToken(refreshToken);
 
