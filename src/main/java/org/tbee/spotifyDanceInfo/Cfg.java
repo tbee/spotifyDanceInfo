@@ -54,14 +54,8 @@ public class Cfg {
         Map<String, List<String>> songIdToDanceNames = new HashMap<>();
 
         // Loop over the moreTrack configurations
-        tecl.grps("/moreTracks").forEach(moreTrackTecl -> {
-            String type = moreTrackTecl.str("type", "");
-            if ("TSV".equalsIgnoreCase(type)) {
-                readMoreTracksTSV(moreTrackTecl, songIdToDanceNames);
-            }
-            else {
-                SOptionPane.ofError(Window.getWindows()[0], "More Tracks", "Don't understand moreTracks type '" + type + "'");
-            }
+        tecl.grps("/moreTracks/tsv").forEach(moreTrackTecl -> {
+            readMoreTracksTSV(moreTrackTecl, songIdToDanceNames);
         });
 
         // Replace with new data

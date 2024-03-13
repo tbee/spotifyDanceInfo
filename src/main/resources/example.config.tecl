@@ -47,25 +47,36 @@ screen {
 }
 
 dances {
-    | id  | text                  |
-    | sw  | "Slow Walz"           |
-    | ta  | "Tango"               |
-    | qs  | "Quick step"          |
-    | sf  | "Slow Foxtrot"        |
-    | vw  | "Viennes Walz"        |
-    | ru  | "Rumba"               |
-    | cc  | "Cha Cha Cha"         |
-    | sa  | "Samba"               |
-    | ji  | "Jive"                |
-    | pd  | "Paso Doble"          |
-    | sal | "Salsa"               |
-    | bac | "Bachata"             |
-    | zou | "Zouk"                |
-    | kiz | "Kizomba"             |
-    | wcs | "West Coast Swing"    |
-    | taa | "Tango Argentine"     |
+    | id  | text                   |
+    | sw  | "Slow Walz"            |
+    | ta  | "Tango"                |
+    | qs  | "Quick step"           |
+    | sf  | "Slow Foxtrot"         |
+    | vw  | "Viennese Walz"        |
+    | ru  | "Rumba"                |
+    | cc  | "Cha Cha"              |
+    | sa  | "Samba"                |
+    | ji  | "Jive"                 |
+    | pd  | "Paso Doble"           |
+    | sal | "Salsa"                |
+    | bac | "Bachata"              |
+    | zou | "Zouk"                 |
+    | mam | "Mambo"                |
+    | kiz | "Kizomba"              |
+    | bol | "Bolero"               |
+    | ecs | "East Coast Swing"     |
+    | wcs | "West Coast Swing"     |
+    | taa | "Tango Argentine"      |
+    | fox | "Foxtrot"              |
+    | swz | "Smooth Walz"          |
+    | sta | "Smooth Tango"         |
+    | svw | "Smooth Viennese Walz" |
+    | aru | "American Rumba"       |
+    | acc | "American Cha Cha"     |
 }
 
+# If the dance is not found in the dances table, then the dance id itself is shown. See the last two lines for an example.
+# This allows for directly specifying the dance name(s), but won't use possible future enhancements to visualizing a specific dance.
 tracks {
     | id                     | dance                |
     | 7AslBsiVLQAGrmFmi79ZeK | ru                   | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
@@ -74,12 +85,14 @@ tracks {
     | 11dAtktxQQzipxuLqljEfY | sf,cc                | # Baby, What a Big Surprise - Edit / https://open.spotify.com/track/11dAtktxQQzipxuLqljEfY
     | 4qjrCkcVbsYlitCqbBkeKe | ru,sf                | # Colors Of The Wind - End Title / https://open.spotify.com/track/4qjrCkcVbsYlitCqbBkeKe
     | 6s8nHXTJVqFjXE4yVZPDHR | "Cha Cha"            | # Troublemaker (feat. Flo Rida) / https://open.spotify.com/track/6s8nHXTJVqFjXE4yVZPDHR
+    | 3MrRksHupTVEQ7YbA0FsZK | "Cha Cha,Salsa"      | # Europe - The Final Countdown / https://open.spotify.com/track/3MrRksHupTVEQ7YbA0FsZK
 }
 
 # moreTracks includes sources that also contain track mappings, so id and dance, like in the tracks table above.
-# For type the following values are supported:
-# - TSV (tab separated values, because the dance field may contain comma separated dances).
 moreTracks {
-    | type | idIdx | danceIdx | uri                                                                                                                                              |
-    | TSV  | 0     | 1        | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
+    # tab separated values (because the dance field may contain comma separated dances)
+    tsv {
+        | idIdx | danceIdx | uri                                                                                                                                              |
+        | 0     | 1        | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
+    }
 }
