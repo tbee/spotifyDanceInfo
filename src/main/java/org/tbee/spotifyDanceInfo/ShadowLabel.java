@@ -8,11 +8,6 @@ import java.util.List;
 
 public class ShadowLabel extends SLabel {
 
-    public static final List<offset> OFFSETS = List.of(
-            new offset(3, 2), new offset(-3, 2), new offset(3, -2), new offset(-3, -2),
-            new offset(3, 0), new offset(-3, 0),
-            new offset(0, 2), new offset(0, -2));
-
     public ShadowLabel() {
         super();
     }
@@ -24,11 +19,20 @@ public class ShadowLabel extends SLabel {
 
         setForeground(background);
         setBackground(foreground);
-        OFFSETS.forEach(o -> {
-            g.translate(o.x, o.y);
-            super.paintComponent(g);
-            g.translate(-1 * o.x, -1 * o.y);
-        });
+
+//        int fontSize = getFont().getSize();
+//        int x = fontSize / 20;
+//        int y = fontSize / 25;
+        int x = 3;
+        int y = 2;
+        List.of(new offset(x, y), new offset(-x, y), new offset(x, -y), new offset(-x, -y),
+                new offset(x, 0), new offset(-x, 0),
+                new offset(0, y), new offset(0, -y))
+                .forEach(o -> {
+                    g.translate(o.x, o.y);
+                    super.paintComponent(g);
+                    g.translate(-o.x, -o.y);
+                });
 
         setForeground(foreground);
         setBackground(background);
