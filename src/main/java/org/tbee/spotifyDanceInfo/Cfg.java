@@ -130,7 +130,7 @@ public class Cfg {
         }
     }
     public int backgroundImageNoise() {
-        return tecl.integer(BACKGROUNDIMAGE + "/moise", 0);
+        return tecl.integer(BACKGROUNDIMAGE + "/noise", 0);
     }
 
     public Font songFont() {
