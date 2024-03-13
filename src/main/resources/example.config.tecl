@@ -25,7 +25,7 @@ screen {
         #uri: "file://C:/.../waiting.jpg"
     }
 
-    # The background image is shown when a track is playing and cover art is not used.
+    # The background image is shown when a track is playing
     backgroundImage {
         #useCovertArt: false
         # Noise reduces visual conflict between text on the covert art and the song/nextUp texts
