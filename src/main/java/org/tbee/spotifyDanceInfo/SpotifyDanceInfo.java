@@ -1,5 +1,6 @@
 package org.tbee.spotifyDanceInfo;
 
+import org.tbee.sway.SContextMenu;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
@@ -58,6 +59,7 @@ public class SpotifyDanceInfo {
 
     private void run() {
         SLookAndFeel.installDefault();
+        SContextMenu.install();
         Cfg cfg = cfg();
 
         try {

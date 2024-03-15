@@ -1,6 +1,10 @@
 package org.tbee.spotifyDanceInfo;
 
 import org.apache.hc.core5.http.ParseException;
+import org.tbee.sway.SDialog;
+import org.tbee.sway.SLabel;
+import org.tbee.sway.SOptionPane;
+import org.tbee.sway.SVPanel;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
@@ -10,7 +14,10 @@ import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
+import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -70,6 +77,7 @@ public class SpotifyWebapi extends Spotify {
             }
             else {
 
+                // Open spotify in the browser
                 // https://developer.spotify.com/documentation/web-api/concepts/authorization
                 // The authorizationCodeUri must be opened in the browser, the resulting code (in the redirect URL) pasted into the popup
                 // The code can only be used once to connect
@@ -79,23 +87,37 @@ public class SpotifyWebapi extends Spotify {
                 System.out.println("authorizationCodeUri " + authorizationCodeUri);
                 Desktop.getDesktop().browse(authorizationCodeUri);
 
-                var authorizationCode = javax.swing.JOptionPane.showInputDialog(Window.getWindows()[0], "Please copy the authorization code here");
+                // Ask for the authorization code
+                Window window = Window.getWindows()[0];
+                var authorizationCode = SOptionPane.showInputDialog(window, "Please copy the authorization code here");
                 if (authorizationCode == null || authorizationCode.isBlank()) {
                     String message = "Authorization code cannot be empty";
-                    javax.swing.JOptionPane.showMessageDialog(Window.getWindows()[0], message);
+                    javax.swing.JOptionPane.showMessageDialog(window, message);
                     throw new IllegalArgumentException(message);
                 }
 
+                // Login to spotify and get the refresh and access tokens
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
                 refreshToken = authorizationCodeCredentials.getRefreshToken();
                 System.out.println("refreshToken " + refreshToken);
                 setAccessToken(authorizationCodeCredentials);
+
+                // Suggest to copy the refresh token in the configuration file
+                String refreshTokenCopy = "\"" + refreshToken + "\"";
+                if (SDialog.ofOkCancel(window, "",
+                        SVPanel.of(
+                                SLabel.of("Do you want to copy the text below?"),
+                                SLabel.of(refreshTokenCopy).font(SLabel.of().getFont().deriveFont(Font.BOLD)),
+                                SLabel.of("It can be placed as the refreshToken in the configuration file for easy startup.")
+                        )
+                ).visible(true).closeReasonIsOk()) {
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(refreshTokenCopy), null);
+                }
             }
             spotifyApi.setRefreshToken(refreshToken);
 
             // Start polling
             scheduledExecutorService.scheduleAtFixedRate(this::pollCurrentlyPlaying, 0, 3, TimeUnit.SECONDS);
-
             return this;
         }
         catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
