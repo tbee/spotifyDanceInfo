@@ -110,7 +110,7 @@ public class SpotifyWebapi extends Spotify {
                                 SLabel.of(refreshTokenCopy).font(SLabel.of().getFont().deriveFont(Font.BOLD)),
                                 SLabel.of("It can be placed as the refreshToken in the configuration file for easy startup.")
                         )
-                ).visible(true).closeReasonIsOk()) {
+                ).showAndWait().closeReasonIsOk()) {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(refreshTokenCopy), null);
                 }
             }

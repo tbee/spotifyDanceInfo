@@ -51,12 +51,14 @@ dances {
     | sw  | "Slow Walz"            |
     | ta  | "Tango"                |
     | qs  | "Quick step"           |
+    | sqs | "Slow Quick step"      |
     | sf  | "Slow Foxtrot"         |
     | vw  | "Viennese Walz"        |
     | ru  | "Rumba"                |
     | cc  | "Cha Cha"              |
     | sa  | "Samba"                |
     | ji  | "Jive"                 |
+    | sji | "Slow Jive"            |
     | pd  | "Paso Doble"           |
     | sal | "Salsa"                |
     | bac | "Bachata"              |

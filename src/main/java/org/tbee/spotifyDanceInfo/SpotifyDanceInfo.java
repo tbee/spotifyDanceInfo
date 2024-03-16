@@ -121,9 +121,7 @@ public class SpotifyDanceInfo {
     private void reactToKeyPress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
             cfg = null; // force reload
-            updateCurrentlyPlaying();
-            updateNextUp();
-            generateAndUpdateImage();
+            updateAll();
         }
         else if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
             System.exit(0);
@@ -135,6 +133,12 @@ public class SpotifyDanceInfo {
                         [r] = Reload configuration, but does not reconnect (if that was changed in the configuration).
                         """);
         }
+    }
+
+    private void updateAll() {
+        updateCurrentlyPlaying();
+        updateNextUp();
+        generateAndUpdateImage();
     }
 
     private void generateAndUpdateImage(URL url) {
@@ -276,7 +280,7 @@ public class SpotifyDanceInfo {
 
     private Cfg cfg() {
         if (cfg == null) {
-            cfg = new Cfg();
+            cfg = new Cfg().onChange(this::updateAll);
         }
         return cfg;
     }

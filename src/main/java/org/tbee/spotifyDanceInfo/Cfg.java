@@ -18,10 +18,14 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Cfg {
 
@@ -32,18 +36,21 @@ public class Cfg {
     private static final String TRACKS = "/tracks";
     private static final String DANCES = "/dances";
 
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final List<Runnable> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
 
     private TECL tecl;
-    private Map<String, List<String>> songIdToDanceNames = Map.of();
+    private Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
 
 
     public Cfg() {
         try {
             tecl = TECL.parser().findAndParse();
             if (tecl == null) {
+                System.out.println("No configuration found, switch to default config (local spotify connection)");
                 tecl = new TECL("notfound");
-                tecl.populateConvertFunctions(); // TBEERNOT can we remove this?
             }
+
             readMoreTracks(tecl);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -51,23 +58,19 @@ public class Cfg {
     }
 
     private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
-        Map<String, List<String>> songIdToDanceNames = new HashMap<>();
-
         // Loop over the moreTrack configurations
         tecl.grps("/moreTracks/tsv").forEach(moreTrackTecl -> {
-            readMoreTracksTSV(moreTrackTecl, songIdToDanceNames);
+            executorService.submit(() -> readMoreTracksTSV(moreTrackTecl));
         });
-
-        // Replace with new data
-        this.songIdToDanceNames = songIdToDanceNames;
     }
 
 
-    private void readMoreTracksTSV(TECL moreTrack, Map<String, List<String>> songIdToDanceNames) { // can't use the tecl() call here otherwise there would be an endless loop
-        String uri = moreTrack.str("uri");
-        int idIdx = moreTrack.integer("idIdx", 0);
-        int danceIdx = moreTrack.integer("danceIdx", 1);
+    private void readMoreTracksTSV(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
         try {
+            String uri = moreTrack.str("uri");
+            int idIdx = moreTrack.integer("idIdx", 0);
+            int danceIdx = moreTrack.integer("danceIdx", 1);
+
             // First read the URI contents
             String contents = "";
             try (
@@ -104,11 +107,11 @@ public class Cfg {
                     songIdToDanceNames.put(id, dances);
                 });
                 System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
+                onChangeListeners.forEach(l -> l.run());
             }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (URISyntaxException | IOException | InterruptedException | RuntimeException e) {
             e.printStackTrace();
             SOptionPane.ofError(Window.getWindows()[0], "More Tracks", e.getMessage());
-            return;
         }
     }
 
@@ -191,5 +194,15 @@ public class Cfg {
 
     public boolean copyTrackLoglineToClipboard() {
         return tecl.bool("copyTrackLoglineToClipboard", false);
+    }
+
+    /**
+     * Some configurations are read in the background, and after one completes the onChange listeners are called.
+     * @param listener
+     * @return
+     */
+    public Cfg onChange(Runnable listener) {
+        onChangeListeners.add(listener);
+        return this;
     }
 }

@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.tbee.tecl</groupId>
             <artifactId>tecl</artifactId>
-            <version>1.7.0</version>
+            <version>1.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.tbee.sway</groupId>
