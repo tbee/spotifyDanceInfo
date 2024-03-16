@@ -148,7 +148,7 @@ public class SpotifyDanceInfo {
 
     private void generateAndUpdateImage() {
         if (covertArtUrl == null || !cfg().useCoverArt()) {
-            this.sImageLabel.setIcon(readAndResizeImageFilling(BACKGROUND_IMAGE_URL));
+            this.sImageLabel.setIcon(readAndResizeImageFilling(song == null ? WAITING_IMAGE_URL : BACKGROUND_IMAGE_URL));
             return;
         }
 
