@@ -20,6 +20,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -27,19 +28,27 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.spi.LocaleNameProvider;
 
 public class SpotifyDanceInfo {
 
     public static URL WAITING_IMAGE_URL;
     public static URL BACKGROUND_IMAGE_URL;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
     private Cfg cfg;
     // Screen
-    private SLabel sImageLabel;
-    private SLabel sTextLabel;
-    private SLabel sNextTextLabel;
+    private SLabel imageSLabel;
+    private SLabel songSLabel;
+    private SLabel nextUpSLabel;
+    private SLabel timeSLabel;
     private SFrame sFrame;
 
     // Current state
@@ -67,29 +76,30 @@ public class SpotifyDanceInfo {
             BACKGROUND_IMAGE_URL = cfg.backgroundImageUrl();
 
             SwingUtilities.invokeAndWait(() -> {
-                sImageLabel = SLabel.of();
+                imageSLabel = SLabel.of();
 
-                Font songFont = cfg.songFont();
-                System.out.println("Using songFont "+ songFont.getFontName() + " " + songFont.getSize());
-                sTextLabel = ShadowLabel.of()
+                songSLabel = ShadowLabel.of()
                         .vAlign(VAlign.TOP)
                         .hAlign(HAlign.LEFT)
                         .margin(10, 10, 0, 0)
                         .foreground(Color.WHITE)
-                        .background(Color.DARK_GRAY)
-                        .font(songFont);
+                        .background(Color.DARK_GRAY);
 
-                Font nextFont = cfg.nextFont();
-                System.out.println("Using nextfont "+ nextFont.getFontName() + " " + nextFont.getSize());
-                sNextTextLabel = ShadowLabel.of()
+                nextUpSLabel = ShadowLabel.of()
                         .vAlign(VAlign.BOTTOM)
                         .hAlign(HAlign.RIGHT)
                         .margin(0, 0, 10, 10)
                         .foreground(Color.WHITE)
-                        .background(Color.DARK_GRAY)
-                        .font(nextFont);
+                        .background(Color.DARK_GRAY);
 
-                SStackedPanel stackPanel = SStackedPanel.of(sImageLabel, sNextTextLabel, sTextLabel);
+                timeSLabel = ShadowLabel.of()
+                        .vAlign(VAlign.BOTTOM)
+                        .hAlign(HAlign.LEFT)
+                        .margin(0, 10, 10, 0)
+                        .foreground(Color.WHITE)
+                        .background(Color.DARK_GRAY);
+
+                SStackedPanel stackPanel = SStackedPanel.of(imageSLabel, timeSLabel, nextUpSLabel, songSLabel);
 
                 sFrame = SFrame.of(stackPanel)
                         .exitOnClose()
@@ -98,8 +108,10 @@ public class SpotifyDanceInfo {
                         .title("Spotify Dance Info")
                         .iconImage(readImage(getClass().getResource("/icon.png")))
                         .onKeyTyped(this::reactToKeyPress)
-                        .onPropertyChange("graphicsConfiguration", e -> updateCurrentlyPlaying())
+                        .onScreenChange(this::updateAll)
                         .visible(true);
+
+                setFonts();
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -108,7 +120,10 @@ public class SpotifyDanceInfo {
 
         // Load initial image
         ImageIcon waitingIcon = readAndResizeImageFilling(WAITING_IMAGE_URL);
-        sImageLabel.setIcon(waitingIcon);
+        imageSLabel.setIcon(waitingIcon);
+
+        // Start updating the time
+        scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
 
         // And go
         (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapi(cfg))
@@ -135,10 +150,33 @@ public class SpotifyDanceInfo {
         }
     }
 
+    private void updateTime() {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+        timeSLabel.text(time);
+    }
+
     private void updateAll() {
+        setFonts();
         updateCurrentlyPlaying();
         updateNextUp();
         generateAndUpdateImage();
+    }
+
+    private void setFonts() {
+        Window window = SFrame.getWindows()[0];
+        System.out.println(window.getWidth() + "x" + window.getHeight());
+
+        Font songFont = cfg.songFont(window.getHeight() / 15);
+        System.out.println("Using song font "+ songFont.getFontName() + " " + songFont.getSize());
+        songSLabel.font(songFont);
+
+        Font nextFont = cfg.nextFont(window.getHeight() / 20);
+        System.out.println("Using nextUp font "+ nextFont.getFontName() + " " + nextFont.getSize());
+        nextUpSLabel.font(nextFont);
+
+        Font timeFont = cfg.timeFont(window.getHeight() / 25);
+        System.out.println("Using time font "+ timeFont.getFontName() + " " + timeFont.getSize());
+        timeSLabel.font(timeFont);
     }
 
     private void generateAndUpdateImage(URL url) {
@@ -148,7 +186,7 @@ public class SpotifyDanceInfo {
 
     private void generateAndUpdateImage() {
         if (covertArtUrl == null || !cfg().useCoverArt()) {
-            this.sImageLabel.setIcon(readAndResizeImageFilling(song == null ? WAITING_IMAGE_URL : BACKGROUND_IMAGE_URL));
+            this.imageSLabel.setIcon(readAndResizeImageFilling(song == null ? WAITING_IMAGE_URL : BACKGROUND_IMAGE_URL));
             return;
         }
 
@@ -169,7 +207,7 @@ public class SpotifyDanceInfo {
 
         ImageUtil.addNoise(cfg.backgroundImageNoise(), resizedFillingImage);
 
-        this.sImageLabel.setIcon(new ImageIcon(resizedFillingImage));
+        this.imageSLabel.setIcon(new ImageIcon(resizedFillingImage));
     }
 
     private void updateCurrentlyPlaying(Song song) {
@@ -208,12 +246,12 @@ public class SpotifyDanceInfo {
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                sTextLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
+                songSLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(imageSLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -247,12 +285,12 @@ public class SpotifyDanceInfo {
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                sNextTextLabel.setText("<html><body><div style=\"text-align:right;\">" + (text.isEmpty() ? "" : "Next up:") + text.toString() + "</div></body></html>");
+                nextUpSLabel.setText("<html><body><div style=\"text-align:right;\">" + (text.isEmpty() ? "" : "Next up:") + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(sImageLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(imageSLabel, e.getMessage(), "Oops", JOptionPane.ERROR_MESSAGE);
         }
     }
 

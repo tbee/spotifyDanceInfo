@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -55,7 +56,7 @@ public class SpotifyWebapi extends Spotify {
 
     private void nextUp(List<Song> nextUp) {
         this.nextUp = nextUp;
-        nextUpCallback.accept(nextUp);
+        nextUpCallback.accept(Collections.unmodifiableList(nextUp));
     }
 
     public Spotify connect() {

@@ -136,11 +136,14 @@ public class Cfg {
         return tecl.integer(BACKGROUNDIMAGE + "/noise", 0);
     }
 
-    public Font songFont() {
-        return font(tecl.grp(SCREEN + "/song"), 80);
+    public Font songFont(int def) {
+        return font(tecl.grp(SCREEN + "/song"), def);
     }
-    public Font nextFont() {
-        return font(tecl.grp(SCREEN + "/next"), 40);
+    public Font nextFont(int def) {
+        return font(tecl.grp(SCREEN + "/nextUp"), def);
+    }
+    public Font timeFont(int def) {
+        return font(tecl.grp(SCREEN + "/time"), def);
     }
     private Font font(TECL tecl, int defaultSize) {
         return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
