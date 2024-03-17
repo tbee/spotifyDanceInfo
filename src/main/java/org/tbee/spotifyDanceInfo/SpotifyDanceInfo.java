@@ -1,13 +1,13 @@
 package org.tbee.spotifyDanceInfo;
 
+import org.tbee.sway.SBorderPanel;
 import org.tbee.sway.SContextMenu;
+import org.tbee.sway.SEditorPane;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
 import org.tbee.sway.SOptionPane;
 import org.tbee.sway.SStackedPanel;
-import org.tbee.sway.support.HAlign;
-import org.tbee.sway.support.VAlign;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -31,11 +31,11 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.spi.LocaleNameProvider;
 
 public class SpotifyDanceInfo {
 
@@ -46,9 +46,9 @@ public class SpotifyDanceInfo {
     private Cfg cfg;
     // Screen
     private SLabel imageSLabel;
-    private SLabel songSLabel;
-    private SLabel nextUpSLabel;
-    private SLabel timeSLabel;
+    private SEditorPane songSLabel;
+    private SEditorPane nextUpSLabel;
+    private SEditorPane timeSLabel;
     private SFrame sFrame;
 
     // Current state
@@ -79,27 +79,26 @@ public class SpotifyDanceInfo {
                 imageSLabel = SLabel.of();
 
                 songSLabel = ShadowLabel.of()
-                        .vAlign(VAlign.TOP)
-                        .hAlign(HAlign.LEFT)
+                        .onKeyTyped(this::reactToKeyPress)
                         .margin(10, 10, 0, 0)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY);
 
                 nextUpSLabel = ShadowLabel.of()
-                        .vAlign(VAlign.BOTTOM)
-                        .hAlign(HAlign.RIGHT)
+                        .onKeyTyped(this::reactToKeyPress)
                         .margin(0, 0, 10, 10)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY);
 
                 timeSLabel = ShadowLabel.of()
-                        .vAlign(VAlign.BOTTOM)
-                        .hAlign(HAlign.LEFT)
+                        .onKeyTyped(this::reactToKeyPress)
                         .margin(0, 10, 10, 0)
                         .foreground(Color.WHITE)
                         .background(Color.DARK_GRAY);
 
-                SStackedPanel stackPanel = SStackedPanel.of(imageSLabel, timeSLabel, nextUpSLabel, songSLabel);
+                SBorderPanel timeBorderPanel = SBorderPanel.of().south(timeSLabel).opaque(false); // for align bottom
+                SBorderPanel nextUpBorderPanel = SBorderPanel.of().south(nextUpSLabel).opaque(false); // for align bottom
+                SStackedPanel stackPanel = SStackedPanel.of(imageSLabel, timeBorderPanel, nextUpBorderPanel, songSLabel);
 
                 sFrame = SFrame.of(stackPanel)
                         .exitOnClose()
@@ -135,6 +134,7 @@ public class SpotifyDanceInfo {
 
     private void reactToKeyPress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
+            System.out.println("Reload");
             cfg = null; // force reload
             updateAll();
         }
@@ -151,37 +151,43 @@ public class SpotifyDanceInfo {
     }
 
     private void updateTime() {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-        timeSLabel.text(time);
+        SwingUtilities.invokeLater(() -> {
+            String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+            timeSLabel.text(time);
+        });
     }
 
     private void updateAll() {
-        setFonts();
-        updateCurrentlyPlaying();
-        updateNextUp();
-        generateAndUpdateImage();
+        SwingUtilities.invokeLater(() -> {
+            setFonts();
+            updateCurrentlyPlaying();
+            updateNextUp();
+            generateAndUpdateImage();
+        });
     }
 
     private void setFonts() {
         Window window = SFrame.getWindows()[0];
-        System.out.println(window.getWidth() + "x" + window.getHeight());
+        System.out.println("Screen size: " + window.getWidth() + "x" + window.getHeight());
 
-        Font songFont = cfg.songFont(window.getHeight() / 15);
+        Font songFont = cfg().songFont(window.getHeight() / 15);
         System.out.println("Using song font "+ songFont.getFontName() + " " + songFont.getSize());
         songSLabel.font(songFont);
 
-        Font nextFont = cfg.nextFont(window.getHeight() / 20);
+        Font nextFont = cfg().nextFont(window.getHeight() / 20);
         System.out.println("Using nextUp font "+ nextFont.getFontName() + " " + nextFont.getSize());
         nextUpSLabel.font(nextFont);
 
-        Font timeFont = cfg.timeFont(window.getHeight() / 25);
+        Font timeFont = cfg().timeFont(window.getHeight() / 25);
         System.out.println("Using time font "+ timeFont.getFontName() + " " + timeFont.getSize());
         timeSLabel.font(timeFont);
     }
 
     private void generateAndUpdateImage(URL url) {
-        this.covertArtUrl = url;
-        generateAndUpdateImage();
+        SwingUtilities.invokeLater(() -> {
+            this.covertArtUrl = url;
+            generateAndUpdateImage();
+        });
     }
 
     private void generateAndUpdateImage() {
@@ -211,8 +217,10 @@ public class SpotifyDanceInfo {
     }
 
     private void updateCurrentlyPlaying(Song song) {
-        this.song = song;
-        updateCurrentlyPlaying();
+        SwingUtilities.invokeLater(() -> {
+            this.song = song;
+            updateCurrentlyPlaying();
+        });
     }
 
     private void updateCurrentlyPlaying() {
@@ -246,7 +254,7 @@ public class SpotifyDanceInfo {
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                songSLabel.setText("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
+                songSLabel.text("<html><body><div style=\"text-align:left;\">" + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {
@@ -256,8 +264,10 @@ public class SpotifyDanceInfo {
     }
 
     private void updateNextUp(List<Song> songs) {
-        this.nextUpSongs = songs;
-        updateNextUp();
+        SwingUtilities.invokeLater(() -> {
+            this.nextUpSongs = songs;
+            updateNextUp();
+        });
     }
 
     private void updateNextUp() {
@@ -266,7 +276,7 @@ public class SpotifyDanceInfo {
             Cfg cfg = cfg();
 
             int count = cfg.nextUpCount();
-            List<Song> songs = nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count));
+            List<Song> songs = Collections.unmodifiableList(nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count)));
 
             // Determine text
             StringBuilder text = new StringBuilder();
@@ -285,7 +295,7 @@ public class SpotifyDanceInfo {
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
-                nextUpSLabel.setText("<html><body><div style=\"text-align:right;\">" + (text.isEmpty() ? "" : "Next up:") + text.toString() + "</div></body></html>");
+                nextUpSLabel.text("<html><body><div style=\"text-align:right;\">" + (text.isEmpty() ? "" : "Next up:") + text.toString() + "</div></body></html>");
             });
         }
         catch (RuntimeException e) {

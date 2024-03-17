@@ -1,15 +1,24 @@
 package org.tbee.spotifyDanceInfo;
 
-import org.tbee.sway.SLabel;
+import org.tbee.sway.SEditorPane;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.List;
 
-public class ShadowLabel extends SLabel {
+public class ShadowLabel extends SEditorPane {
+
+    static public ShadowLabel of() {
+        return new ShadowLabel();
+    }
 
     public ShadowLabel() {
         super();
+        name("dummy");
+        opaque(false);
+        background(new Color(0,0,0, 100));
+        editable(false);
+        contentType("text/html");
     }
 
     @Override
@@ -38,10 +47,5 @@ public class ShadowLabel extends SLabel {
         setBackground(background);
         super.paintComponent(g);
     }
-
     record offset(int x, int y) {}
-
-    static public ShadowLabel of() {
-        return new ShadowLabel();
-    }
 }
