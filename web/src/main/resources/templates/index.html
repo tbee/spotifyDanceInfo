@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Spotify Dance Info</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+        <link rel="stylesheet" href="/index.css">
+    </head>
+    <body>
+        <section class="section">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half">
+                        <form class="box" th:action="@{/}" th:object="${ClientIdConnectForm}" method="post">
+                            <div class="block">
+                                Either provide a client id and secret as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's documentation.
+                                <br/>
+                                Use <strong>https:/....../</strong> as the value for the redirect URL.
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Client id</label>
+                                <div class="control">
+                                    <input id="clientId" class="input" type="text" placeholder="xxxxx" th:field="*{clientId}"/>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Client secret</label>
+                                <div class="control">
+                                    <input id="clientSecret" class="input" type="text" placeholder="********" th:field="*{clientSecret}"/>
+                                </div>
+                            </div>
+
+                            <button class="button is-primary">Connect</button>
+                        </form>
+                        <form class="box" th:action="@{/}" th:object="${RefreshTokenConnectForm}" method="post">
+                            <div class="block">
+                                Or, if you're technically more savvy, provide a refresh token directly.
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Refresh token</label>
+                                <div class="control">
+                                    <input id="refreshToken" class="input" type="text" placeholder="xxxxx" th:field="*{refreshToken}"/>
+                                </div>
+                            </div>
+
+                            <button class="button is-primary">Connect</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </body>
+</html>

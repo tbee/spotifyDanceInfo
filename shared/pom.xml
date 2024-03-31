@@ -11,4 +11,29 @@
     </parent>
     <artifactId>spotifyDanceInfoShared</artifactId>
 
+    <dependencies>
+        <!-- https://github.com/tbee/TECL -->
+        <dependency>
+            <groupId>org.tbee.tecl</groupId>
+            <artifactId>tecl</artifactId>
+        </dependency>
+
+        <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+        </dependency>
+
+        <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
+        <dependency>
+            <groupId>se.michaelthelin.spotify</groupId>
+            <artifactId>spotify-web-api-java</artifactId>
+        </dependency>
+
+        <!-- https://github.com/LabyStudio/java-spotify-api -->
+        <dependency>
+            <groupId>com.github.LabyStudio</groupId>
+            <artifactId>java-spotify-api</artifactId>
+        </dependency>
+    </dependencies>
 </project>

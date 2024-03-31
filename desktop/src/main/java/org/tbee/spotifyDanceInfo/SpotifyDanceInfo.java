@@ -125,7 +125,7 @@ public class SpotifyDanceInfo {
         scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
 
         // And go
-        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapi(cfg))
+        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapiSwing(cfg))
                 .currentlyPlayingCallback(this::updateCurrentlyPlaying)
                 .nextUpCallback(this::updateNextUp)
                 .coverArtCallback(this::generateAndUpdateImage)

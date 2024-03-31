@@ -4,11 +4,9 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import org.tbee.sway.SOptionPane;
 import org.tbee.tecl.TECL;
 
 import java.awt.Font;
-import java.awt.Window;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -110,14 +108,13 @@ public class Cfg {
                 onChangeListeners.forEach(l -> l.run());
             }
         } catch (URISyntaxException | IOException | InterruptedException | RuntimeException e) {
-            e.printStackTrace();
-            SOptionPane.ofError(Window.getWindows()[0], "More Tracks", e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     public URL waitingImageUrl() {
         try {
-            return tecl.uri(SCREEN + "/waitingImage/uri", SpotifyDanceInfo.class.getResource("/waiting.png").toURI()).toURL();
+            return tecl.uri(SCREEN + "/waitingImage/uri", Cfg.class.getResource("/waiting.png").toURI()).toURL();
         }
         catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
@@ -126,7 +123,7 @@ public class Cfg {
 
     public URL backgroundImageUrl() {
         try {
-            return tecl.uri(BACKGROUNDIMAGE + "/uri", SpotifyDanceInfo.class.getResource("/background.png").toURI()).toURL();
+            return tecl.uri(BACKGROUNDIMAGE + "/uri", Cfg.class.getResource("/background.png").toURI()).toURL();
         }
         catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
