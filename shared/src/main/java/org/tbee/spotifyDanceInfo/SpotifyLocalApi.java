@@ -13,6 +13,7 @@ public class SpotifyLocalApi extends Spotify {
 
     public Spotify connect() {
 
+        Cfg cfg = new Cfg();
         spotifyLocalApi = SpotifyAPIFactory.create();
         spotifyLocalApi.registerListener(new SpotifyListener() {
             @Override
@@ -24,7 +25,7 @@ public class SpotifyLocalApi extends Spotify {
                 lastPlayingSong = new Song(track.getId(), track.getArtist(), track.getName());
                 currentlyPlayingCallback.accept(lastPlayingSong);
 
-                coverArtCallback.accept(SpotifyDanceInfo.BACKGROUND_IMAGE_URL);
+                coverArtCallback.accept(cfg.backgroundImageUrl());
             }
 
             @Override
@@ -33,7 +34,7 @@ public class SpotifyLocalApi extends Spotify {
             @Override
             public void onPlayBackChanged(boolean isPlaying) {
                 currentlyPlayingCallback.accept(!isPlaying ? null : lastPlayingSong);
-                coverArtCallback.accept(!isPlaying ? SpotifyDanceInfo.WAITING_IMAGE_URL : SpotifyDanceInfo.BACKGROUND_IMAGE_URL);
+                coverArtCallback.accept(!isPlaying ? cfg.waitingImageUrl() : cfg.backgroundImageUrl());
             }
 
             @Override

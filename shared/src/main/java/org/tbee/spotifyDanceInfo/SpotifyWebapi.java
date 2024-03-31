@@ -1,10 +1,6 @@
 package org.tbee.spotifyDanceInfo;
 
 import org.apache.hc.core5.http.ParseException;
-import org.tbee.sway.SDialog;
-import org.tbee.sway.SLabel;
-import org.tbee.sway.SOptionPane;
-import org.tbee.sway.SVPanel;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
@@ -13,11 +9,6 @@ import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
-import java.awt.Desktop;
-import java.awt.Font;
-import java.awt.Toolkit;
-import java.awt.Window;
-import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -33,20 +24,32 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class SpotifyWebapi extends Spotify {
+abstract public class SpotifyWebapi extends Spotify {
 
     public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     private final Cfg cfg;
 
-    private SpotifyApi spotifyApi = null;
+    protected final SpotifyApi spotifyApi;
 
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
 
     public SpotifyWebapi(Cfg cfg) {
-        this.cfg = cfg;
+        try {
+            this.cfg = cfg;
+
+            // Setup the API
+            spotifyApi = new SpotifyApi.Builder()
+                    .setClientId(cfg.webapiClientId())
+                    .setClientSecret(cfg.webapiClientSecret())
+                    .setRedirectUri(new URI(cfg.webapiRedirect()))
+                    .build();
+        }
+        catch (URISyntaxException e) {
+            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+        }
     }
 
     private void currentlyPlaying(Song song) {
@@ -59,69 +62,19 @@ public class SpotifyWebapi extends Spotify {
         nextUpCallback.accept(Collections.unmodifiableList(nextUp));
     }
 
-    public Spotify connect() {
+    public Spotify connect(String refreshToken) {
         try {
-            // Setup the API
-            spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(cfg.webapiClientId())
-                    .setClientSecret(cfg.webapiClientSecret())
-                    .setRedirectUri(new URI(cfg.webapiRedirect()))
-                    .build();
-
-            // Do we have tokens stored or need to fetch them?
-            String refreshToken = cfg.webapiRefreshToken();
-            if (!refreshToken.isBlank()) {
-                spotifyApi.setRefreshToken(refreshToken);
-
-                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
-                setAccessToken(authorizationCodeCredentials);
-            }
-            else {
-
-                // Open spotify in the browser
-                // https://developer.spotify.com/documentation/web-api/concepts/authorization
-                // The authorizationCodeUri must be opened in the browser, the resulting code (in the redirect URL) pasted into the popup
-                // The code can only be used once to connect
-                URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
-                        .scope("user-read-playback-state,user-read-currently-playing")
-                        .build().execute();
-                System.out.println("authorizationCodeUri " + authorizationCodeUri);
-                Desktop.getDesktop().browse(authorizationCodeUri);
-
-                // Ask for the authorization code
-                Window window = Window.getWindows()[0];
-                var authorizationCode = SOptionPane.showInputDialog(window, "Please copy the authorization code here");
-                if (authorizationCode == null || authorizationCode.isBlank()) {
-                    String message = "Authorization code cannot be empty";
-                    javax.swing.JOptionPane.showMessageDialog(window, message);
-                    throw new IllegalArgumentException(message);
-                }
-
-                // Login to spotify and get the refresh and access tokens
-                AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-                refreshToken = authorizationCodeCredentials.getRefreshToken();
-                System.out.println("refreshToken " + refreshToken);
-                setAccessToken(authorizationCodeCredentials);
-
-                // Suggest to copy the refresh token in the configuration file
-                String refreshTokenCopy = "\"" + refreshToken + "\"";
-                if (SDialog.ofOkCancel(window, "",
-                        SVPanel.of(
-                                SLabel.of("Do you want to copy the text below?"),
-                                SLabel.of(refreshTokenCopy).font(SLabel.of().getFont().deriveFont(Font.BOLD)),
-                                SLabel.of("It can be placed as the refreshToken in the configuration file for easy startup.")
-                        )
-                ).showAndWait().closeReasonIsOk()) {
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(refreshTokenCopy), null);
-                }
-            }
             spotifyApi.setRefreshToken(refreshToken);
+
+            // Get access token
+            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
+            setAccessToken(authorizationCodeCredentials);
 
             // Start polling
             scheduledExecutorService.scheduleAtFixedRate(this::pollCurrentlyPlaying, 0, 3, TimeUnit.SECONDS);
             return this;
         }
-        catch (IOException | URISyntaxException | SpotifyWebApiException | ParseException e) {
+        catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Sportify webapi", e);
         }
     }
@@ -147,7 +100,7 @@ public class SpotifyWebapi extends Spotify {
                         currentlyPlaying(song);
 
                         if (song == null) {
-                            coverArtCallback.accept(SpotifyDanceInfo.WAITING_IMAGE_URL);
+                            coverArtCallback.accept(cfg.waitingImageUrl());
                             nextUp(List.of());
                         } else {
                             String id = song.id();
@@ -250,7 +203,7 @@ public class SpotifyWebapi extends Spotify {
         }
     }
 
-    private void setAccessToken(AuthorizationCodeCredentials authorizationCodeCredentials) {
+    protected void setAccessToken(AuthorizationCodeCredentials authorizationCodeCredentials) {
         String accessToken = authorizationCodeCredentials.getAccessToken();
         spotifyApi.setAccessToken(accessToken);
         //System.out.println("accessToken " + accessToken);

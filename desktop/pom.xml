@@ -55,12 +55,6 @@
             <artifactId>java-spotify-api</artifactId>
         </dependency>
 
-        <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
