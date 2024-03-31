@@ -5,14 +5,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.tbee.spotifyDanceInfo</groupId>
-    <artifactId>spotifyDanceInfo</artifactId>
+    <artifactId>spotifyDanceInfoParent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+	<modules>
+		<module>desktop</module>
+		<module>web</module>
+        <module>shared</module>
+	</modules>
 
     <repositories>
         <repository>
@@ -21,75 +28,58 @@
         </repository>
     </repositories>
 
-    <dependencies>
+    <dependencyManagement>
+        <dependencies>
 
-        <!-- https://github.com/tbee/TECL -->
-        <dependency>
-            <groupId>org.tbee.tecl</groupId>
-            <artifactId>tecl</artifactId>
-            <version>1.7.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.tbee.sway</groupId>
-            <artifactId>sway</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.swinglabs.swingx</groupId>
-            <artifactId>swingx-core</artifactId>
-            <version>1.6.5-1</version>
-        </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>spotifyDanceInfoShared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
-        <dependency>
-            <groupId>se.michaelthelin.spotify</groupId>
-            <artifactId>spotify-web-api-java</artifactId>
-            <version>9.0.0-RC1</version>
-        </dependency>
+            <!-- https://github.com/tbee/TECL -->
+            <dependency>
+                <groupId>org.tbee.tecl</groupId>
+                <artifactId>tecl</artifactId>
+                <version>1.7.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.tbee.sway</groupId>
+                <artifactId>sway</artifactId>
+                <version>2.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.swinglabs.swingx</groupId>
+                <artifactId>swingx-core</artifactId>
+                <version>1.6.5-1</version>
+            </dependency>
 
-        <!-- https://github.com/LabyStudio/java-spotify-api -->
-        <dependency>
-            <groupId>com.github.LabyStudio</groupId>
-            <artifactId>java-spotify-api</artifactId>
-            <version>1.2.0</version>
-        </dependency>
+            <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
+            <dependency>
+                <groupId>se.michaelthelin.spotify</groupId>
+                <artifactId>spotify-web-api-java</artifactId>
+                <version>9.0.0-RC1</version>
+            </dependency>
 
-        <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>5.9</version>
-        </dependency>
+            <!-- https://github.com/LabyStudio/java-spotify-api -->
+            <dependency>
+                <groupId>com.github.LabyStudio</groupId>
+                <artifactId>java-spotify-api</artifactId>
+                <version>1.2.0</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.12</version>
-        </dependency>
-    </dependencies>
+            <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
+            <dependency>
+                <groupId>com.opencsv</groupId>
+                <artifactId>opencsv</artifactId>
+                <version>5.9</version>
+            </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.2</version>
-                <configuration>
-                    <!-- <classifier>boot</classifier> -->
-                    <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
-                    <attach>false</attach>
-                    <excludeDevtools>true</excludeDevtools>
-                    <finalName>${project.name}</finalName>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>2.0.12</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

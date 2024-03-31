@@ -1,5 +1,5 @@
-if exist javaHome.cmd (
-    call javaHome.cmd
+if exist ..\javaHome.cmd (
+    call ..\javaHome.cmd
 )
 
 call %JAVA_HOME%\bin\java -Dconfig.tecl=..\spotifyDanceInfo.tecl -jar target\spotifyDanceInfo.jar

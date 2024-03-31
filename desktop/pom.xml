@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.tbee.spotifyDanceInfo</groupId>
+        <artifactId>spotifyDanceInfoParent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>spotifyDanceInfo</artifactId>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>spotifyDanceInfoShared</artifactId>
+        </dependency>
+
+        <!-- https://github.com/tbee/TECL -->
+        <dependency>
+            <groupId>org.tbee.tecl</groupId>
+            <artifactId>tecl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tbee.sway</groupId>
+            <artifactId>sway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.swinglabs.swingx</groupId>
+            <artifactId>swingx-core</artifactId>
+        </dependency>
+
+        <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
+        <dependency>
+            <groupId>se.michaelthelin.spotify</groupId>
+            <artifactId>spotify-web-api-java</artifactId>
+        </dependency>
+
+        <!-- https://github.com/LabyStudio/java-spotify-api -->
+        <dependency>
+            <groupId>com.github.LabyStudio</groupId>
+            <artifactId>java-spotify-api</artifactId>
+        </dependency>
+
+        <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <!-- <classifier>boot</classifier> -->
+                    <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
+                    <attach>false</attach>
+                    <excludeDevtools>true</excludeDevtools>
+                    <finalName>${project.name}</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
