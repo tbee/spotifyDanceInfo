@@ -72,15 +72,20 @@ public class IndexController {
 
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(@RequestParam("code") String authorizationCode) {
-        SpotifyApi spotifyApi = spotifyApi(null); // TBEERNOT how to match this to a session?
-        AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
+        try {
+            SpotifyApi spotifyApi = spotifyApi(null); // TBEERNOT how to match this to a session?
+            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
 
-        SpotifyConnectData spotifyConnectData = spotifyConnectData(null);
-        spotifyConnectData
-                .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
-                .accessToken(authorizationCodeCredentials.getAccessToken());
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(null);
+            spotifyConnectData
+                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
+                    .accessToken(authorizationCodeCredentials.getAccessToken());
 
-        return "index";
+            return "index";
+        }
+        catch (IOException | SpotifyWebApiException | ParseException e) {
+            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+        }
     }
 
     private SpotifyApi spotifyApi(HttpSession session) {
