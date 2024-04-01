@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 import java.io.IOException;
 import java.net.URI;
@@ -97,7 +98,6 @@ public class IndexController {
 
                         boolean playing = (track != null && track.getIs_playing());
                         Song currentlyPlaying = !playing ? null : new Song(track.getItem().getId(), track.getItem().getName(), "");
-                        screenData.currentlyPlaying(currentlyPlaying);
 
                         // The artist changes afterward, so we cannot do an equals on the songs
                         String currentlyPlayingId = currentlyPlaying == null ? "" : currentlyPlaying.trackId();
@@ -107,6 +107,7 @@ public class IndexController {
                             return;
                         }
 
+                        screenData.currentlyPlaying(currentlyPlaying);
                         if (currentlyPlaying == null) {
                             //coverArtCallback.accept(cfg.waitingImageUrl());
                             //nextUp(List.of());
@@ -115,8 +116,24 @@ public class IndexController {
                             //pollCovertArt(id);
                             //pollNextUp(id);
                             //pollArtist(id, t -> updateCurrentlyPlayingArtist(id, t));
+                            scheduledExecutorService.submit(() -> pollArtist(session));
                         }
                     }
+                });
+    }
+
+    private void pollArtist(HttpSession session) {
+        ScreenData screenData = screenData(session);
+        Song currentlyPlaying = screenData.currentlyPlaying();
+        spotifyApi(session).getTrack(currentlyPlaying.trackId()).build().executeAsync()
+                .exceptionally(t -> logException(session, t))
+                .thenAccept(t -> {
+                    ArtistSimplified[] artists = t.getArtists();
+                    if (artists.length == 0) {
+                        return;
+                    }
+                    String name = artists[0].getName();
+                    screenData.currentlyPlaying().artist(name);
                 });
     }
 
