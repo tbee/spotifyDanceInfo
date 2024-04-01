@@ -13,7 +13,7 @@
             function copyCode() {
                 try {
                     navigator.clipboard.writeText(document.getElementById('redirectUrl').value);
-                    document.getElementById('copyStatus').innerHTML = 'The url is copied to clipboard';
+                    document.getElementById('copyStatus').innerHTML = 'The url has been copied to clipboard';
                 } catch (err) {
                     document.getElementById('copyStatus').innerHTML = 'Failed to copy: ' + err;
                 }
