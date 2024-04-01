@@ -18,7 +18,11 @@ body {
     display: none;
 }
 
-h1.title {
+.title {
+    -webkit-text-stroke: 1px black; /* width and color */
+    color: white;
+}
+.subtitle {
     -webkit-text-stroke: 1px black; /* width and color */
     color: white;
 }
