@@ -19,7 +19,7 @@ import java.net.URISyntaxException;
 @Controller
 public class IndexController {
 
-    @GetMapping
+    @GetMapping("/")
     public String index(Model model) {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
@@ -28,13 +28,13 @@ public class IndexController {
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
-            connectForm.setRedirectUrl("https://nyota.softworks.nl/SpotifyDanceInfo.html"); // TBEERNOT generate URL
+            connectForm.setRedirectUrl("http://localhost:8080/spotifyCallback"); // TBEERNOT generate URL
             connectForm.setRefreshToken(cfg.webapiRefreshToken());
         }
         return "index";
     }
 
-    @PostMapping
+    @PostMapping("/")
     public String indexSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm) {
         try {
             SpotifyConnectData spotifyConnectData = new SpotifyConnectData()
@@ -71,17 +71,17 @@ public class IndexController {
     }
 
     @GetMapping("/spotifyCallback")
-    public String spotifyCallback(@RequestParam("code") String authorizationCode) {
+    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
         try {
-            SpotifyApi spotifyApi = spotifyApi(null); // TBEERNOT how to match this to a session?
+            SpotifyApi spotifyApi = spotifyApi(session);
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
 
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(null);
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken());
 
-            return "index";
+            return "redirect:/";
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Sportify webapi", e);
