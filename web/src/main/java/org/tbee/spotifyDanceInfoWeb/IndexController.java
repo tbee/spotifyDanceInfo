@@ -16,9 +16,14 @@ import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCrede
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Controller
 public class IndexController {
+
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     @GetMapping("/")
     public String index(HttpServletRequest request, Model model) {
@@ -38,11 +43,10 @@ public class IndexController {
     @PostMapping("/")
     public String indexSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm) {
         try {
-            SpotifyConnectData spotifyConnectData = new SpotifyConnectData()
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(session)
                     .clientId(connectForm.getClientId())
                     .clientSecret(connectForm.getClientSecret())
                     .redirectUrl(connectForm.getRedirectUrl());
-            session.setAttribute("SpotifyConnectData", spotifyConnectData);
 
             // Spotify API
             SpotifyApi spotifyApi = spotifyApi(session);
@@ -77,8 +81,43 @@ public class IndexController {
     }
 
     @GetMapping("/spotify")
-    public String spotify(Model model) {
+    public String spotify(HttpSession session, Model model) {
+        updateCurrentlyPlaying(session);
+        model.addAttribute("ScreenData", screenData(session));
         return "spotify";
+    }
+
+    private void updateCurrentlyPlaying(HttpSession session) {
+        spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
+                .exceptionally(t -> logException(session, t))
+                .thenAccept(track -> {
+                    synchronized (session) {
+
+                        ScreenData screenData = screenData(session);
+
+                        boolean playing = (track != null && track.getIs_playing());
+                        Song currentlyPlaying = !playing ? null : new Song(track.getItem().getId(), track.getItem().getName(), "");
+                        screenData.currentlyPlaying(currentlyPlaying);
+
+                        // The artist changes afterward, so we cannot do an equals on the songs
+                        String currentlyPlayingId = currentlyPlaying == null ? "" : currentlyPlaying.trackId();
+                        String songId = (screenData.currentlyPlaying() == null ? "" : screenData.currentlyPlaying().trackId());
+                        boolean songChanged = !Objects.equals(currentlyPlayingId, songId);
+                        if (!songChanged) {
+                            return;
+                        }
+
+                        if (currentlyPlaying == null) {
+                            //coverArtCallback.accept(cfg.waitingImageUrl());
+                            //nextUp(List.of());
+                        } else {
+                            //String id = currentlyPlaying.trackId()();
+                            //pollCovertArt(id);
+                            //pollNextUp(id);
+                            //pollArtist(id, t -> updateCurrentlyPlayingArtist(id, t));
+                        }
+                    }
+                });
     }
 
     private SpotifyApi spotifyApi(HttpSession session) {
@@ -98,8 +137,46 @@ public class IndexController {
     }
 
     private static SpotifyConnectData spotifyConnectData(HttpSession session) {
-        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute("SpotifyConnectData");
+        String attributeName = "SpotifyConnectData";
+        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(attributeName);
+        if (spotifyConnectData == null) {
+            spotifyConnectData = new SpotifyConnectData();
+            session.setAttribute(attributeName, spotifyConnectData);
+        }
         return spotifyConnectData;
+    }
+
+    private static ScreenData screenData(HttpSession session) {
+        String attributeName = "SpotifyScreenData";
+        ScreenData screenData = (ScreenData) session.getAttribute(attributeName);
+        if (screenData == null) {
+            screenData = new ScreenData();
+            session.setAttribute(attributeName, screenData);
+        }
+        return screenData;
+    }
+
+    private <T> T logException(HttpSession session, Throwable t) {
+        t.printStackTrace();
+
+        // just in case something went wrong with scheduled refreshing
+        if (t.getMessage().contains("The access token expired")) {
+            refreshAccessToken(session);
+        }
+
+        return null;
+    }
+
+    private void refreshAccessToken(HttpSession session) {
+        try {
+            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi(session).authorizationCodeRefresh().build().execute();
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            spotifyConnectData
+                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
+                    .accessToken(authorizationCodeCredentials.getAccessToken());
+        } catch (IOException | SpotifyWebApiException | ParseException e) {
+            logException(session, e);
+        }
     }
 
     public static class ConnectForm {
