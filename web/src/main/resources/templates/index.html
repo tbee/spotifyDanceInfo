@@ -8,6 +8,17 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
         <link rel="stylesheet" href="/index.css">
         <link rel="stylesheet" href="/site.css">
+        <script src="https://kit.fontawesome.com/501b8808a2.js" type="text/javascript" defer=""></script>
+        <script type="application/javascript">
+            function copyCode() {
+                try {
+                    navigator.clipboard.writeText(document.getElementById('redirectUrl').value);
+                    document.getElementById('copyStatus').innerHTML = 'The url is copied to clipboard';
+                } catch (err) {
+                    document.getElementById('copyStatus').innerHTML = 'Failed to copy: ' + err;
+                }
+            }
+        </script>
     </head>
     <body>
         <section class="section">
@@ -17,11 +28,18 @@
                         <h1 class="title">Spotify Dance Info</h1>
                         <form class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
                             <div class="block">
-                                Provide a client id and secret as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's documentation.
-                                <br/>
-                                Use same value as below for the redirect URL.
-                                <br/>
-                                And optionally, if you're technically more savvy, provide a refresh token.
+                                Copy the client id and secret from Spotify, as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's WebAPI documentation.
+                                During the WebAPI set up, use the value below for the redirect URL.
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Redirect URL</label>
+                                <div class="control">
+                                    <input id="redirectUrl" class="input" type="url" th:field="*{redirectUrl}" style="width: 95%;"/>
+                                    <span class="icon" style="padding-top: 10px;" onclick="copyCode()"><i class="fas fa-copy fa-xl"></i></span>
+                                </div>
+                                <div id="copyStatus" style="text-align: end;">
+                                </div>
                             </div>
 
                             <div class="field">
@@ -35,20 +53,6 @@
                                 <label class="label">Client secret</label>
                                 <div class="control">
                                     <input id="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label class="label">Redirect URL</label>
-                                <div class="control">
-                                    <input id="redirectUrl" class="input" type="url" th:field="*{redirectUrl}"/>
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label class="label">Refresh token</label>
-                                <div class="control">
-                                    <input id="refreshToken" class="input" type="text" placeholder="xxxxx" th:field="*{refreshToken}"/>
                                 </div>
                             </div>
 

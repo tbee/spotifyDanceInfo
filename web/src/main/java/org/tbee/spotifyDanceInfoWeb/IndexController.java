@@ -1,5 +1,6 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.springframework.stereotype.Controller;
@@ -20,7 +21,7 @@ import java.net.URISyntaxException;
 public class IndexController {
 
     @GetMapping("/")
-    public String index(Model model) {
+    public String index(HttpServletRequest request, Model model) {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
 
@@ -28,9 +29,9 @@ public class IndexController {
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
-            connectForm.setRedirectUrl("http://localhost:8080/spotifyCallback"); // TBEERNOT generate URL
-            connectForm.setRefreshToken(cfg.webapiRefreshToken());
+            connectForm.setRedirectUrl(request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
         }
+
         return "index";
     }
 
@@ -40,32 +41,19 @@ public class IndexController {
             SpotifyConnectData spotifyConnectData = new SpotifyConnectData()
                     .clientId(connectForm.getClientId())
                     .clientSecret(connectForm.getClientSecret())
-                    .redirectUrl(connectForm.getRedirectUrl())
-                    .refreshToken(connectForm.getRefreshToken().isBlank() ? null : connectForm.getRefreshToken());
+                    .redirectUrl(connectForm.getRedirectUrl());
             session.setAttribute("SpotifyConnectData", spotifyConnectData);
 
             // Spotify API
             SpotifyApi spotifyApi = spotifyApi(session);
 
             // Forward to Spotify
-            if (connectForm.getRefreshToken().isBlank()) {
-                URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
-                        .scope("user-read-playback-state,user-read-currently-playing")
-                        .build().execute();
-                return "redirect:" + authorizationCodeUri.toURL().toString();
-            }
-
-            // Get the access token
-            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
-
-            // Update connect data
-            spotifyConnectData
-                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
-                    .accessToken(authorizationCodeCredentials.getAccessToken());
-
-            return "redirect:/spotify";
+            URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
+                    .scope("user-read-playback-state,user-read-currently-playing")
+                    .build().execute();
+            return "redirect:" + authorizationCodeUri.toURL().toString();
         }
-        catch (IOException | SpotifyWebApiException | ParseException e) {
+        catch (IOException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
@@ -101,6 +89,7 @@ public class IndexController {
                     .setClientSecret(spotifyConnectData.clientSecret())
                     .setRedirectUri(new URI(spotifyConnectData.redirectUrl()))
                     .setRefreshToken(spotifyConnectData.refreshToken())
+                    .setAccessToken(spotifyConnectData.accessToken())
                     .build();
         }
         catch (URISyntaxException e) {
