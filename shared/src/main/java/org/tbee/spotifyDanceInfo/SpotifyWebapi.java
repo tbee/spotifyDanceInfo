@@ -48,7 +48,7 @@ abstract public class SpotifyWebapi extends Spotify {
                     .build();
         }
         catch (URISyntaxException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 
@@ -75,7 +75,7 @@ abstract public class SpotifyWebapi extends Spotify {
             return this;
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 

@@ -7,17 +7,19 @@
         <title>Spotify Dance Info</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
         <link rel="stylesheet" href="/index.css">
+        <link rel="stylesheet" href="/site.css">
     </head>
     <body>
         <section class="section">
             <div class="container">
                 <div class="columns is-centered">
                     <div class="column is-half">
+                        <h1 class="title">Spotify Dance Info</h1>
                         <form class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
                             <div class="block">
                                 Provide a client id and secret as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's documentation.
                                 <br/>
-                                Use <strong>https:/....../</strong> as the value for the redirect URL.
+                                Use same value as below for the redirect URL.
                                 <br/>
                                 And optionally, if you're technically more savvy, provide a refresh token.
                             </div>

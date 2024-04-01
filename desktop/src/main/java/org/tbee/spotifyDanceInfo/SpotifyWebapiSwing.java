@@ -74,7 +74,7 @@ public class SpotifyWebapiSwing extends SpotifyWebapi {
             return this;
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 

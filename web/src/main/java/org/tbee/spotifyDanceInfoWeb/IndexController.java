@@ -63,10 +63,10 @@ public class IndexController {
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken());
 
-            return "redirect:/";
+            return "redirect:/spotify";
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 
@@ -81,11 +81,16 @@ public class IndexController {
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken());
 
-            return "redirect:/";
+            return "redirect:/spotify";
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
+    }
+
+    @GetMapping("/spotify")
+    public String spotify(Model model) {
+        return "spotify";
     }
 
     private SpotifyApi spotifyApi(HttpSession session) {
@@ -99,7 +104,7 @@ public class IndexController {
                     .build();
         }
         catch (URISyntaxException e) {
-            throw new RuntimeException("Problem connecting to Sportify webapi", e);
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 
