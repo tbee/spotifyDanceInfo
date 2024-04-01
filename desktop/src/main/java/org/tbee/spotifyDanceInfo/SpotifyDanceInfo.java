@@ -30,8 +30,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -125,7 +125,7 @@ public class SpotifyDanceInfo {
         scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
 
         // And go
-        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapiSwing(cfg))
+        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapi(cfg))
                 .currentlyPlayingCallback(this::updateCurrentlyPlaying)
                 .nextUpCallback(this::updateNextUp)
                 .coverArtCallback(this::generateAndUpdateImage)
@@ -276,7 +276,7 @@ public class SpotifyDanceInfo {
             Cfg cfg = cfg();
 
             int count = cfg.nextUpCount();
-            List<Song> songs = Collections.unmodifiableList(nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count)));
+            List<Song> songs = new ArrayList<>(nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count)));
 
             // Determine text
             StringBuilder text = new StringBuilder();
