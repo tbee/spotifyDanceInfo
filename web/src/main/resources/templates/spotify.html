@@ -17,17 +17,9 @@
             <h3 class="title is-3">?</h3>
         </div>
         <div class="upNext">
-            <div class="upNextItem">
-                <h2 class="title is-2">NextUp</h2>
-                <h3 class="subtitle is-3">Dance</h3>
-            </div>
-            <div class="upNextItem">
-                <h2 class="title is-2">NextUp</h2>
-                <h3 class="subtitle is-3">Dance</h3>
-            </div>
-            <div class="upNextItem">
-                <h2 class="title is-2">NextUp</h2>
-                <h3 class="subtitle is-3">Dance</h3>
+            <div class="upNextItem" th:each="nextUp : ${ScreenData.nextUp()}">
+                <h2 class="title is-2" th:text="${nextUp.title() + ' ' + nextUp.artist()}">?</h2>
+                <h3 class="subtitle is-3">?</h3>
             </div>
         </div>
     </body>

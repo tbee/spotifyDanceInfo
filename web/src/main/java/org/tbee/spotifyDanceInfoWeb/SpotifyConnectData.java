@@ -11,8 +11,8 @@ public class SpotifyConnectData {
         return clientId;
     }
 
-    public SpotifyConnectData clientId(String clientId) {
-        this.clientId = clientId;
+    public SpotifyConnectData clientId(String v) {
+        this.clientId = v;
         return this;
     }
 
@@ -20,8 +20,8 @@ public class SpotifyConnectData {
         return clientSecret;
     }
 
-    public SpotifyConnectData clientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
+    public SpotifyConnectData clientSecret(String v) {
+        this.clientSecret = v;
         return this;
     }
 
@@ -29,8 +29,8 @@ public class SpotifyConnectData {
         return redirectUrl;
     }
 
-    public SpotifyConnectData redirectUrl(String redirectUrl) {
-        this.redirectUrl = redirectUrl;
+    public SpotifyConnectData redirectUrl(String v) {
+        this.redirectUrl = v;
         return this;
     }
 
@@ -38,8 +38,8 @@ public class SpotifyConnectData {
         return refreshToken;
     }
 
-    public SpotifyConnectData refreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
+    public SpotifyConnectData refreshToken(String v) {
+        this.refreshToken = v;
         return this;
     }
 
@@ -47,8 +47,8 @@ public class SpotifyConnectData {
         return accessToken;
     }
 
-    public SpotifyConnectData accessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public SpotifyConnectData accessToken(String v) {
+        this.accessToken = v;
         return this;
     }
 }

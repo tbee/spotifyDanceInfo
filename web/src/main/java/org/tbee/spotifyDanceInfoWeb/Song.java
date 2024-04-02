@@ -21,8 +21,8 @@ public class Song {
         return trackId;
     }
 
-    public Song trackId(String clientId) {
-        this.trackId = clientId;
+    public Song trackId(String v) {
+        this.trackId = v;
         return this;
     }
 
@@ -30,8 +30,8 @@ public class Song {
         return title;
     }
 
-    public Song title(String clientSecret) {
-        this.title = clientSecret;
+    public Song title(String v) {
+        this.title = v;
         return this;
     }
 
@@ -39,8 +39,17 @@ public class Song {
         return artist;
     }
 
-    public Song artist(String redirectUrl) {
-        this.artist = redirectUrl;
+    public Song artist(String v) {
+        this.artist = v;
+        return this;
+    }
+
+    public List<String> dances() {
+        return dances;
+    }
+
+    public Song dances(List<String> v) {
+        this.dances = v;
         return this;
     }
 }

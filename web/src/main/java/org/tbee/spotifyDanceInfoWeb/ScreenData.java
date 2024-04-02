@@ -5,7 +5,7 @@ import java.util.List;
 
 public class ScreenData {
     private Song currentlyPlaying = new Song();
-    private List<Song> upnext = new ArrayList<>();
+    private List<Song> nextUp = new ArrayList<>();
 
     public Song currentlyPlaying() {
         return currentlyPlaying;
@@ -16,7 +16,11 @@ public class ScreenData {
         return this;
     }
 
-    public List<Song> upnext() {
-        return upnext;
+    public List<Song> nextUp() {
+        return nextUp;
+    }
+    public ScreenData nextUp(List<Song> v) {
+        nextUp = v;
+        return this;
     }
 }

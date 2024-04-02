@@ -11,15 +11,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 
 @Controller
 public class IndexController {
@@ -112,28 +116,49 @@ public class IndexController {
                             //coverArtCallback.accept(cfg.waitingImageUrl());
                             //nextUp(List.of());
                         } else {
-                            //String id = currentlyPlaying.trackId()();
                             //pollCovertArt(id);
-                            //pollNextUp(id);
-                            //pollArtist(id, t -> updateCurrentlyPlayingArtist(id, t));
-                            scheduledExecutorService.submit(() -> pollArtist(session));
+                            pollArtist(session, currentlyPlayingId, name -> screenData.currentlyPlaying().artist(name));
+                            pollNextUp(session, currentlyPlayingId);
                         }
                     }
                 });
     }
 
-    private void pollArtist(HttpSession session) {
+    private void pollArtist(HttpSession session, String trackId, Consumer<String> callback) {
         ScreenData screenData = screenData(session);
         Song currentlyPlaying = screenData.currentlyPlaying();
         spotifyApi(session).getTrack(currentlyPlaying.trackId()).build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
-                    if (artists.length == 0) {
-                        return;
+                    if (artists.length > 0) {
+                        String name = artists[0].getName();
+                        callback.accept(name);
                     }
-                    String name = artists[0].getName();
-                    screenData.currentlyPlaying().artist(name);
+                });
+    }
+
+    public void pollNextUp(HttpSession session, String trackId) {
+        spotifyApi(session).getTheUsersQueue().build().executeAsync()
+                .exceptionally(t -> logException(session, t))
+                .thenAccept(playbackQueue -> {
+                    ScreenData screenData = screenData(session);
+                    Song currentlyPlaying = screenData.currentlyPlaying();
+
+                    if (currentlyPlaying != null && currentlyPlaying.trackId().equals(trackId)) {
+                        List<Song> songs = new ArrayList<>();
+                        for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
+                            //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
+                            songs.add(new Song(playlistItem.getId(), playlistItem.getName(), ""));
+                            if (songs.size() == 3) {
+                                break; // TBEERNOT
+                            }
+                        }
+                        screenData.nextUp(songs);
+
+                        // Update artist
+                        songs.forEach(song -> pollArtist(session, song.trackId(), song::artist));
+                    }
                 });
     }
 
