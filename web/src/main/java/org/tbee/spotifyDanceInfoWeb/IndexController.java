@@ -109,13 +109,23 @@ public class IndexController {
                         if (currentlyPlaying.trackId().isBlank()) {
                             //coverArtCallback.accept(cfg.waitingImageUrl());
                             screenData.nextUp(List.of());
-                        } else {
+                        }
+                        else {
                             //pollCovertArt(id);
                             pollArtist(session, currentlyPlaying);
                             pollNextUp(session, currentlyPlaying.trackId());
+                            setDances(currentlyPlaying);
                         }
                     }
                 });
+    }
+
+    private void setDances(Song song) {
+        Cfg cfg = new Cfg();
+        List<String> dances = cfg.trackIdToDanceIds(song.trackId()).stream()
+                .map(danceId -> cfg.danceIdToScreenText(danceId))
+                .toList();
+        song.dances(dances);
     }
 
     private void pollArtist(HttpSession session, Song song) {
@@ -141,10 +151,12 @@ public class IndexController {
                         List<Song> songs = new ArrayList<>();
                         for (IPlaylistItem playlistItem : playbackQueue.getQueue()) {
                             //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
-                            songs.add(new Song(playlistItem.getId(), playlistItem.getName(), ""));
+                            Song song = new Song(playlistItem.getId(), playlistItem.getName(), "");
+                            songs.add(song);
                             if (songs.size() == 3) {
                                 break; // TBEERNOT
                             }
+                            setDances(song);
                         }
                         screenData.nextUp(songs);
 

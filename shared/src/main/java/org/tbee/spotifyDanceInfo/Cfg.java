@@ -169,7 +169,7 @@ public class Cfg {
         return tecl.bool(BACKGROUNDIMAGE + "/useCovertArt", true);
     }
 
-    List<String> trackIdToDanceIds(String trackId) {
+    public List<String> trackIdToDanceIds(String trackId) {
         String danceText = tecl.grp(TRACKS).str("id", trackId, "dance", "");
         if (!danceText.isBlank()) {
             return danceTextToDances(danceText);
@@ -180,7 +180,7 @@ public class Cfg {
         return dances == null ? List.of("") : dances;
     }
 
-    String danceIdToScreenText(String danceId) {
+    public String danceIdToScreenText(String danceId) {
         return tecl.grp(DANCES).str("id", danceId, "text", danceId);
     }
 
