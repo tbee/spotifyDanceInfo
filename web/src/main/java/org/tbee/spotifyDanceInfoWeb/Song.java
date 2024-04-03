@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Song {
-    private String trackId = "trackid";
-    private String title = "title";
-    private String artist = "artist";
+    private String trackId = "";
+    private String title = "";
+    private String artist = "";
     private List<String> dances = new ArrayList<>();
 
     public Song() {

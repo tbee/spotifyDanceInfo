@@ -21,14 +21,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
 
 @Controller
 public class IndexController {
-
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     @GetMapping("/")
     public String index(HttpServletRequest request, Model model) {
@@ -101,39 +96,35 @@ public class IndexController {
                         ScreenData screenData = screenData(session);
 
                         boolean playing = (track != null && track.getIs_playing());
-                        Song currentlyPlaying = !playing ? null : new Song(track.getItem().getId(), track.getItem().getName(), "");
+                        Song currentlyPlaying = !playing ? new Song() : new Song(track.getItem().getId(), track.getItem().getName(), "");
 
                         // The artist changes afterward, so we cannot do an equals on the songs
-                        String currentlyPlayingId = currentlyPlaying == null ? "" : currentlyPlaying.trackId();
-                        String songId = (screenData.currentlyPlaying() == null ? "" : screenData.currentlyPlaying().trackId());
-                        boolean songChanged = !Objects.equals(currentlyPlayingId, songId);
+                        boolean songChanged = !Objects.equals(currentlyPlaying.trackId(), screenData.currentlyPlaying().trackId());
                         if (!songChanged) {
                             return;
                         }
 
                         screenData.currentlyPlaying(currentlyPlaying);
-                        if (currentlyPlaying == null) {
+                        if (currentlyPlaying.trackId().isBlank()) {
                             //coverArtCallback.accept(cfg.waitingImageUrl());
-                            //nextUp(List.of());
+                            screenData.nextUp(List.of());
                         } else {
                             //pollCovertArt(id);
-                            pollArtist(session, currentlyPlayingId, name -> screenData.currentlyPlaying().artist(name));
-                            pollNextUp(session, currentlyPlayingId);
+                            pollArtist(session, currentlyPlaying);
+                            pollNextUp(session, currentlyPlaying.trackId());
                         }
                     }
                 });
     }
 
-    private void pollArtist(HttpSession session, String trackId, Consumer<String> callback) {
-        ScreenData screenData = screenData(session);
-        Song currentlyPlaying = screenData.currentlyPlaying();
-        spotifyApi(session).getTrack(currentlyPlaying.trackId()).build().executeAsync()
+    private void pollArtist(HttpSession session, Song song) {
+        spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
                     if (artists.length > 0) {
                         String name = artists[0].getName();
-                        callback.accept(name);
+                        song.artist(name);
                     }
                 });
     }
@@ -157,7 +148,7 @@ public class IndexController {
                         screenData.nextUp(songs);
 
                         // Update artist
-                        songs.forEach(song -> pollArtist(session, song.trackId(), song::artist));
+                        songs.forEach(song -> pollArtist(session, song));
                     }
                 });
     }

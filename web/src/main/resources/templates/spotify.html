@@ -18,7 +18,7 @@
         </div>
         <div class="upNext">
             <div class="upNextItem" th:each="nextUp : ${ScreenData.nextUp()}">
-                <h2 class="title is-2" th:text="${nextUp.title() + ' ' + nextUp.artist()}">?</h2>
+                <h2 class="title is-2" th:text="${nextUp.title() + (nextUp.artist().isBlank() ? '' : ' - ' + nextUp.artist())}">?</h2>
                 <h3 class="subtitle is-3">?</h3>
             </div>
         </div>
