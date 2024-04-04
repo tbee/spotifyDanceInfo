@@ -1,88 +1,23 @@
 package org.tbee.spotifyDanceInfoWeb;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.tbee.spotifyDanceInfo.Cfg;
-import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-// TODO:
-// - per session track-to-dance (TSV with col 1 = trackid and col 2 = dances?)
-// - split controller into connect and spotify
 @Controller
-public class IndexController {
-
-    @GetMapping("/")
-    public String index(HttpServletRequest request, Model model) {
-        ConnectForm connectForm = new ConnectForm();
-        model.addAttribute("ConnectForm", connectForm);
-
-        Cfg cfg = SpotifyDanceInfoWebApplication.cfg();
-        if (cfg.webapiRefreshToken() != null) {
-            connectForm.setClientId(cfg.webapiClientId());
-            connectForm.setClientSecret(cfg.webapiClientSecret());
-            connectForm.setRedirectUrl(request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
-        }
-
-        return "index";
-    }
-
-    @PostMapping("/")
-    public String indexSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm) {
-        try {
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session)
-                    .clientId(connectForm.getClientId())
-                    .clientSecret(connectForm.getClientSecret())
-                    .redirectUrl(connectForm.getRedirectUrl());
-
-            // Spotify API
-            SpotifyApi spotifyApi = spotifyApi(session);
-
-            // Forward to Spotify
-            URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
-                    .scope("user-read-playback-state,user-read-currently-playing")
-                    .build().execute();
-            return "redirect:" + authorizationCodeUri.toURL().toString();
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Problem connecting to Spotify webapi", e);
-        }
-    }
-
-    @GetMapping("/spotifyCallback")
-    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
-        try {
-            SpotifyApi spotifyApi = spotifyApi(session);
-            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
-            spotifyConnectData
-                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
-                    .accessToken(authorizationCodeCredentials.getAccessToken());
-
-            return "redirect:/spotify";
-        }
-        catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Spotify webapi", e);
-        }
-    }
+public class SpotifyController {
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, Model model) {
@@ -92,7 +27,7 @@ public class IndexController {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
+        ConnectController.spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(track -> {
                     synchronized (session) {
@@ -132,7 +67,7 @@ public class IndexController {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
+        ConnectController.spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
@@ -144,7 +79,7 @@ public class IndexController {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        spotifyApi(session).getTheUsersQueue().build().executeAsync()
+        ConnectController.spotifyApi(session).getTheUsersQueue().build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(playbackQueue -> {
                     ScreenData screenData = screenData(session);
@@ -169,21 +104,6 @@ public class IndexController {
                 });
     }
 
-    private SpotifyApi spotifyApi(HttpSession session) {
-        try {
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
-            return new SpotifyApi.Builder()
-                    .setClientId(spotifyConnectData.clientId())
-                    .setClientSecret(spotifyConnectData.clientSecret())
-                    .setRedirectUri(new URI(spotifyConnectData.redirectUrl()))
-                    .setRefreshToken(spotifyConnectData.refreshToken())
-                    .setAccessToken(spotifyConnectData.accessToken())
-                    .build();
-        }
-        catch (URISyntaxException e) {
-            throw new RuntimeException("Problem connecting to Spotify webapi", e);
-        }
-    }
 
     private static SpotifyConnectData spotifyConnectData(HttpSession session) {
         String attributeName = "SpotifyConnectData";
@@ -218,52 +138,13 @@ public class IndexController {
 
     private void refreshAccessToken(HttpSession session) {
         try {
-            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi(session).authorizationCodeRefresh().build().execute();
+            AuthorizationCodeCredentials authorizationCodeCredentials = ConnectController.spotifyApi(session).authorizationCodeRefresh().build().execute();
             SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken());
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             logException(session, e);
-        }
-    }
-
-    public static class ConnectForm {
-        private String clientId;
-        private String clientSecret;
-        private String redirectUrl;
-        private String refreshToken;
-
-        public String getClientId() {
-            return clientId;
-        }
-
-        public void setClientId(String clientId) {
-            this.clientId = clientId;
-        }
-
-        public String getClientSecret() {
-            return clientSecret;
-        }
-
-        public void setClientSecret(String clientSecret) {
-            this.clientSecret = clientSecret;
-        }
-
-        public String getRedirectUrl() {
-            return redirectUrl;
-        }
-
-        public void setRedirectUrl(String redirectUrl) {
-            this.redirectUrl = redirectUrl;
-        }
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public void setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
         }
     }
 }
