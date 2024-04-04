@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO:
+// - per session track-to-dance (TSV with col 1 = trackid and col 2 = dances?)
+// - split controller into connect and spotify
 @Controller
 public class IndexController {
 
@@ -31,7 +34,7 @@ public class IndexController {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
 
-        Cfg cfg = new Cfg();
+        Cfg cfg = SpotifyDanceInfoWebApplication.cfg();
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
@@ -121,7 +124,7 @@ public class IndexController {
     }
 
     private void setDances(Song song) {
-        Cfg cfg = new Cfg();
+        Cfg cfg = SpotifyDanceInfoWebApplication.cfg();
         List<String> dances = cfg.trackIdToDanceIds(song.trackId()).stream()
                 .map(danceId -> cfg.danceIdToScreenText(danceId))
                 .toList();
