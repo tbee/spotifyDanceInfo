@@ -1,0 +1,13 @@
+@version 1
+
+dances {
+    | cc  | "Cha Cha"              |
+    | sa  | "Samba"                |
+}
+
+moreTracks {
+    tsv {
+        | idIdx | danceIdx | uri                                                                                                                                              |
+        | 0     | 1        | "./src/test/resources/trackToDance.tsv" |
+    }
+}

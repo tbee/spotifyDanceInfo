@@ -7,6 +7,7 @@ import com.opencsv.CSVReaderBuilder;
 import org.tbee.tecl.TECL;
 
 import java.awt.Font;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -16,6 +17,9 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,14 +40,20 @@ public class Cfg {
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private final List<Runnable> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
+    private final boolean moreTracksInBackground;
 
     private TECL tecl;
     private Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
 
 
     public Cfg() {
+        this("config.tecl", true);
+    }
+
+    public Cfg(String configFileName, boolean moreTracksInBackground) {
+        this.moreTracksInBackground = moreTracksInBackground;
         try {
-            tecl = TECL.parser().findAndParse();
+            tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
                 System.out.println("No configuration found, switch to default config (local spotify connection)");
                 tecl = new TECL("notfound");
@@ -58,7 +68,12 @@ public class Cfg {
     private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
         // Loop over the moreTrack configurations
         tecl.grps("/moreTracks/tsv").forEach(moreTrackTecl -> {
-            executorService.submit(() -> readMoreTracksTSV(moreTrackTecl));
+            if (moreTracksInBackground) {
+                executorService.submit(() -> readMoreTracksTSV(moreTrackTecl));
+            }
+            else {
+                readMoreTracksTSV(moreTrackTecl);
+            }
         });
     }
 
@@ -69,17 +84,7 @@ public class Cfg {
             int idIdx = moreTrack.integer("idIdx", 0);
             int danceIdx = moreTrack.integer("danceIdx", 1);
 
-            // First read the URI contents
-            String contents = "";
-            try (
-                    HttpClient httpClient = HttpClient.newBuilder()
-                            .followRedirects(HttpClient.Redirect.ALWAYS)
-                            .build();
-            ) {
-                HttpRequest request = HttpRequest.newBuilder(new URI(uri)).GET().build();
-                HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                contents = httpResponse.body();
-            }
+            String contents = readContents(new URI(uri));
 
             // Parse the contents
             CSVParser parser = new CSVParserBuilder()
@@ -87,12 +92,15 @@ public class Cfg {
                     .withIgnoreQuotations(true)
                     .build();
             try (
-                    CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
-                            .withSkipLines(1) // skip header
-                            .withCSVParser(parser)
-                            .build();
+                CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
+                        .withSkipLines(1) // skip header
+                        .withCSVParser(parser)
+                        .withKeepCarriageReturn(false)
+                        .build();
             ) {
+                System.out.println("contents " + contents);
                 csvReader.forEach(line -> {
+                    System.out.println("line " + line);
 
                     // Extract id and dance
                     String id = line[idIdx];
@@ -107,7 +115,59 @@ public class Cfg {
                 System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
                 onChangeListeners.forEach(l -> l.run());
             }
-        } catch (URISyntaxException | IOException | InterruptedException | RuntimeException e) {
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String readContents(URI uri) {
+        if (uri.toString().startsWith("http")) {
+            return readContentsHttp(uri);
+        }
+        if (uri.toString().startsWith("file")) {
+            return readContentsFile(uri);
+        }
+        if (uri.toString().startsWith("./")) {
+            try {
+                File currentDirectory = new File(".");
+                uri = new URI("file:///" + currentDirectory.getAbsolutePath().replace("\\", "/") + "/" + uri);
+                return readContentsFile(uri);
+            }
+            catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+        throw new IllegalArgumentException("Unknown URI type " + uri);
+    }
+
+    private String readContentsHttp(URI uri) {
+        try (
+                HttpClient httpClient = HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.ALWAYS)
+                        .build();
+        ) {
+            HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
+            HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return httpResponse.body();
+        }
+        catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String readContentsFile(URI uri) {
+        try {
+            File file = new File(uri.toURL().getFile());
+            if (!file.exists()) {
+                throw new IllegalArgumentException("File does not exist: " + file.getAbsolutePath());
+            }
+            Path path = Paths.get(uri.toURL().getFile().substring(1));
+            return String.join("\n", Files.readAllLines(path));
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
