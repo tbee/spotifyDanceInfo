@@ -52,18 +52,31 @@ public class SpotifyController {
                             //pollCovertArt(id);
                             pollArtist(session, currentlyPlaying);
                             pollNextUp(session, currentlyPlaying.trackId());
-                            setDances(currentlyPlaying);
+                            setDances(session, currentlyPlaying);
                         }
                     }
                 });
     }
 
-    private void setDances(Song song) {
-        Cfg cfg = SpotifyDanceInfoWebApplication.cfg();
-        List<String> dances = cfg.trackIdToDanceIds(song.trackId()).stream()
-                .map(danceId -> cfg.danceIdToScreenText(danceId))
+    private void setDances(HttpSession session, Song song) {
+
+        // First check in the session config
+        Cfg sessionCfg = (Cfg)session.getAttribute("cfg");
+        List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
+                .filter(danceId -> !danceId.isBlank())
+                .map(danceId -> sessionCfg.danceIdToScreenText(danceId))
                 .toList();
-        song.dances(dances);
+        if (!sessionDances.isEmpty()) {
+            song.dances(sessionDances);
+            return;
+        }
+
+        // Then in the application config
+        Cfg applicationCfg = SpotifyDanceInfoWebApplication.cfg();
+        List<String> applicationDances = applicationCfg.trackIdToDanceIds(song.trackId()).stream()
+                .map(danceId -> applicationCfg.danceIdToScreenText(danceId))
+                .toList();
+        song.dances(applicationDances);
     }
 
     private void pollArtist(HttpSession session, Song song) {
@@ -94,7 +107,7 @@ public class SpotifyController {
                             if (songs.size() == 3) {
                                 break; // TBEERNOT
                             }
-                            setDances(song);
+                            setDances(session, song);
                         }
                         screenData.nextUp(songs);
 
