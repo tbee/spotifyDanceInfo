@@ -16,4 +16,12 @@ public class CfgTest {
         Cfg cfg = new Cfg("tsv.tecl", false);
         Assertions.assertEquals("[cc]", cfg.trackIdToDanceIds("tsv001").toString());
     }
+
+    @Test
+    public void excel() {
+        Cfg cfg = new Cfg("excel.tecl", false);
+        Assertions.assertEquals("[ew]", cfg.trackIdToDanceIds("xlsx001").toString());
+        Assertions.assertEquals("[ew, ru]", cfg.trackIdToDanceIds("xls002").toString());
+        Assertions.assertEquals("[Engelse Wals, Rumba]", cfg.trackIdToDanceIds("xls004").toString());
+    }
 }

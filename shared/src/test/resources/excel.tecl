@@ -1,0 +1,17 @@
+@version 1
+
+dances {
+    | cc  | "Cha Cha"              |
+    | sa  | "Samba"                |
+}
+
+moreTracks {
+    xslx {
+        | idIdx | danceIdx | uri                                      |
+        | 0     | 1        | "./src/test/resources/trackToDance.xlsx" |
+    }
+    xsl {
+        | idIdx | danceIdx | uri                                      |
+        | 0     | 1        | "./src/test/resources/trackToDance.xls"  |
+    }
+}

@@ -4,12 +4,20 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.tbee.tecl.TECL;
 
 import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,9 +25,6 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Cfg {
 
@@ -68,15 +74,24 @@ public class Cfg {
     private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
         // Loop over the moreTrack configurations
         tecl.grps("/moreTracks/tsv").forEach(moreTrackTecl -> {
-            if (moreTracksInBackground) {
-                executorService.submit(() -> readMoreTracksTSV(moreTrackTecl));
-            }
-            else {
-                readMoreTracksTSV(moreTrackTecl);
-            }
+            runReadMoreTracks(() -> readMoreTracksTSV(moreTrackTecl));
+        });
+        tecl.grps("/moreTracks/xslx").forEach(moreTrackTecl -> {
+            runReadMoreTracks(() -> readMoreTracksXSLX(moreTrackTecl));
+        });
+        tecl.grps("/moreTracks/xsl").forEach(moreTrackTecl -> {
+            runReadMoreTracks(() -> readMoreTracksXSL(moreTrackTecl));
         });
     }
 
+    private void runReadMoreTracks(Runnable runnable) {
+        if (moreTracksInBackground) {
+            executorService.submit(runnable);
+        }
+        else {
+            runnable.run();
+        }
+    }
 
     private void readMoreTracksTSV(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
         try {
@@ -84,23 +99,21 @@ public class Cfg {
             int idIdx = moreTrack.integer("idIdx", 0);
             int danceIdx = moreTrack.integer("danceIdx", 1);
 
-            String contents = readContents(new URI(uri));
+            InputStream inputStream = readContents(new URI(uri));
 
-            // Parse the contents
+            // Parse the inputStream
             CSVParser parser = new CSVParserBuilder()
                     .withSeparator('\t') // TSV
                     .withIgnoreQuotations(true)
                     .build();
             try (
-                CSVReader csvReader = new CSVReaderBuilder(new StringReader(contents))
+                CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(inputStream)))
                         .withSkipLines(1) // skip header
                         .withCSVParser(parser)
                         .withKeepCarriageReturn(false)
                         .build();
             ) {
-                System.out.println("contents " + contents);
                 csvReader.forEach(line -> {
-                    System.out.println("line " + line);
 
                     // Extract id and dance
                     String id = line[idIdx];
@@ -121,7 +134,66 @@ public class Cfg {
         }
     }
 
-    private String readContents(URI uri) {
+    private void readMoreTracksXSLX(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
+        try {
+            String uri = moreTrack.str("uri");
+
+            InputStream inputStream = readContents(new URI(uri));
+
+            // Parse the inputStream
+            Workbook xssfWorkbook = new XSSFWorkbook(inputStream);
+            readMoreTracksExcel(moreTrack, uri, xssfWorkbook);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readMoreTracksXSL(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
+        try {
+            String uri = moreTrack.str("uri");
+
+            InputStream inputStream = readContents(new URI(uri));
+
+            // Parse the inputStream
+            HSSFWorkbook hssfWorkbook = new HSSFWorkbook(inputStream);
+            readMoreTracksExcel(moreTrack, uri, hssfWorkbook);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void readMoreTracksExcel(TECL moreTrack, String uri, Workbook workbook) {
+        int sheetIdx = moreTrack.integer("sheetIdx", 0);
+        int idIdx = moreTrack.integer("idIdx", 0);
+        int danceIdx = moreTrack.integer("danceIdx", 1);
+
+        Sheet hssfSheet = workbook.getSheetAt(sheetIdx);
+
+        AtomicInteger cnt = new AtomicInteger(0);
+        hssfSheet.forEach(row -> {
+            // skip first row
+            cnt.incrementAndGet();
+            if (cnt.get() == 0) {
+                return;
+            }
+
+            String id = row.getCell(idIdx).getStringCellValue();
+            String danceText = row.getCell(danceIdx).getStringCellValue();
+
+            // Possibly split on comma
+            List<String> dances = danceTextToDances(danceText);
+
+            // Store
+            songIdToDanceNames.put(id, dances);
+        });
+        System.out.println("Read " + (cnt.get() - 1) + " id(s) from " + uri);
+        onChangeListeners.forEach(l -> l.run());
+    }
+
+    private InputStream readContents(URI uri) {
         if (uri.toString().startsWith("http")) {
             return readContentsHttp(uri);
         }
@@ -143,29 +215,28 @@ public class Cfg {
         throw new IllegalArgumentException("Unknown URI type " + uri);
     }
 
-    private String readContentsHttp(URI uri) {
+    private ByteArrayInputStream readContentsHttp(URI uri) {
         try (
-                HttpClient httpClient = HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.ALWAYS)
-                        .build();
+            HttpClient httpClient = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .build();
         ) {
             HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return httpResponse.body();
+            return new ByteArrayInputStream(httpResponse.body().getBytes());
         }
         catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String readContentsFile(URI uri) {
+    private FileInputStream readContentsFile(URI uri) {
         try {
             File file = new File(uri.toURL().getFile());
             if (!file.exists()) {
                 throw new IllegalArgumentException("File does not exist: " + file.getAbsolutePath());
             }
-            Path path = Paths.get(uri.toURL().getFile().substring(1));
-            return String.join("\n", Files.readAllLines(path));
+            return new FileInputStream(file);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -245,7 +316,10 @@ public class Cfg {
     }
 
     List<String> danceTextToDances(String dancesText) {
-        return dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText);
+        return (dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText))
+                .stream()
+                .map(s -> s.trim())
+                .toList();
     }
 
     public int nextUpCount() {

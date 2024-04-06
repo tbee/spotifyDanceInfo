@@ -7,7 +7,7 @@ dances {
 
 moreTracks {
     tsv {
-        | idIdx | danceIdx | uri                                                                                                                                              |
+        | idIdx | danceIdx | uri                                     |
         | 0     | 1        | "./src/test/resources/trackToDance.tsv" |
     }
 }
