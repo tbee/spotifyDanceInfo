@@ -26,7 +26,7 @@
                 <div class="columns is-centered">
                     <div class="column is-half">
                         <h1 class="title">Spotify Dance Info</h1>
-                        <form class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
+                        <form enctype="multipart/form-data" class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
                             <div class="block">
                                 Copy the client id and secret from Spotify, as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's WebAPI documentation.
                                 During the WebAPI set up, use the value below for the redirect URL.
@@ -54,6 +54,21 @@
                                 <div class="control">
                                     <input id="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
                                 </div>
+                            </div>
+
+                            <div class="field">
+                                <label class="label">Track-to-dance(s) map</label>
+                                <div class="control">
+                                    <input id="file" class="input" type="file" name="file"/>
+                                </div>
+                            </div>
+                            <div class="block">
+                                You may provide a TSV (tab separated) or Excel (xls, xlsx) file that maps track ids to dances.
+                                <ul>
+                                    <li class="bullet">The first column must contain the track id.</li>
+                                    <li class="bullet">The second column must contain the dance, or dances separated by a comma.</li>
+                                    <li class="bullet">Excel file must have this information on the first sheet.</li>
+                                </ul>
                             </div>
 
                             <button class="button is-primary">Connect</button>

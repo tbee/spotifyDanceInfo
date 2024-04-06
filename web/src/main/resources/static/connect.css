@@ -1,3 +1,9 @@
 body {
     background-image: url('/waiting.png');
 }
+
+.bullet {
+    list-style: square outside;
+    margin-left: 20px;
+    padding-left: 0;
+}

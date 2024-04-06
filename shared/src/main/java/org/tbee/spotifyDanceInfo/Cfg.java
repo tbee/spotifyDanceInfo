@@ -101,36 +101,40 @@ public class Cfg {
 
             InputStream inputStream = readContents(new URI(uri));
 
-            // Parse the inputStream
-            CSVParser parser = new CSVParserBuilder()
-                    .withSeparator('\t') // TSV
-                    .withIgnoreQuotations(true)
-                    .build();
-            try (
-                CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(inputStream)))
-                        .withSkipLines(1) // skip header
-                        .withCSVParser(parser)
-                        .withKeepCarriageReturn(false)
-                        .build();
-            ) {
-                csvReader.forEach(line -> {
-
-                    // Extract id and dance
-                    String id = line[idIdx];
-                    String danceText = line[danceIdx];
-
-                    // Possibly split on comma
-                    List<String> dances = danceTextToDances(danceText);
-
-                    // Store
-                    songIdToDanceNames.put(id, dances);
-                });
-                System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
-                onChangeListeners.forEach(l -> l.run());
-            }
+            readMoreTracksTSV(uri, inputStream, idIdx, danceIdx);
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void readMoreTracksTSV(String uri, InputStream inputStream, int idIdx, int danceIdx) throws IOException {
+        // Parse the inputStream
+        CSVParser parser = new CSVParserBuilder()
+                .withSeparator('\t') // TSV
+                .withIgnoreQuotations(true)
+                .build();
+        try (
+            CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(inputStream)))
+                    .withSkipLines(1) // skip header
+                    .withCSVParser(parser)
+                    .withKeepCarriageReturn(false)
+                    .build();
+        ) {
+            csvReader.forEach(line -> {
+
+                // Extract id and dance
+                String id = line[idIdx];
+                String danceText = line[danceIdx];
+
+                // Possibly split on comma
+                List<String> dances = danceTextToDances(danceText);
+
+                // Store
+                songIdToDanceNames.put(id, dances);
+            });
+            System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
+            onChangeListeners.forEach(l -> l.run());
         }
     }
 
@@ -170,6 +174,10 @@ public class Cfg {
         int idIdx = moreTrack.integer("idIdx", 0);
         int danceIdx = moreTrack.integer("danceIdx", 1);
 
+        readMoreTracksExcel(uri, workbook, sheetIdx, idIdx, danceIdx);
+    }
+
+    public void readMoreTracksExcel(String uri, Workbook workbook, int sheetIdx, int idIdx, int danceIdx) {
         Sheet hssfSheet = workbook.getSheetAt(sheetIdx);
 
         AtomicInteger cnt = new AtomicInteger(0);
