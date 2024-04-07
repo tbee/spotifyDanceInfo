@@ -8,6 +8,9 @@ body {
     left: 0;
     margin: 1%;
 }
+.currentlyPlaying h1 {
+    font-size: 4em !important;
+}
 
 .upNext {
     position: fixed;
