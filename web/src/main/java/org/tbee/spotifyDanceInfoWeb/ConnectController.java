@@ -33,7 +33,8 @@ public class ConnectController {
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
-            connectForm.setRedirectUrl(request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
+            String webapiRedirect = cfg.webapiRedirect();
+            connectForm.setRedirectUrl(webapiRedirect != null ? webapiRedirect : request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
         }
 
         return "connect";
