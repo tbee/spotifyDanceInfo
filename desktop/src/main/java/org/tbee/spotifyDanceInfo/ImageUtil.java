@@ -1,5 +1,8 @@
 package org.tbee.spotifyDanceInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -14,6 +17,8 @@ import java.util.Map;
 
 public class ImageUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(ImageUtil.class);
+
     public static byte[] read(URL url) {
         byte[] bytes = new byte[]{};
         try (
@@ -22,7 +27,7 @@ public class ImageUtil {
             bytes = inputStream.readAllBytes();
         }
         catch (IOException e) {
-            System.out.println("Error loading image " + e.getMessage());
+            logger.error("Error loading image ", e);
         }
         return bytes;
     }

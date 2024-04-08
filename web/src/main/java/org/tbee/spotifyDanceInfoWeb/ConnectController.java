@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +25,8 @@ import java.net.URISyntaxException;
 
 @Controller
 public class ConnectController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConnectController.class);
 
     @GetMapping("/")
     public String connect(HttpServletRequest request, Model model) {

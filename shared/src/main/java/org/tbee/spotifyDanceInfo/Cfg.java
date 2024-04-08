@@ -8,6 +8,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tbee.tecl.TECL;
 
 import java.awt.Font;
@@ -36,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Cfg {
+    private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
 
     private static final String CONNECT_LOCAL = "local";
     private static final String WEBAPI = "/spotify/webapi";
@@ -61,7 +64,7 @@ public class Cfg {
         try {
             tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
-                System.out.println("No configuration found, switch to default config (local spotify connection)");
+                if (logger.isInfoEnabled()) logger.info("No configuration found, switch to default config (local spotify connection)");
                 tecl = new TECL("notfound");
             }
 
@@ -133,7 +136,7 @@ public class Cfg {
                 // Store
                 songIdToDanceNames.put(id, dances);
             });
-            System.out.println("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
+            if (logger.isInfoEnabled()) logger.info("Read " + (csvReader.getLinesRead() - 1) + " id(s) from " + uri);
             onChangeListeners.forEach(l -> l.run());
         }
     }
@@ -197,7 +200,7 @@ public class Cfg {
             // Store
             songIdToDanceNames.put(id, dances);
         });
-        System.out.println("Read " + (cnt.get() - 1) + " id(s) from " + uri);
+        if (logger.isInfoEnabled()) logger.info("Read " + (cnt.get() - 1) + " id(s) from " + uri);
         onChangeListeners.forEach(l -> l.run());
     }
 

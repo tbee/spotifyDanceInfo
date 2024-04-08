@@ -1,6 +1,8 @@
 package org.tbee.spotifyDanceInfo;
 
 import org.apache.hc.core5.http.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tbee.sway.SDialog;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SOptionPane;
@@ -34,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class SpotifyWebapi extends Spotify {
+
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyWebapi.class);
 
     public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
@@ -74,7 +78,7 @@ public class SpotifyWebapi extends Spotify {
                 URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
                         .scope("user-read-playback-state,user-read-currently-playing")
                         .build().execute();
-                System.out.println("authorizationCodeUri " + authorizationCodeUri);
+                if (logger.isInfoEnabled()) logger.info("authorizationCodeUri " + authorizationCodeUri);
                 Desktop.getDesktop().browse(authorizationCodeUri);
 
                 // Ask for the authorization code
@@ -89,7 +93,7 @@ public class SpotifyWebapi extends Spotify {
                 // Login to spotify and get the refresh and access tokens
                 AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
                 refreshToken = authorizationCodeCredentials.getRefreshToken();
-                System.out.println("refreshToken " + refreshToken);
+                if (logger.isInfoEnabled()) logger.info("refreshToken " + refreshToken);
 
                 // Suggest to copy the refresh token in the configuration file
                 String refreshTokenCopy = "\"" + refreshToken + "\"";
@@ -261,7 +265,7 @@ public class SpotifyWebapi extends Spotify {
 
         Integer expiresIn = authorizationCodeCredentials.getExpiresIn();
         scheduledExecutorService.schedule(this::refreshAccessToken, expiresIn - EXPIRE_MARGIN, TimeUnit.SECONDS);
-        System.out.println("new accessToken, expires in " + expiresIn + " seconds (" + LocalDateTime.now().plusSeconds(expiresIn).withNano(0) + ")");
+        if (logger.isInfoEnabled()) logger.info("new accessToken, expires in " + expiresIn + " seconds (" + LocalDateTime.now().plusSeconds(expiresIn).withNano(0) + ")");
     }
 
     protected void ifSongIsStillPlaying(String id, Runnable runnable) {

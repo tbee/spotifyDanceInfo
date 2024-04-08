@@ -1,5 +1,7 @@
 package org.tbee.spotifyDanceInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tbee.sway.SBorderPanel;
 import org.tbee.sway.SContextMenu;
 import org.tbee.sway.SEditorPane;
@@ -36,8 +38,10 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class SpotifyDanceInfo {
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyDanceInfo.class);
 
     public static URL WAITING_IMAGE_URL;
     public static URL BACKGROUND_IMAGE_URL;
@@ -58,10 +62,7 @@ public class SpotifyDanceInfo {
 
     public static void main(String[] args) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-
-        System.out.print("Available fonts: ");
-        Arrays.stream(ge.getAvailableFontFamilyNames()).forEach(f -> System.out.print(f + ", "));
-        System.out.println();
+        if (logger.isInfoEnabled()) logger.info("Available fonts: " + Arrays.stream(ge.getAvailableFontFamilyNames()).collect(Collectors.joining(", ")));
 
         new SpotifyDanceInfo().run();
     }
@@ -134,7 +135,7 @@ public class SpotifyDanceInfo {
 
     private void reactToKeyPress(KeyEvent e) {
         if (e.getKeyChar() == 'r') {
-            System.out.println("Reload");
+            if (logger.isInfoEnabled()) logger.info("Reload");
             cfg = null; // force reload
             updateAll();
         }
@@ -143,10 +144,10 @@ public class SpotifyDanceInfo {
         }
         else if (e.getKeyChar() == ' ') {
             SOptionPane.ofInfo(sFrame, "Supported keys",
-                        """
-                        [esc] = Quit the application
-                        [r] = Reload configuration, but does not reconnect (if that was changed in the configuration).
-                        """);
+                    """
+                            [esc] = Quit the application
+                            [r] = Reload configuration, but does not reconnect (if that was changed in the configuration).
+                            """);
         }
     }
 
@@ -168,18 +169,18 @@ public class SpotifyDanceInfo {
 
     private void setFonts() {
         Window window = SFrame.getWindows()[0];
-        System.out.println("Screen size: " + window.getWidth() + "x" + window.getHeight());
+        if (logger.isInfoEnabled()) logger.info("Screen size: " + window.getWidth() + "x" + window.getHeight());
 
         Font songFont = cfg().songFont(window.getHeight() / 15);
-        System.out.println("Using song font "+ songFont.getFontName() + " " + songFont.getSize());
+        if (logger.isInfoEnabled()) logger.info("Using song font " + songFont.getFontName() + " " + songFont.getSize());
         songSLabel.font(songFont);
 
         Font nextFont = cfg().nextFont(window.getHeight() / 20);
-        System.out.println("Using nextUp font "+ nextFont.getFontName() + " " + nextFont.getSize());
+        if (logger.isInfoEnabled()) logger.info("Using nextUp font " + nextFont.getFontName() + " " + nextFont.getSize());
         nextUpSLabel.font(nextFont);
 
         Font timeFont = cfg().timeFont(window.getHeight() / 25);
-        System.out.println("Using time font "+ timeFont.getFontName() + " " + timeFont.getSize());
+        if (logger.isInfoEnabled()) logger.info("Using time font " + timeFont.getFontName() + " " + timeFont.getSize());
         timeSLabel.font(timeFont);
     }
 
@@ -238,8 +239,8 @@ public class SpotifyDanceInfo {
                 String trackId = song.id();
                 List<String> danceIds = cfg.trackIdToDanceIds(trackId);
                 text.append(song.artist().isBlank() ? "" : song.artist() + "<br>")
-                    .append(song.name())
-                    .append("<br>");
+                        .append(song.name())
+                        .append("<br>");
                 for (String danceId : danceIds) {
                     String screenText = cfg.danceIdToScreenText(danceId);
                     text.append(screenText.isBlank() ? "" : "<br>" + screenText);
@@ -250,7 +251,7 @@ public class SpotifyDanceInfo {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(logline), null);
                 }
             }
-            System.out.println(logline);
+            if (logger.isInfoEnabled()) logger.info(logline);
 
             // Update screen
             SwingUtilities.invokeLater(() -> {
@@ -283,14 +284,14 @@ public class SpotifyDanceInfo {
             songs.forEach(nextSong -> {
                 String trackId = nextSong.id();
                 text.append("<br><br>")
-                    .append(nextSong.artist().isBlank() ? "" : nextSong.artist() + " - ")
-                    .append(nextSong.name());
+                        .append(nextSong.artist().isBlank() ? "" : nextSong.artist() + " - ")
+                        .append(nextSong.name());
                 cfg.trackIdToDanceIds(trackId).stream()
-                    .filter(dance -> dance != null && !dance.isBlank())
-                    .forEach(danceId -> {
-                        text.append("<br>")
-                            .append(cfg.danceIdToScreenText(danceId));
-                    });
+                        .filter(dance -> dance != null && !dance.isBlank())
+                        .forEach(danceId -> {
+                            text.append("<br>")
+                                    .append(cfg.danceIdToScreenText(danceId));
+                        });
             });
 
             // Update screen

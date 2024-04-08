@@ -1,7 +1,10 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,10 +22,18 @@ import java.util.Objects;
 @Controller
 public class SpotifyController {
 
+    private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
+
     @GetMapping("/spotify")
-    public String spotify(HttpSession session, Model model) {
-        updateCurrentlyPlaying(session);
-        model.addAttribute("ScreenData", screenData(session));
+    public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
+        try {
+            updateCurrentlyPlaying(session);
+            model.addAttribute("ScreenData", screenData(session));
+        }
+        catch (Exception e) {
+            logger.error("Problem constructing page", e);
+            httpServletResponse.addHeader("HX-Redirect", "/");
+        }
         return "spotify";
     }
 
