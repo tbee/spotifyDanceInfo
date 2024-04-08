@@ -2,25 +2,21 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.tbee.spotifyDanceInfo.Cfg;
-import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
-import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Controller
-public class SpotifyController {
+public class SpotifyController extends ControllerBase {
 
     private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
 
@@ -38,7 +34,7 @@ public class SpotifyController {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        ConnectController.spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
+        spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(track -> {
                     synchronized (session) {
@@ -91,7 +87,7 @@ public class SpotifyController {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        ConnectController.spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
+        spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
@@ -103,7 +99,7 @@ public class SpotifyController {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        ConnectController.spotifyApi(session).getTheUsersQueue().build().executeAsync()
+        spotifyApi(session).getTheUsersQueue().build().executeAsync()
                 .exceptionally(t -> logException(session, t))
                 .thenAccept(playbackQueue -> {
                     ScreenData screenData = screenData(session);
@@ -129,16 +125,6 @@ public class SpotifyController {
     }
 
 
-    private static SpotifyConnectData spotifyConnectData(HttpSession session) {
-        String attributeName = "SpotifyConnectData";
-        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(attributeName);
-        if (spotifyConnectData == null) {
-            spotifyConnectData = new SpotifyConnectData();
-            session.setAttribute(attributeName, spotifyConnectData);
-        }
-        return spotifyConnectData;
-    }
-
     private static ScreenData screenData(HttpSession session) {
         String attributeName = "SpotifyScreenData";
         ScreenData screenData = (ScreenData) session.getAttribute(attributeName);
@@ -147,28 +133,5 @@ public class SpotifyController {
             session.setAttribute(attributeName, screenData);
         }
         return screenData;
-    }
-
-    private <T> T logException(HttpSession session, Throwable t) {
-        t.printStackTrace();
-
-        // just in case something went wrong with scheduled refreshing
-        if (t.getMessage().contains("The access token expired")) {
-            refreshAccessToken(session);
-        }
-
-        return null;
-    }
-
-    private void refreshAccessToken(HttpSession session) {
-        try {
-            AuthorizationCodeCredentials authorizationCodeCredentials = ConnectController.spotifyApi(session).authorizationCodeRefresh().build().execute();
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
-            spotifyConnectData
-                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
-                    .accessToken(authorizationCodeCredentials.getAccessToken());
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            logException(session, e);
-        }
     }
 }

@@ -21,10 +21,10 @@ import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCrede
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 
 @Controller
-public class ConnectController {
+public class ConnectController extends ControllerBase {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectController.class);
 
@@ -86,41 +86,17 @@ public class ConnectController {
         try {
             SpotifyApi spotifyApi = spotifyApi(session);
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
+            LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(authorizationCodeCredentials.getExpiresIn()).minusMinutes(10);
 
             SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
-                    .accessToken(authorizationCodeCredentials.getAccessToken());
+                    .accessToken(authorizationCodeCredentials.getAccessToken())
+                    .accessTokenExpireDateTime(expiresAt);
 
             return "redirect:/spotify";
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            throw new RuntimeException("Problem connecting to Spotify webapi", e);
-        }
-    }
-
-    static SpotifyConnectData spotifyConnectData(HttpSession session) {
-        String attributeName = "SpotifyConnectData";
-        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(attributeName);
-        if (spotifyConnectData == null) {
-            spotifyConnectData = new SpotifyConnectData();
-            session.setAttribute(attributeName, spotifyConnectData);
-        }
-        return spotifyConnectData;
-    }
-
-    static SpotifyApi spotifyApi(HttpSession session) {
-        try {
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
-            return new SpotifyApi.Builder()
-                    .setClientId(spotifyConnectData.clientId())
-                    .setClientSecret(spotifyConnectData.clientSecret())
-                    .setRedirectUri(new URI(spotifyConnectData.redirectUrl()))
-                    .setRefreshToken(spotifyConnectData.refreshToken())
-                    .setAccessToken(spotifyConnectData.accessToken())
-                    .build();
-        }
-        catch (URISyntaxException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }

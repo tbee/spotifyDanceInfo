@@ -1,11 +1,14 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import java.time.LocalDateTime;
+
 public class SpotifyConnectData {
     private String clientId;
     private String clientSecret;
     private String redirectUrl;
     private String refreshToken;
     private String accessToken;
+    private LocalDateTime accessTokenExpireDateTime;
 
     public String clientId() {
         return clientId;
@@ -49,6 +52,15 @@ public class SpotifyConnectData {
 
     public SpotifyConnectData accessToken(String v) {
         this.accessToken = v;
+        return this;
+    }
+
+    public LocalDateTime accessTokenExpireDateTime() {
+        return accessTokenExpireDateTime;
+    }
+
+    public SpotifyConnectData accessTokenExpireDateTime(LocalDateTime v) {
+        this.accessTokenExpireDateTime = v;
         return this;
     }
 }
