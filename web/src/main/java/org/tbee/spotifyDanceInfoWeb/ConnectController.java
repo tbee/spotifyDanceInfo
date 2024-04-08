@@ -86,7 +86,7 @@ public class ConnectController extends ControllerBase {
         try {
             SpotifyApi spotifyApi = spotifyApi(session);
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-            LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(authorizationCodeCredentials.getExpiresIn()).minusMinutes(10);
+            LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
 
             SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
             spotifyConnectData

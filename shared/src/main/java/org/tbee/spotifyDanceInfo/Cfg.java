@@ -64,7 +64,7 @@ public class Cfg {
         try {
             tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
-                if (logger.isInfoEnabled()) logger.info("No configuration found, switch to default config (local spotify connection)");
+                if (logger.isInfoEnabled()) logger.info("No configuration found, switch to default config for '" + configFileName + "'");
                 tecl = new TECL("notfound");
             }
 
