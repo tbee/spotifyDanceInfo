@@ -51,7 +51,8 @@ public class ConnectController extends ControllerBase {
             spotifyConnectData(session)
                     .clientId(connectForm.getClientId())
                     .clientSecret(connectForm.getClientSecret())
-                    .redirectUrl(connectForm.getRedirectUrl());
+                    .redirectUrl(connectForm.getRedirectUrl())
+                    .connectTime(LocalDateTime.now());
 
             // Spotify API
             SpotifyApi spotifyApi = spotifyApi(session);

@@ -22,5 +22,13 @@
                 <h2 class="subtitle is-2" th:each="dance : ${nextUp.dances()}" th:text="${dance}">?</h2>
             </div>
         </div>
+
+        <div class="time" th:if="${!ScreenData.showTips()}">
+            <h1 class="title is-1" th:text="${ScreenData.time()}">?</h1>
+        </div>
+        <div class="time" th:if="${ScreenData.showTips()}">
+            <h3 class="title is-3">Use browser's full screen (F11).</h3>
+            <h3 class="title is-3">Use browser's zoom function to increase text size.</h3>
+        </div>
     </body>
 </html>

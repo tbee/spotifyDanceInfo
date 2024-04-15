@@ -11,6 +11,8 @@ import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +26,13 @@ public class SpotifyController extends ControllerBase {
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
         try {
             updateCurrentlyPlaying(session);
-            model.addAttribute("ScreenData", screenData(session));
+
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            ScreenData screenData = screenData(session);
+            screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
+            screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+
+            model.addAttribute("ScreenData", screenData);
         }
         catch (Exception e) {
             logger.error("Problem constructing page", e);

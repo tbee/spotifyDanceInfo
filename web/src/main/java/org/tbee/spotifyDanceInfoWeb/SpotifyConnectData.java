@@ -9,6 +9,7 @@ public class SpotifyConnectData {
     private String refreshToken;
     private String accessToken;
     private LocalDateTime accessTokenExpireDateTime;
+    private LocalDateTime connectTime = null;
 
     public String clientId() {
         return clientId;
@@ -61,6 +62,15 @@ public class SpotifyConnectData {
 
     public SpotifyConnectData accessTokenExpireDateTime(LocalDateTime v) {
         this.accessTokenExpireDateTime = v;
+        return this;
+    }
+
+
+    public LocalDateTime connectTime() {
+        return connectTime;
+    }
+    public SpotifyConnectData connectTime(LocalDateTime v) {
+        this.connectTime = v;
         return this;
     }
 }
