@@ -1,16 +1,20 @@
 package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +24,7 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDateTime;
 
@@ -100,6 +105,21 @@ public class ConnectController extends ControllerBase {
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
+    }
+
+
+    @GetMapping("/example.{filetype}")
+    public void example(HttpServletResponse response, HttpSession session, @PathVariable("filetype") String filetype) throws IOException {
+        InputStream inputStream = Cfg.class.getResourceAsStream("/trackToDance." + filetype); // fetch resource from shared jar
+        IOUtils.copy(inputStream, response.getOutputStream());
+        response.flushBuffer();
+        response.setContentType(switch (filetype) {
+            case "tsv" -> "text/tab-separated-values";
+            case "xls" -> "application/vnd.ms-excel";
+            case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            default -> throw new IllegalArgumentException("Unknown filetype: " + filetype);
+        });
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"example." + filetype + "\"");
     }
 
     public static class ConnectForm {

@@ -8,6 +8,6 @@ dances {
 moreTracks {
     tsv {
         | idIdx | danceIdx | uri                                     |
-        | 0     | 1        | "./src/test/resources/trackToDance.tsv" |
+        | 0     | 1        | "./src/main/resources/trackToDance.tsv" |
     }
 }
