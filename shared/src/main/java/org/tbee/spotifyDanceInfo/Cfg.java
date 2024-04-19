@@ -337,6 +337,14 @@ public class Cfg {
         return tecl.integer(SCREEN + "/nextUp/count", 3);
     }
 
+    public List<Shortcut> getListofDanceShortcuts() {
+        TECL dancesTecl = tecl.grp(DANCES);
+        return dancesTecl.strs("id").stream()
+                .map(id -> new Shortcut(id, dancesTecl.str("id", id, "text", "?")))
+                .toList();
+    }
+    public record Shortcut(String id, String name) {}
+
     public boolean copyTrackLoglineToClipboard() {
         return tecl.bool("copyTrackLoglineToClipboard", false);
     }

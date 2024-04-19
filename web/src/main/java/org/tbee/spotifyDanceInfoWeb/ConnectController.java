@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Controller
 public class ConnectController extends ControllerBase {
@@ -45,6 +46,8 @@ public class ConnectController extends ControllerBase {
             String webapiRedirect = cfg.webapiRedirect();
             connectForm.setRedirectUrl(webapiRedirect != null && !webapiRedirect.isBlank() ? webapiRedirect : request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
         }
+
+        connectForm.shortcuts(cfg.getListofDanceShortcuts());
 
         return "connect";
     }
@@ -126,7 +129,7 @@ public class ConnectController extends ControllerBase {
         private String clientId;
         private String clientSecret;
         private String redirectUrl;
-        private String refreshToken;
+        private List<Cfg.Shortcut> shortcuts;
 
         public String getClientId() {
             return clientId;
@@ -150,6 +153,14 @@ public class ConnectController extends ControllerBase {
 
         public void setRedirectUrl(String redirectUrl) {
             this.redirectUrl = redirectUrl;
+        }
+
+        public List<Cfg.Shortcut> shortcuts() {
+            return shortcuts;
+        }
+        public ConnectForm shortcuts(List<Cfg.Shortcut> shortcuts) {
+            this.shortcuts = shortcuts;
+            return this;
         }
     }
 }
