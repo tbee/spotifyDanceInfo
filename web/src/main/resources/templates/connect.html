@@ -68,7 +68,7 @@
                                     <li class="bullet">The first column must contain the track id.</li>
                                     <li class="bullet">The second column must contain the dance, or dances separated by a comma.
                                         If you use spaces, the dance must be surrounded by double quotes (").
-                                        You may also use <a onclick="document.getElementById('shortcuts').style.display = ''">these shortcuts</a> for the dances.</li>
+                                        You may also use <a onclick="document.getElementById('abbreviations').style.display = ''">these abbreviations</a> for the dances.</li>
                                     <li class="bullet">The first row/line will not be read, it can contain column headers.</li>
                                     <li class="bullet">Excel files must have the track and dance information on the first sheet.</li>
                                 </ul>
@@ -83,14 +83,14 @@
                             <button class="button is-primary">Connect</button>
                         </form>
                     </div>
-                    <div id="shortcuts" class="column is-one-quarter" style="display: none;">
+                    <div id="abbreviations" class="column is-one-quarter" style="display: none;">
                         <h1 class="title">&nbsp;</h1>
                         <div class="notification">
                             <table class="">
                                 <tbody>
-                                <tr th:each="shortcut : ${ConnectForm.shortcuts()}">
-                                    <td th:text="${shortcut.id()}" style="padding-right: 5px;">.</td>
-                                    <td th:text="${shortcut.name()}">.</td>
+                                <tr th:each="abbreviation : ${ConnectForm.abbreviations()}">
+                                    <td th:text="${abbreviation.id()}" style="padding-right: 5px;">.</td>
+                                    <td th:text="${abbreviation.name()}">.</td>
                                 </tr>
                                 </tbody>
                             </table>

@@ -47,7 +47,7 @@ public class ConnectController extends ControllerBase {
             connectForm.setRedirectUrl(webapiRedirect != null && !webapiRedirect.isBlank() ? webapiRedirect : request.getRequestURL().toString() + "spotifyCallback"); // TBEERNOT generate URL
         }
 
-        connectForm.shortcuts(cfg.getListofDanceShortcuts());
+        connectForm.abbreviations(cfg.getListofDanceAbbreviations());
 
         return "connect";
     }
@@ -129,7 +129,7 @@ public class ConnectController extends ControllerBase {
         private String clientId;
         private String clientSecret;
         private String redirectUrl;
-        private List<Cfg.Shortcut> shortcuts;
+        private List<Cfg.Abbreviation> abbreviations;
 
         public String getClientId() {
             return clientId;
@@ -155,11 +155,11 @@ public class ConnectController extends ControllerBase {
             this.redirectUrl = redirectUrl;
         }
 
-        public List<Cfg.Shortcut> shortcuts() {
-            return shortcuts;
+        public List<Cfg.Abbreviation> abbreviations() {
+            return abbreviations;
         }
-        public ConnectForm shortcuts(List<Cfg.Shortcut> shortcuts) {
-            this.shortcuts = shortcuts;
+        public ConnectForm abbreviations(List<Cfg.Abbreviation> abbreviations) {
+            this.abbreviations = abbreviations;
             return this;
         }
     }
