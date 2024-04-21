@@ -1,9 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SpotifyDanceInfo" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="org.tbee.spotifyDanceInfo.SpotifyDanceInfo" />
-    <module name="spotifyDanceInfo (1)" />
+    <module name="spotifyDanceInfo" />
     <option name="VM_PARAMETERS" value="-Dconfig.tecl=..\..\spotifyDanceInfo.tecl" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/desktop" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.tbee.spotifyDanceInfo.*" />
