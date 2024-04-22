@@ -31,7 +31,7 @@
                                 <div class="field">
                                     <label class="label">Redirect URL</label>
                                     <div class="control">
-                                        <input id="redirectUrl" class="input" type="url" th:field="*{redirectUrl}" style="width: 95%;"/>
+                                        <input id="redirectUrl" name="redirectUrl" class="input" type="url" th:field="*{redirectUrl}" style="width: 95%;"/>
                                         <span class="icon" style="padding-top: 10px;" onclick="copyCode()"><i class="fas fa-copy fa-xl"></i></span>
                                     </div>
                                     <div id="copyStatus" style="text-align: end;">
@@ -41,14 +41,14 @@
                                 <div class="field">
                                     <label class="label">Client id</label>
                                     <div class="control">
-                                        <input id="clientId" class="input" type="text" th:field="*{clientId}"/>
+                                        <input id="clientId" name="clientId" class="input" type="text" th:field="*{clientId}"/>
                                     </div>
                                 </div>
 
                                 <div class="field">
                                     <label class="label">Client secret</label>
                                     <div class="control">
-                                        <input id="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
+                                        <input id="clientSecret" name="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
                                     </div>
                                 </div>
 
@@ -73,7 +73,7 @@
                                 <div class="field">
                                     <label class="label">Track-to-dance(s) map</label>
                                     <div class="control">
-                                        <input id="file" class="input" type="file" name="file"/>
+                                        <input id="file" name="file" class="input" type="file"/>
                                     </div>
                                 </div>
 
