@@ -12,7 +12,9 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <apache.poi.version>5.2.5</apache.poi.version>
         <log4j.version>2.23.1</log4j.version>
     </properties>
@@ -20,6 +22,7 @@
 	<modules>
 		<module>desktop</module>
 		<module>web</module>
+		<module>qrks</module>
         <module>shared</module>
 	</modules>
 
