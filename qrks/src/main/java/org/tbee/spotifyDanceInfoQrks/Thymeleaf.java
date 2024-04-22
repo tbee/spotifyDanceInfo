@@ -3,7 +3,6 @@ package org.tbee.spotifyDanceInfoQrks;
 import groovy.util.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +11,7 @@ import org.jboss.resteasy.plugins.providers.html.Renderable;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Log
 @ApplicationScoped
-public class Rendering {
+public class Thymeleaf {
 
     @Produces
     public TemplateEngine templateEngine() {
@@ -30,32 +30,31 @@ public class Rendering {
         return templateEngine;
     }
 
-    public ThymeleafView view(String relativePath) {
+    public ThymeleafRenderable view(String relativePath) {
         String templatePath = String.format("templates/%s.html", relativePath);
-        return new ThymeleafView(templatePath, templateEngine());
+        return new ThymeleafRenderable(templatePath, templateEngine());
     }
 
-    public static class ThymeleafView implements Renderable {
+    public static class ThymeleafRenderable implements Renderable {
 
         private final String path;
         private final TemplateEngine templateEngine;
         private final Map<String, Object> variables = new HashMap<>();
 
-        public ThymeleafView(String path, TemplateEngine templateEngine) {
+        public ThymeleafRenderable(String path, TemplateEngine templateEngine) {
             this.path = path;
             this.templateEngine = templateEngine;
         }
 
-        public ThymeleafView with(String key, Object variable) {
+        public ThymeleafRenderable with(String key, Object variable) {
             this.variables.put(key, variable);
             return this;
         }
 
         @Override
-        public void render(HttpServletRequest request, HttpServletResponse response)
-                throws IOException, ServletException, WebApplicationException {
+        public void render(HttpServletRequest request, HttpServletResponse response) throws IOException, WebApplicationException {
 
-            WebContext context = ThymeleafHelper.createContext(request, response);
+            WebContext context = createContext(request, response);
             context.setVariables(variables);
 
             try (ServletOutputStream outputStream = response.getOutputStream();
@@ -63,5 +62,12 @@ public class Rendering {
                 templateEngine.process(path, context, writer);
             }
         }
+
+        private WebContext createContext(HttpServletRequest req, HttpServletResponse res) {
+            var application = JakartaServletWebApplication.buildApplication(req.getServletContext());
+            var exchange = application.buildExchange(req, res);
+            return new WebContext(exchange);
+        }
+
     }
 }

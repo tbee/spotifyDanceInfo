@@ -17,15 +17,15 @@ import java.util.Optional;
 @Log
 @Path("")
 @Produces(MediaType.TEXT_HTML)
-public class MvcPage {
+public class HtmlResource {
 
     @Inject
-    Rendering render;
+    Thymeleaf thymeleaf;
 
     @GET
     @Path("")
     public Renderable query(@QueryParam("name") @DefaultValue("Buddy") String name) {
-        return render.view("index")
+        return thymeleaf.view("index")
                 .with("name", getOr(name, "Friend"))
                 .with("now", LocalDateTime.now());
     }
@@ -33,7 +33,7 @@ public class MvcPage {
     @GET
     @Path("{path}") // @Path("{path: .*}")
     public Renderable path(@PathParam("path") String path) {
-        return render.view("index")
+        return thymeleaf.view("index")
                 .with("name", getOr(path, "Dude"))
                 .with("now", LocalDateTime.now());
     }
