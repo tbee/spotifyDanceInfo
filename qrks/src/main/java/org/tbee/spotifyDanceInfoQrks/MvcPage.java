@@ -41,7 +41,7 @@ public class MvcPage {
     private String getOr(String name, String elseValue) {
         return Optional.ofNullable(name)
                 .map(String::trim)
-//                .filter(not(String::isEmpty))
+                .filter(s -> !s.isEmpty())
                 .orElse(elseValue);
     }
 }
