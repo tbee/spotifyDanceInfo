@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+    <head>
+        <th:block layout:fragment="header">
+            <link rel="stylesheet" href="/connect.css">
+            <script type="application/javascript">
+                function copyCode() {
+                    try {
+                        navigator.clipboard.writeText(document.getElementById('redirectUrl').value);
+                        document.getElementById('copyStatus').innerHTML = 'The url has been copied to clipboard';
+                    } catch (err) {
+                        document.getElementById('copyStatus').innerHTML = 'Failed to copy: ' + err;
+                    }
+                }
+            </script>
+        </th:block>
+    </head>
+    <body>
+        <th:block layout:fragment="content">
+            <section class="section">
+                <div class="container">
+                    <div class="columns is-centered">
+                        <div class="column is-half">
+                            <h1 class="title">Spotify Dance Info</h1>
+                            <form enctype="multipart/form-data" class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
+                                <div class="block">
+                                    Copy the client id and secret from Spotify, as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's WebAPI documentation.
+                                    During the WebAPI set up, use the value below for the redirect URL.
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Redirect URL</label>
+                                    <div class="control">
+                                        <input id="redirectUrl" class="input" type="url" th:field="*{redirectUrl}" style="width: 95%;"/>
+                                        <span class="icon" style="padding-top: 10px;" onclick="copyCode()"><i class="fas fa-copy fa-xl"></i></span>
+                                    </div>
+                                    <div id="copyStatus" style="text-align: end;">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Client id</label>
+                                    <div class="control">
+                                        <input id="clientId" class="input" type="text" th:field="*{clientId}"/>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Client secret</label>
+                                    <div class="control">
+                                        <input id="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
+                                    </div>
+                                </div>
+
+                                <div class="block">
+                                    You may provide a
+                                    <a href="/example.tsv" target="_blank">TSV (tab separated)</a>
+                                    or Excel
+                                    (<a href="/example.xls" target="_blank">xls</a>,
+                                    <a href="/example.xlsx" target="_blank">xlsx</a>)
+                                    file that maps track ids to dances.
+                                    See the examples for clarification of the points below.
+                                    <ul>
+                                        <li class="bullet">The first column must contain the track id.</li>
+                                        <li class="bullet">The second column must contain the dance, or dances separated by a comma.
+                                            If you use spaces, the dance(s) must be surrounded by double quotes (").
+                                            You may use <a onclick="document.getElementById('abbreviations').style.display = ''">these abbreviations</a> for the dances, this will allow for translations in the future.
+                                        </li>
+                                        <li class="bullet">The first row/line will not be read, it should contain the column headers.</li>
+                                        <li class="bullet">Excel files must have the track and dance information on the first sheet.</li>
+                                    </ul>
+                                </div>
+                                <div class="field">
+                                    <label class="label">Track-to-dance(s) map</label>
+                                    <div class="control">
+                                        <input id="file" class="input" type="file" name="file"/>
+                                    </div>
+                                </div>
+
+                                <button class="button is-primary">Connect</button>
+                            </form>
+                        </div>
+                        <div id="abbreviations" class="column is-one-quarter" style="display: none;">
+                            <h1 class="title">&nbsp;</h1>
+                            <div class="notification">
+                                <table class="">
+                                    <tbody>
+                                    <tr th:each="abbreviation : ${ConnectForm.abbreviations()}">
+                                        <td th:text="${abbreviation.id()}" style="padding-right: 5px;">.</td>
+                                        <td th:text="${abbreviation.name()}">.</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </th:block>
+    </body>
+</html>

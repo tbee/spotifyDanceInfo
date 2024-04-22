@@ -1,6 +1,5 @@
 package org.tbee.spotifyDanceInfoQrks;
 
-import groovy.util.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.servlet.ServletOutputStream;
@@ -19,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-@Log
 @ApplicationScoped
 public class Thymeleaf {
 
@@ -30,7 +28,7 @@ public class Thymeleaf {
         return templateEngine;
     }
 
-    public ThymeleafRenderable view(String relativePath) {
+    public ThymeleafRenderable template(String relativePath) {
         String templatePath = String.format("templates/%s.html", relativePath);
         return new ThymeleafRenderable(templatePath, templateEngine());
     }

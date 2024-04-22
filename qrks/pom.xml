@@ -29,7 +29,12 @@
     </dependencyManagement>
 
     <dependencies>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>spotifyDanceInfoShared</artifactId>
+        </dependency>
+
+        <!--        <dependency>-->
 <!--            <groupId>io.quarkus</groupId>-->
 <!--            <artifactId>quarkus-qute</artifactId>-->
 <!--        </dependency>-->
@@ -65,6 +70,9 @@
             <artifactId>thymeleaf-layout-dialect</artifactId>
             <version>3.3.0</version>
         </dependency>
+
+        <!-- https://quarkus.io/guides/http-reference#serving-static-resources -->
+
     </dependencies>
 
     <build>
