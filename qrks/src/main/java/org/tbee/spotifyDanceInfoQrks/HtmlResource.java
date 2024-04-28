@@ -3,32 +3,38 @@ package org.tbee.spotifyDanceInfoQrks;
 import groovy.util.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.EntityPart;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-import org.jboss.resteasy.annotations.providers.multipart.PartType;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jboss.resteasy.plugins.providers.html.Renderable;
 import org.tbee.spotifyDanceInfo.Cfg;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Log
 @Path("")
 @Produces(MediaType.TEXT_HTML)
-public class HtmlResource {
+public class HtmlResource extends ResourceBase {
 
     static private Cfg cfg = new Cfg();
 
@@ -37,7 +43,8 @@ public class HtmlResource {
 
     @GET
     @Path("")
-    public Renderable connect(@Context HttpServletRequest httpServletRequest, @QueryParam("name") @DefaultValue("Buddy") String name) {
+    public Renderable connect(@Context HttpServletRequest httpServletRequest) {
+        HttpSession session = httpServletRequest.getSession();
 
         ConnectForm connectForm = new ConnectForm();
         connectForm.abbreviations(cfg.getListofDanceAbbreviations());
@@ -57,29 +64,61 @@ public class HtmlResource {
     @POST
     @Path("")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response connect(@MultipartForm ConnectForm connectForm) throws URISyntaxException {
-//        LOGGER.log(Level.INFO, "name: {0} ", name);
-//        LOGGER.log(
-//                Level.INFO,
-//                "uploading file: {0},{1},{2},{3}",
-//                new Object[]{
-//                        part.getMediaType(),
-//                        part.getName(),
-//                        part.getFileName(),
-//                        part.getHeaders()
-//                }
-//        );
-//        try {
-//            Files.copy(
-//                    part.getContent(),
-//                    Paths.get(uploadedPath.toString(), part.getFileName().orElse(generateFileName(UUID.randomUUID().toString(), mediaTypeToFileExtension(part.getMediaType())))),
-//                    StandardCopyOption.REPLACE_EXISTING
-//            );
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return Response.ok().build();
-        return Response.temporaryRedirect(new URI("/")).build(); // redirect not working
+    public Response connect(@Context HttpServletRequest httpServletRequest, List<EntityPart> parts) throws URISyntaxException {
+        try {
+            HttpSession session = httpServletRequest.getSession();
+            String clientId = getPartAsString("clientId", parts);
+            String clientSecret = getPartAsString("clientSecret", parts);
+            String redirectUrl = getPartAsString("redirectUrl", parts);
+            EntityPart file = getPart("file", parts);
+
+            // store connection data
+            spotifyConnectData(session)
+                    .clientId(clientId)
+                    .clientSecret(clientSecret)
+                    .redirectUrl(redirectUrl)
+                    .connectTime(LocalDateTime.now());
+
+            // Spotify API
+            SpotifyApi spotifyApi = spotifyApi(session);
+
+            // Load configuration
+            Cfg cfg = new Cfg("session", false);
+            session.setAttribute("cfg", cfg);
+            String originalFilename = file.getFileName().orElse("");
+            if (originalFilename.endsWith(".tsv")) {
+                cfg.readMoreTracksTSV("web", file.getContent(), 0, 1);
+            }
+            else if (originalFilename.endsWith(".xlsx")) {
+                cfg.readMoreTracksExcel("web", new XSSFWorkbook(file.getContent()), 0, 0, 1);
+            }
+            else if (originalFilename.endsWith(".xls")) {
+                cfg.readMoreTracksExcel("web", new HSSFWorkbook(file.getContent()), 0, 0, 1);
+            }
+
+            // Forward to Spotify
+            URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
+                    .scope("user-read-playback-state,user-read-currently-playing")
+                    .build().execute();
+            return Response.status(Response.Status.FOUND).location(authorizationCodeUri).build(); // redirect not working
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
+        }
+
+    }
+
+    private EntityPart getPart(String id, List<EntityPart> parts) {
+        return parts.stream().filter(p -> p.getName().equals(id)).findFirst().orElseThrow();
+    }
+
+    private String getPartAsString(String id, List<EntityPart> parts) {
+        try {
+            return getPart(id, parts).getContent(String.class);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getOr(String name, String elseValue) {
@@ -89,23 +128,43 @@ public class HtmlResource {
                 .orElse(elseValue);
     }
 
+
+    @GET
+    @Path("/spotifyCallback")
+    public Response spotifyCallback(@Context HttpServletRequest httpServletRequest, @QueryParam("code") @DefaultValue("") String authorizationCode) { //
+        try {
+            HttpSession session = httpServletRequest.getSession();
+            SpotifyApi spotifyApi = spotifyApi(session);
+            AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
+            LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
+
+            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            spotifyConnectData
+                    .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
+                    .accessToken(authorizationCodeCredentials.getAccessToken())
+                    .accessTokenExpireDateTime(expiresAt);
+
+            return Response.status(Response.Status.FOUND).location(new URI("/spotify")).build(); // redirect not working
+        }
+        catch (IOException | SpotifyWebApiException | ParseException | URISyntaxException e) {
+            throw new RuntimeException("Problem connecting to Spotify webapi", e);
+        }
+    }
+
     public static class ConnectForm {
 
-        @FormParam("clientId")
         private String clientId;
-        @FormParam("clientSecret")
         private String clientSecret;
-        @FormParam("redirectUrl")
         private String redirectUrl;
         private List<Cfg.Abbreviation> abbreviations;
 
-        @FormParam("file")
-        @PartType(MediaType.APPLICATION_OCTET_STREAM)
-        public InputStream file;
+        public ConnectForm() {}
 
-        @FormParam("fileName")
-        @PartType(MediaType.TEXT_PLAIN)
-        public String fileName;
+        public ConnectForm(String clientId, String clientSecret, String redirectUrl) {
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            this.redirectUrl = redirectUrl;
+        }
 
         public String getClientId() {
             return clientId;

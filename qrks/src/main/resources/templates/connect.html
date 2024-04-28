@@ -22,7 +22,7 @@
                     <div class="columns is-centered">
                         <div class="column is-half">
                             <h1 class="title">Spotify Dance Info</h1>
-                            <form enctype="multipart/form-data" class="box" th:action="@{/}" th:object="${ConnectForm}" method="post">
+                            <form enctype="multipart/form-data" class="box" th:action="@{/}" method="post">
                                 <div class="block">
                                     Copy the client id and secret from Spotify, as described in the <a href="https://developer.spotify.com/documentation/web-api" target="_blank">getting started</a> section in Spotify's WebAPI documentation.
                                     During the WebAPI set up, use the value below for the redirect URL.
@@ -31,7 +31,7 @@
                                 <div class="field">
                                     <label class="label">Redirect URL</label>
                                     <div class="control">
-                                        <input id="redirectUrl" name="redirectUrl" class="input" type="url" th:field="*{redirectUrl}" style="width: 95%;"/>
+                                        <input id="redirectUrl" name="redirectUrl" class="input" type="url" th:value="${ConnectForm.redirectUrl}" style="width: 95%;"/>
                                         <span class="icon" style="padding-top: 10px;" onclick="copyCode()"><i class="fas fa-copy fa-xl"></i></span>
                                     </div>
                                     <div id="copyStatus" style="text-align: end;">
@@ -41,14 +41,14 @@
                                 <div class="field">
                                     <label class="label">Client id</label>
                                     <div class="control">
-                                        <input id="clientId" name="clientId" class="input" type="text" th:field="*{clientId}"/>
+                                        <input id="clientId" name="clientId" class="input" type="text" th:value="${ConnectForm.clientId}"/>
                                     </div>
                                 </div>
 
                                 <div class="field">
                                     <label class="label">Client secret</label>
                                     <div class="control">
-                                        <input id="clientSecret" name="clientSecret" class="input" type="text" th:field="*{clientSecret}"/>
+                                        <input id="clientSecret" name="clientSecret" class="input" type="text" th:value="${ConnectForm.clientSecret}"/>
                                     </div>
                                 </div>
 

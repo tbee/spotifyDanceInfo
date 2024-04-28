@@ -83,7 +83,7 @@ public class ConnectController extends ControllerBase {
             URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
                     .scope("user-read-playback-state,user-read-currently-playing")
                     .build().execute();
-            return "redirect:" + authorizationCodeUri.toURL().toString();
+            return "redirect:" + authorizationCodeUri.toURL();
         }
         catch (IOException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
