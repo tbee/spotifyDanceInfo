@@ -34,9 +34,7 @@ import java.util.Optional;
 @Log
 @Path("")
 @Produces(MediaType.TEXT_HTML)
-public class HtmlResource extends ResourceBase {
-
-    static private Cfg cfg = new Cfg();
+public class ConnectHtmlResource extends ResourceBase {
 
     @Inject
     Thymeleaf thymeleaf;
@@ -45,6 +43,7 @@ public class HtmlResource extends ResourceBase {
     @Path("")
     public Renderable connect(@Context HttpServletRequest httpServletRequest) {
         HttpSession session = httpServletRequest.getSession();
+        Cfg cfg = SpotifyDanceInfoQrks.cfg();
 
         ConnectForm connectForm = new ConnectForm();
         connectForm.abbreviations(cfg.getListofDanceAbbreviations());
