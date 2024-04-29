@@ -137,28 +137,19 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.4</version>
-                <configuration>
-                    <classifier>boot</classifier>
-                    <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
-                    <attach>false</attach>
-                    <excludeDevtools>true</excludeDevtools>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <quarkus.package.type>uber-jar</quarkus.package.type>
+            </properties>
+        </profile>
         <profile>
             <id>native</id>
             <activation>
