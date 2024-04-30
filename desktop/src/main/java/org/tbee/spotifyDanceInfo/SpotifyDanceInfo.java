@@ -329,7 +329,7 @@ public class SpotifyDanceInfo {
 
     private Cfg cfg() {
         if (cfg == null) {
-            cfg = new Cfg().onChange(this::updateAll);
+            cfg = new Cfg(true).onChange(this::updateAll);
         }
         return cfg;
     }

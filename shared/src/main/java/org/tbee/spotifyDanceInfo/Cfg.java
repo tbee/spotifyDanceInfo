@@ -4,6 +4,7 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import org.apache.commons.io.IOUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -17,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Cfg {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
 
+    private static final String CONFIG_TECL = "config.tecl";
     private static final String CONNECT_LOCAL = "local";
     private static final String WEBAPI = "/spotify/webapi";
     private static final String SCREEN = "/screen";
@@ -56,21 +59,42 @@ public class Cfg {
 
 
     public Cfg() {
-        this("config.tecl", true);
+        this(CONFIG_TECL, true, false);
     }
 
-    public Cfg(String configFileName, boolean moreTracksInBackground) {
+    public Cfg( boolean generateConfigFileIfNotFound) {
+        this(CONFIG_TECL, true, generateConfigFileIfNotFound);
+    }
+
+    public Cfg(String configFileName, boolean moreTracksInBackground, boolean generateConfigFileIfNotFound) {
         this.moreTracksInBackground = moreTracksInBackground;
         try {
             tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
-                if (logger.isInfoEnabled()) logger.info("No configuration found, switch to default config for '" + configFileName + "'");
-                tecl = new TECL("notfound");
+                if (generateConfigFileIfNotFound) {
+                    createFromExampleConfigFile(configFileName);
+                    tecl = TECL.parser().findAndParse(configFileName);
+                }
+                if (tecl == null) {
+                    if (logger.isInfoEnabled()) logger.info("No configuration found, switch to default config for '" + configFileName + "'");
+                    tecl = new TECL("notfound");
+                }
             }
 
             readMoreTracks(tecl);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void createFromExampleConfigFile(String configFileName) throws IOException {
+        File file = new File(configFileName);
+        if (logger.isInfoEnabled()) logger.info("No configuration found, generating one ìn '" + file.getAbsolutePath() + "'");
+        try (
+            InputStream inputStream = Cfg.class.getResourceAsStream("/example.config.tecl");
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+        ) {
+            IOUtils.copy(inputStream, fileOutputStream);
         }
     }
 

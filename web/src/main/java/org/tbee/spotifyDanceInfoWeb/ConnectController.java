@@ -66,7 +66,7 @@ public class ConnectController extends ControllerBase {
             SpotifyApi spotifyApi = spotifyApi(session);
 
             // Load configuration
-            Cfg cfg = new Cfg("session", false);
+            Cfg cfg = new Cfg("session", false, false);
             session.setAttribute("cfg", cfg);
             String originalFilename = file.getOriginalFilename();
             if (originalFilename.endsWith(".tsv")) {

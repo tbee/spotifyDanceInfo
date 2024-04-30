@@ -27,7 +27,7 @@ screen {
 
     # The background image is shown when a track is playing
     backgroundImage {
-        #useCovertArt: false
+        useCovertArt: false
         # Noise reduces visual conflict between text on the covert art and the song/nextUp texts
         #noise: 80
 
@@ -96,5 +96,13 @@ moreTracks {
     tsv {
         | idIdx | danceIdx | uri                                                                                                                                              |
         | 0     | 1        | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
+    }
+
+    # excel files
+    xslx {
+        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                              |
+    }
+    xsl {
+        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                              |
     }
 }

@@ -82,7 +82,7 @@ public class ConnectHtmlResource extends ResourceBase {
             SpotifyApi spotifyApi = spotifyApi(session);
 
             // Load configuration
-            Cfg cfg = new Cfg("session", false);
+            Cfg cfg = new Cfg("session", false, false);
             session.setAttribute("cfg", cfg);
             String originalFilename = file.getFileName().orElse("");
             if (originalFilename.endsWith(".tsv")) {

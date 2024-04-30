@@ -39,3 +39,4 @@ build/
 javaHome.cmd
 
 *.versionsBackup
+desktop/config.tecl

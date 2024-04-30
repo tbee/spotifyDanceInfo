@@ -148,6 +148,7 @@
             </activation>
             <properties>
                 <quarkus.package.type>uber-jar</quarkus.package.type>
+                <quarkus.package.runner-suffix>uber</quarkus.package.runner-suffix>
             </properties>
         </profile>
         <profile>
