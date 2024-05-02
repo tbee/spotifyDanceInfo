@@ -29,7 +29,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Log
 @Path("")
@@ -119,14 +118,6 @@ public class ConnectHtmlResource extends ResourceBase {
             throw new RuntimeException(e);
         }
     }
-
-    private String getOr(String name, String elseValue) {
-        return Optional.ofNullable(name)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .orElse(elseValue);
-    }
-
 
     @GET
     @Path("/spotifyCallback")

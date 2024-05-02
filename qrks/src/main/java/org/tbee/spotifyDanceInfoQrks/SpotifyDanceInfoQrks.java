@@ -7,7 +7,7 @@ import org.tbee.spotifyDanceInfo.Cfg;
 @QuarkusMain
 public class SpotifyDanceInfoQrks {
 
-    static private Cfg cfg = new Cfg();
+    static private final Cfg cfg = new Cfg();
 
     public static void main(String... args) {
         Quarkus.run(args);
