@@ -2,7 +2,7 @@ if exist javaHome.cmd (
     call javaHome.cmd
 )
 call mvnw.cmd versions:set
-call mvnw.cmd clean package 
+call mvnw.cmd clean package
 pause
 
 rem -Dquarkus.native.additional-build-args="--initialize-at-run-time=org.apache.poi.util.RandomSingleton"  -P native

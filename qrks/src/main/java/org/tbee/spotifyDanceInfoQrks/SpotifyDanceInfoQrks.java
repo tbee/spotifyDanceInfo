@@ -10,7 +10,6 @@ public class SpotifyDanceInfoQrks {
     static private Cfg cfg = new Cfg();
 
     public static void main(String... args) {
-        System.out.println("Running main method");
         Quarkus.run(args);
     }
 

@@ -24,7 +24,7 @@
 		<module>web</module>
 		<module>qrks</module>
         <module>shared</module>
-	</modules>
+    </modules>
 
     <repositories>
         <repository>

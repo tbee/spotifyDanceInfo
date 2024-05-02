@@ -25,6 +25,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>${groupId}</groupId>
+                <artifactId>generated-bytecode</artifactId>
+                <version>${version}</version>
+                <scope>system</scope>
+                <systemPath>${project.basedir}/target/quarkus-app/quarkus/generated-bytecode.jar</systemPath>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -86,21 +93,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>${quarkus.platform.group-id}</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build</goal>
-                            <goal>generate-code</goal>
-<!--                            <goal>generate-code-tests</goal>-->
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <compilerArgs>
@@ -136,6 +128,47 @@
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>quarkus-generate-code</id>
+                        <goals>
+                            <goal>generate-code</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>quarkus-build</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <configuration>
+                    <tasks>
+                        <unzip src="${project.build.directory}/quarkus-app/quarkus/generated-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
+                        <unzip src="${project.build.directory}/quarkus-app/quarkus/transformed-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
+                        <copy file="${project.build.directory}/quarkus-app/quarkus/quarkus-application.dat" todir="${project.build.directory}/classes"/>
+                    </tasks>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
