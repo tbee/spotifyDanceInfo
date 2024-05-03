@@ -99,9 +99,9 @@ public class SpotifyWebapi extends Spotify {
                 String refreshTokenCopy = "\"" + refreshToken + "\"";
                 if (SDialog.ofOkCancel(window, "",
                         SVPanel.of(
-                                SLabel.of("Do you want to copy the text below?"),
+                                SLabel.of("Do you want to copy the refresh token below, so you can put it in the configuration file?"),
                                 SLabel.of(refreshTokenCopy).font(SLabel.of().getFont().deriveFont(Font.BOLD)),
-                                SLabel.of("It can be placed as the refreshToken in the configuration file for easy startup.")
+                                SLabel.of("This will remove the need to copy the access token on ever start.")
                         )
                 ).showAndWait().closeReasonIsOk()) {
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(refreshTokenCopy), null);
