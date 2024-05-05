@@ -16,8 +16,6 @@ import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -49,13 +47,7 @@ public class SpotifyHtmlResource extends ResourceBase {
         }
         catch (Exception e) {
             logger.error("Problem constructing page", e);
-            httpServletResponse.addHeader("HX-Redirect", "/");
-        }
-        try {
-            return Response.status(Response.Status.FOUND).location(new URI("/")).build(); // redirect not working
-        }
-        catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            return Response.ok().header("HX-Redirect", "/").build(); // redirect
         }
     }
 
