@@ -25,13 +25,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>${groupId}</groupId>
-                <artifactId>generated-bytecode</artifactId>
-                <version>${version}</version>
-                <scope>system</scope>
-                <systemPath>${project.basedir}/target/quarkus-app/quarkus/generated-bytecode.jar</systemPath>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
