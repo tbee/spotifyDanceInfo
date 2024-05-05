@@ -151,43 +151,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
-                <configuration>
-                    <tasks>
-                        <unzip src="${project.build.directory}/quarkus-app/quarkus/generated-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
-                        <unzip src="${project.build.directory}/quarkus-app/quarkus/transformed-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
-                        <copy file="${project.build.directory}/quarkus-app/quarkus/quarkus-application.dat" todir="${project.build.directory}/classes"/>
-                    </tasks>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.4</version>
-                <configuration>
-                    <classifier>boot</classifier>
-                    <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
-                    <attach>false</attach>
-                    <excludeDevtools>true</excludeDevtools>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -198,10 +161,56 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <quarkus.package.type>uber-jar</quarkus.package.type>
-                <quarkus.package.runner-suffix>-uber</quarkus.package.runner-suffix>
+<!--                <quarkus.package.type>uber-jar</quarkus.package.type>-->
+<!--                <quarkus.package.runner-suffix>-uber</quarkus.package.runner-suffix>-->
             </properties>
         </profile>
+
+        <profile>
+            <id>bootable</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <configuration>
+                            <tasks>
+                                <unzip src="${project.build.directory}/quarkus-app/quarkus/generated-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
+                                <unzip src="${project.build.directory}/quarkus-app/quarkus/transformed-bytecode.jar" dest="${project.build.directory}/classes" failOnEmptyArchive="true"/>
+                                <copy file="${project.build.directory}/quarkus-app/quarkus/quarkus-application.dat" todir="${project.build.directory}/classes"/>
+                            </tasks>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <configuration>
+                            <classifier>boot</classifier>
+                            <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
+                            <attach>false</attach>
+                            <excludeDevtools>true</excludeDevtools>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>native</id>
             <activation>
