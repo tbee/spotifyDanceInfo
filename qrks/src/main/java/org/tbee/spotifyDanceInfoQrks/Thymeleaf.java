@@ -6,7 +6,6 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.WebApplicationException;
-import nz.net.ultraq.thymeleaf.layoutdialect.LayoutDialect;
 import org.jboss.resteasy.plugins.providers.html.Renderable;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
@@ -26,7 +25,6 @@ public class Thymeleaf {
     public TemplateEngine templateEngine() {
         TemplateEngine templateEngine = new TemplateEngine();
         templateEngine.setTemplateResolver(new ClassLoaderTemplateResolver());
-        templateEngine.addDialect(new LayoutDialect());
         return templateEngine;
     }
 

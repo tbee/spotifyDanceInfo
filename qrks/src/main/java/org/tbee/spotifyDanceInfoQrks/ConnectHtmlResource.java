@@ -1,6 +1,5 @@
 package org.tbee.spotifyDanceInfoQrks;
 
-import groovy.util.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -30,7 +29,6 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Log
 @Path("")
 @Produces(MediaType.TEXT_HTML)
 public class ConnectHtmlResource extends ResourceBase {

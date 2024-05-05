@@ -79,12 +79,6 @@
             <artifactId>thymeleaf</artifactId>
             <version>3.1.2.RELEASE</version>
         </dependency>
-        <!-- https://www.thymeleaf.org/doc/articles/layouts.html -->
-        <dependency>
-            <groupId>nz.net.ultraq.thymeleaf</groupId>
-            <artifactId>thymeleaf-layout-dialect</artifactId>
-            <version>3.3.0</version>
-        </dependency>
 
         <!-- https://quarkus.io/guides/http-reference#serving-static-resources -->
 
@@ -161,8 +155,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-<!--                <quarkus.package.type>uber-jar</quarkus.package.type>-->
-<!--                <quarkus.package.runner-suffix>-uber</quarkus.package.runner-suffix>-->
+                <quarkus.package.type>uber-jar</quarkus.package.type>
+                <quarkus.package.runner-suffix>-uber</quarkus.package.runner-suffix>
             </properties>
         </profile>
 

@@ -1,33 +1,29 @@
 <!doctype html>
-<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="/layout/basic.html">
+<html lang="en"  th:replace="templates/template.html :: template(~{::head},~{::body})">
     <head>
-        <th:block layout:fragment="header">
-            <link rel="stylesheet" href="/spotify.css">
-        </th:block>
+        <link rel="stylesheet" href="/spotify.css">
     </head>
     <body>
-        <th:block layout:fragment="content">
-            <div hx-trigger="every 2s" hx-get="/spotify" hx-swap="innerHTML">
-                <div class="currentlyPlaying">
-                    <h1 class="title is-1" th:text="${ScreenData.currentlyPlaying().title()}">?</h1>
-                    <h2 class="subtitle is-1" th:text="${ScreenData.currentlyPlaying().artist()}">?</h2>
-                    <h3 class="title is-3" th:each="dance : ${ScreenData.currentlyPlaying().dances()}" th:text="${dance}">?</h3>
-                </div>
-                <div class="upNext">
-                    <div class="upNextItem" th:each="nextUp : ${ScreenData.nextUp()}">
-                        <h1 class="title is-1" th:text="${nextUp.title() + (nextUp.artist().isBlank() ? '' : ' - ' + nextUp.artist())}">?</h1>
-                        <h2 class="subtitle is-2" th:each="dance : ${nextUp.dances()}" th:text="${dance}">?</h2>
-                    </div>
-                </div>
-
-                <div class="time" th:if="${!ScreenData.showTips()}">
-                    <h1 class="title is-1" th:text="${ScreenData.time()}">?</h1>
-                </div>
-                <div class="time" th:if="${ScreenData.showTips()}">
-                    <h3 class="title is-3">Use browser's full screen (F11).</h3>
-                    <h3 class="title is-3">Use browser's zoom function to increase text size.</h3>
+        <div hx-trigger="every 2s" hx-get="/spotify" hx-swap="innerHTML">
+            <div class="currentlyPlaying">
+                <h1 class="title is-1" th:text="${ScreenData.currentlyPlaying().title()}">?</h1>
+                <h2 class="subtitle is-1" th:text="${ScreenData.currentlyPlaying().artist()}">?</h2>
+                <h3 class="title is-3" th:each="dance : ${ScreenData.currentlyPlaying().dances()}" th:text="${dance}">?</h3>
+            </div>
+            <div class="upNext">
+                <div class="upNextItem" th:each="nextUp : ${ScreenData.nextUp()}">
+                    <h1 class="title is-1" th:text="${nextUp.title() + (nextUp.artist().isBlank() ? '' : ' - ' + nextUp.artist())}">?</h1>
+                    <h2 class="subtitle is-2" th:each="dance : ${nextUp.dances()}" th:text="${dance}">?</h2>
                 </div>
             </div>
-        </th:block>
+
+            <div class="time" th:if="${!ScreenData.showTips()}">
+                <h1 class="title is-1" th:text="${ScreenData.time()}">?</h1>
+            </div>
+            <div class="time" th:if="${ScreenData.showTips()}">
+                <h3 class="title is-3">Use browser's full screen (F11).</h3>
+                <h3 class="title is-3">Use browser's zoom function to increase text size.</h3>
+            </div>
+        </div>
     </body>
 </html>

@@ -1,6 +1,5 @@
 package org.tbee.spotifyDanceInfoQrks;
 
-import groovy.util.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Log
 @Path("")
 @Produces(MediaType.TEXT_HTML)
 public class SpotifyHtmlResource extends ResourceBase {
