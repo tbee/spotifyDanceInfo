@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.sway.SBorderPanel;
 import org.tbee.sway.SContextMenu;
+import org.tbee.sway.SDialog;
 import org.tbee.sway.SEditorPane;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SLabel;
@@ -125,12 +126,17 @@ public class SpotifyDanceInfo {
         // Start updating the time
         scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
 
-        // And go
-        (cfg.connectLocal() ? new SpotifyLocalApi() : new SpotifyWebapi(cfg))
-                .currentlyPlayingCallback(this::updateCurrentlyPlaying)
-                .nextUpCallback(this::updateNextUp)
-                .coverArtCallback(this::generateAndUpdateImage)
-                .connect();
+        // Gather connect information
+        ConnectPanel connectPanel = new ConnectPanel(cfg);
+        SDialog.ofOkCancel(sFrame, "Connect", connectPanel)
+                .onCancel(() -> System.exit(0))
+                .onOk(() ->
+                        new SpotifyWebapi(cfg, connectPanel.clientId(), connectPanel.clientSecret(), connectPanel.redirectUri().toString(), connectPanel.refreshToken())
+                        .currentlyPlayingCallback(this::updateCurrentlyPlaying)
+                        .nextUpCallback(this::updateNextUp)
+                        .coverArtCallback(this::generateAndUpdateImage)
+                        .connect())
+                .showAndWait();
     }
 
     private void reactToKeyPress(KeyEvent e) {

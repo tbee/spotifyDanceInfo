@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.prefs.Preferences;
 
 public class Cfg {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
@@ -319,16 +320,49 @@ public class Cfg {
         return CONNECT_LOCAL.equalsIgnoreCase(connect());
     }
     public String webapiClientId() {
-        return tecl.str(WEBAPI + "/clientId", "");
+        return tecl.str(WEBAPI + "/clientId", recallClientId());
     }
     public String webapiClientSecret() {
-        return tecl.str(WEBAPI + "/clientSecret", "");
+        return tecl.str(WEBAPI + "/clientSecret", recallClientSecret());
     }
     public String webapiRedirect() {
-        return tecl.str(WEBAPI + "/redirect", "");
+        return tecl.str(WEBAPI + "/redirect", recallRedirect());
     }
     public String webapiRefreshToken() {
-        return tecl.str(WEBAPI + "/refreshToken", "");
+        return tecl.str(WEBAPI + "/refreshToken", recallRefreshToken());
+    }
+
+    public void rememberClientId(String v) {
+        remember("clientId", v);
+    }
+    private String recallClientId() {
+        return recall("clientId");
+    }
+    public void rememberClientSecret(String v) {
+        remember("clientSecret", v);
+    }
+    private String recallClientSecret() {
+        return recall("clientSecret");
+    }
+    public void rememberRedirectURI(String v) {
+        remember("redirect", v);
+    }
+    private String recallRedirect() {
+        return recall("redirect");
+    }
+    public void rememberRefreshToken(String v) {
+        remember("refreshToken", v);
+    }
+    private String recallRefreshToken() {
+        return recall("refreshToken");
+    }
+    private void remember(String id, String v) {
+        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
+        preferences.put(id, v);
+    }
+    private String recall(String id) {
+        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
+        return preferences.get(id, "");
     }
 
     public boolean useCoverArt() {

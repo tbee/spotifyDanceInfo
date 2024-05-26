@@ -3,10 +3,7 @@ package org.tbee.spotifyDanceInfo;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tbee.sway.SDialog;
-import org.tbee.sway.SLabel;
 import org.tbee.sway.SOptionPane;
-import org.tbee.sway.SVPanel;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
@@ -16,10 +13,7 @@ import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 import java.awt.Desktop;
-import java.awt.Font;
-import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -43,32 +37,37 @@ public class SpotifyWebapi extends Spotify {
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
     private final Cfg cfg;
-
     protected final SpotifyApi spotifyApi;
+    private String refreshToken;
 
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
 
     public SpotifyWebapi(Cfg cfg) {
+        this(cfg, cfg.webapiClientId(), cfg.webapiClientSecret(), cfg.webapiRedirect(), cfg.webapiRefreshToken());
+    }
+
+    public SpotifyWebapi(Cfg cfg, String clientId, String clientSecret, String redirectUri, String refreshToken) {
         try {
             this.cfg = cfg;
 
             // Setup the API
             spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(cfg.webapiClientId())
-                    .setClientSecret(cfg.webapiClientSecret())
-                    .setRedirectUri(new URI(cfg.webapiRedirect()))
+                    .setClientId(clientId)
+                    .setClientSecret(clientSecret)
+                    .setRedirectUri(new URI(redirectUri))
                     .build();
+            this.refreshToken = refreshToken;
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 
+
     public Spotify connect() {
         try {
             // Do we have tokens stored or need to fetch them?
-            String refreshToken = cfg.webapiRefreshToken();
             if (refreshToken.isBlank()) {
 
                 // Open spotify in the browser
@@ -83,7 +82,7 @@ public class SpotifyWebapi extends Spotify {
 
                 // Ask for the authorization code
                 Window window = Window.getWindows()[0];
-                var authorizationCode = SOptionPane.showInputDialog(window, "Please copy the authorization code here");
+                var authorizationCode = SOptionPane.showInputDialog(window, "Please copy the authorization code from the webbrowser here");
                 if (authorizationCode == null || authorizationCode.isBlank()) {
                     String message = "Authorization code cannot be empty";
                     javax.swing.JOptionPane.showMessageDialog(window, message);
@@ -95,17 +94,11 @@ public class SpotifyWebapi extends Spotify {
                 refreshToken = authorizationCodeCredentials.getRefreshToken();
                 if (logger.isInfoEnabled()) logger.info("refreshToken " + refreshToken);
 
-                // Suggest to copy the refresh token in the configuration file
-                String refreshTokenCopy = "\"" + refreshToken + "\"";
-                if (SDialog.ofOkCancel(window, "",
-                        SVPanel.of(
-                                SLabel.of("Do you want to copy the refresh token below, so you can put it in the configuration file?"),
-                                SLabel.of(refreshTokenCopy).font(SLabel.of().getFont().deriveFont(Font.BOLD)),
-                                SLabel.of("This will remove the need to copy the access token on ever start.")
-                        )
-                ).showAndWait().closeReasonIsOk()) {
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(refreshTokenCopy), null);
-                }
+                // Remember
+                cfg.rememberClientId(spotifyApi.getClientId());
+                cfg.rememberClientSecret(spotifyApi.getClientSecret());
+                cfg.rememberRedirectURI(spotifyApi.getRedirectURI().toString());
+                cfg.rememberRefreshToken(refreshToken);
             }
 
             // connect
