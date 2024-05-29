@@ -2,6 +2,7 @@ package org.tbee.spotifyDanceInfo;
 
 import net.miginfocom.layout.AlignX;
 import net.miginfocom.layout.CC;
+import org.tbee.sway.SFileTextField;
 import org.tbee.sway.SMigPanel;
 import org.tbee.sway.STextField;
 
@@ -11,9 +12,12 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import static org.tbee.sway.format.FileFormat.AllowedType.FILE;
 
 public class ConnectPanel extends SMigPanel {
 
@@ -21,7 +25,7 @@ public class ConnectPanel extends SMigPanel {
     private final STextField<String> clientSecretTextField = STextField.of(String.class);
     private final STextField<URI> redirectUriTextField = STextField.of(URI.class);
     private final STextField<String> refreshTokenTextField = STextField.of(String.class).columns(100);
-    private final STextField<String> fileTextField = STextField.of(String.class);
+    private final SFileTextField fileTextField = SFileTextField.of().mustExist(true).allowedType(FILE);
 
     public ConnectPanel(Cfg cfg) {
         //debug();
@@ -45,7 +49,23 @@ public class ConnectPanel extends SMigPanel {
             addLabelAndFieldVertical("Client id*", clientIdTextField);
             addLabelAndFieldVertical("Client secret*", clientSecretTextField);
             addLabelAndFieldVertical("Refresh Token", refreshTokenTextField);
-            //addLabelAndFieldVertical("Track-to-dance file", fileTextField);
+            addHtml("""
+                <html><body>
+                    <p>
+                        You may provide a <a href="https://spotifydanceinfo.softworks.nl/example.tsv">TSV (tab separated)<a/> or Excel (<a href="https://spotifydanceinfo.softworks.nl/example.xls">xls</a>, <a href="https://spotifydanceinfo.softworks.nl/example.xlsx">xlsx</a>) file that maps track ids to dances. 
+                        See the examples for clarification of the points below.
+                        <ul>
+                            <li>The first column must contain the track id.</li>
+                            <li>The second column must contain the dance, or dances separated by a comma.</li>
+                            <li>If you use spaces, the dance must be surrounded by double quotes (").</li>
+                            <li>The first row/line will not be read, it can contain column headers.</li>
+                            <li>Excel files must have the track and dance information on the first sheet.</li>
+                        </ul>                    
+                    </p>
+                </body></html>
+            """);
+            //                          You may also use these abbreviations for the dances.
+            addLabelAndFieldVertical("Track-to-dance file", fileTextField);
             addLabelVertical(" ");
         }
         catch (URISyntaxException e) {
@@ -59,7 +79,7 @@ public class ConnectPanel extends SMigPanel {
         jEditorPane.setEditable(false);
         jEditorPane.setBorder(null);
         jEditorPane.setText(html);
-        jEditorPane.setPreferredSize(new Dimension(10, 10));
+        jEditorPane.setPreferredSize(new Dimension(10, 70));
         jEditorPane.addHyperlinkListener(new HyperlinkListener() {
             public void hyperlinkUpdate(HyperlinkEvent e) {
                 if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -102,5 +122,9 @@ public class ConnectPanel extends SMigPanel {
 
     public String refreshToken() {
         return refreshTokenTextField.getValue();
+    }
+
+    public File file() {
+        return fileTextField.getValue();
     }
 }

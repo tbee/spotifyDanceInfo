@@ -1,5 +1,7 @@
 package org.tbee.spotifyDanceInfo;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.sway.SBorderPanel;
@@ -28,6 +30,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -130,13 +134,39 @@ public class SpotifyDanceInfo {
         ConnectPanel connectPanel = new ConnectPanel(cfg);
         SDialog.ofOkCancel(sFrame, "Connect", connectPanel)
                 .onCancel(() -> System.exit(0))
-                .onOk(() ->
-                        new SpotifyWebapi(cfg, connectPanel.clientId(), connectPanel.clientSecret(), connectPanel.redirectUri().toString(), connectPanel.refreshToken())
-                        .currentlyPlayingCallback(this::updateCurrentlyPlaying)
-                        .nextUpCallback(this::updateNextUp)
-                        .coverArtCallback(this::generateAndUpdateImage)
-                        .connect())
+                .onOk(() -> connect(connectPanel, cfg))
                 .showAndWait();
+    }
+
+    private void connect(ConnectPanel connectPanel, Cfg cfg) {
+        // process file
+        try {
+            File file = connectPanel.file();
+            if (file != null) {
+                try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                    String fileName = file.getName();
+                    if (fileName.endsWith(".tsv")) {
+                        cfg.readMoreTracksTSV("web", fileInputStream, 0, 1);
+                    }
+                    else if (fileName.endsWith(".xlsx")) {
+                        cfg.readMoreTracksExcel("web", new XSSFWorkbook(fileInputStream), 0, 0, 1);
+                    }
+                    else if (fileName.endsWith(".xls")) {
+                        cfg.readMoreTracksExcel("web", new HSSFWorkbook(fileInputStream), 0, 0, 1);
+                    }
+                }
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // connect
+        new SpotifyWebapi(cfg, connectPanel.clientId(), connectPanel.clientSecret(), connectPanel.redirectUri().toString(), connectPanel.refreshToken())
+                .currentlyPlayingCallback(this::updateCurrentlyPlaying)
+                .nextUpCallback(this::updateNextUp)
+                .coverArtCallback(this::generateAndUpdateImage)
+                .connect();
     }
 
     private void reactToKeyPress(KeyEvent e) {
