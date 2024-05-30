@@ -9,6 +9,7 @@ import org.tbee.sway.SContextMenu;
 import org.tbee.sway.SDialog;
 import org.tbee.sway.SEditorPane;
 import org.tbee.sway.SFrame;
+import org.tbee.sway.SIconRegistry;
 import org.tbee.sway.SLabel;
 import org.tbee.sway.SLookAndFeel;
 import org.tbee.sway.SOptionPane;
@@ -74,6 +75,7 @@ public class SpotifyDanceInfo {
 
     private void run() {
         SLookAndFeel.installDefault();
+        SIconRegistry.registerDefaultIcons();
         SContextMenu.install();
         Cfg cfg = cfg();
 
@@ -142,6 +144,7 @@ public class SpotifyDanceInfo {
         // process file
         try {
             File file = connectPanel.file();
+            cfg.rememberFile(file == null ? "" : file.getAbsolutePath());
             if (file != null) {
                 try (FileInputStream fileInputStream = new FileInputStream(file)) {
                     String fileName = file.getName();

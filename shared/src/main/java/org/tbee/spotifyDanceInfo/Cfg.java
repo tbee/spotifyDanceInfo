@@ -356,6 +356,12 @@ public class Cfg {
     private String recallRefreshToken() {
         return recall("refreshToken");
     }
+    public void rememberFile(String v) {
+        remember("file", v);
+    }
+    public String recallReFile() {
+        return recall("file");
+    }
     private void remember(String id, String v) {
         Preferences preferences = Preferences.userNodeForPackage(this.getClass());
         preferences.put(id, v);

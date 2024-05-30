@@ -36,6 +36,7 @@ public class ConnectPanel extends SMigPanel {
             clientSecretTextField.value(cfg.webapiClientSecret());
             redirectUriTextField.value(new URI(cfg.webapiRedirect().isBlank() ? "https://nyota.softworks.nl/SpotifyDanceInfo.html" : cfg.webapiRedirect()));
             refreshTokenTextField.value(cfg.webapiRefreshToken());
+            fileTextField.text(cfg.recallReFile());
 
             addHtml("""
                 <html><body>
