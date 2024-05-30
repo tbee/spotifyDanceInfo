@@ -36,7 +36,10 @@ public class ConnectPanel extends SMigPanel {
             clientSecretTextField.value(cfg.webapiClientSecret());
             redirectUriTextField.value(new URI(cfg.webapiRedirect().isBlank() ? "https://nyota.softworks.nl/SpotifyDanceInfo.html" : cfg.webapiRedirect()));
             refreshTokenTextField.value(cfg.webapiRefreshToken());
-            fileTextField.text(cfg.recallReFile());
+            String filename = cfg.recallReFile();
+            if (!filename.isBlank()) {
+                fileTextField.value(new File(filename));
+            }
 
             addHtml("""
                 <html><body>
@@ -61,13 +64,16 @@ public class ConnectPanel extends SMigPanel {
                             <li>If you use spaces, the dance must be surrounded by double quotes (").</li>
                             <li>The first row/line will not be read, it can contain column headers.</li>
                             <li>Excel files must have the track and dance information on the first sheet.</li>
+                        </ul>   
+                        <ul>
+                            <li>On Windows: move window to other monitor using Shift+Win+&lt;arrow&gt; keys.</li>
                         </ul>                    
                     </p>
                 </body></html>
             """);
             //                          You may also use these abbreviations for the dances.
             addLabelAndFieldVertical("Track-to-dance file", fileTextField);
-            addLabelVertical(" ");
+//            addLabelVertical(" ");
         }
         catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -80,7 +86,7 @@ public class ConnectPanel extends SMigPanel {
         jEditorPane.setEditable(false);
         jEditorPane.setBorder(null);
         jEditorPane.setText(html);
-        jEditorPane.setPreferredSize(new Dimension(10, 70));
+        jEditorPane.setPreferredSize(new Dimension(10, 80));
         jEditorPane.addHyperlinkListener(new HyperlinkListener() {
             public void hyperlinkUpdate(HyperlinkEvent e) {
                 if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {

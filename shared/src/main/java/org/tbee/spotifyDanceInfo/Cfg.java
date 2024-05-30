@@ -124,6 +124,9 @@ public class Cfg {
     private void readMoreTracksTSV(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
         try {
             String uri = moreTrack.str("uri");
+            if (uri == null || uri.isEmpty()) {
+                return;
+            }
             int idIdx = moreTrack.integer("idIdx", 0);
             int danceIdx = moreTrack.integer("danceIdx", 1);
 
@@ -169,6 +172,9 @@ public class Cfg {
     private void readMoreTracksXSLX(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
         try {
             String uri = moreTrack.str("uri");
+            if (uri == null || uri.isEmpty()) {
+                return;
+            }
 
             InputStream inputStream = readContents(new URI(uri));
 
@@ -184,6 +190,9 @@ public class Cfg {
     private void readMoreTracksXSL(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
         try {
             String uri = moreTrack.str("uri");
+            if (uri == null || uri.isEmpty()) {
+                return;
+            }
 
             InputStream inputStream = readContents(new URI(uri));
 

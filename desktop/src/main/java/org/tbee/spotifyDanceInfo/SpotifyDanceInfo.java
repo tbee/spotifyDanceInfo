@@ -119,6 +119,14 @@ public class SpotifyDanceInfo {
                         .visible(true);
 
                 setFonts();
+
+                // Gather connect information
+                ConnectPanel connectPanel = new ConnectPanel(cfg);
+                SDialog dialog = SDialog.ofOkCancel(sFrame, "Connect", connectPanel)
+                        .onCancel(() -> System.exit(0))
+                        .onOk(() -> connect(connectPanel, cfg))
+                        .noWindowDecoration()
+                        .showAndWait();
             });
         }
         catch (InterruptedException | InvocationTargetException e) {
@@ -131,13 +139,6 @@ public class SpotifyDanceInfo {
 
         // Start updating the time
         scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
-
-        // Gather connect information
-        ConnectPanel connectPanel = new ConnectPanel(cfg);
-        SDialog.ofOkCancel(sFrame, "Connect", connectPanel)
-                .onCancel(() -> System.exit(0))
-                .onOk(() -> connect(connectPanel, cfg))
-                .showAndWait();
     }
 
     private void connect(ConnectPanel connectPanel, Cfg cfg) {
