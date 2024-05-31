@@ -65,15 +65,12 @@ public class ConnectPanel extends SMigPanel {
                             <li>The first row/line will not be read, it can contain column headers.</li>
                             <li>Excel files must have the track and dance information on the first sheet.</li>
                         </ul>   
-                        <ul>
-                            <li>On Windows: move window to other monitor using Shift+Win+&lt;arrow&gt; keys.</li>
-                        </ul>                    
                     </p>
                 </body></html>
             """);
             //                          You may also use these abbreviations for the dances.
             addLabelAndFieldVertical("Track-to-dance file", fileTextField);
-//            addLabelVertical(" ");
+            addLabelVertical("On Windows: move window to other monitor using Shift+Win+<arrow> keys.");
         }
         catch (URISyntaxException e) {
             throw new RuntimeException(e);
