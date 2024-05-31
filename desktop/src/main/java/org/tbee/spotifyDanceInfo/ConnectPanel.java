@@ -2,9 +2,9 @@ package org.tbee.spotifyDanceInfo;
 
 import net.miginfocom.layout.AlignX;
 import net.miginfocom.layout.CC;
-import org.tbee.sway.SFileTextField;
 import org.tbee.sway.SMigPanel;
 import org.tbee.sway.STextField;
+import org.tbee.sway.format.FileFormat;
 
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
@@ -25,7 +25,7 @@ public class ConnectPanel extends SMigPanel {
     private final STextField<String> clientSecretTextField = STextField.of(String.class);
     private final STextField<URI> redirectUriTextField = STextField.of(URI.class);
     private final STextField<String> refreshTokenTextField = STextField.of(String.class).columns(100);
-    private final SFileTextField fileTextField = SFileTextField.of().mustExist(true).allowedType(FILE);
+    private final STextField<File> fileTextField = STextField.of(new FileFormat().mustExist(true).allowedType(FILE));
 
     public ConnectPanel(Cfg cfg) {
         //debug();
