@@ -38,9 +38,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.prefs.Preferences;
 
-public class Cfg {
+public abstract class Cfg<T> {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
 
     private static final String CONFIG_TECL = "config.tecl";
@@ -371,14 +370,8 @@ public class Cfg {
     public String recallReFile() {
         return recall("file");
     }
-    private void remember(String id, String v) {
-        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-        preferences.put(id, v);
-    }
-    private String recall(String id) {
-        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-        return preferences.get(id, "");
-    }
+    protected abstract void remember(String id, String v);
+    protected abstract String recall(String id);
 
     public boolean useCoverArt() {
         return tecl.bool(BACKGROUNDIMAGE + "/useCovertArt", true);
@@ -427,8 +420,8 @@ public class Cfg {
      * @param listener
      * @return
      */
-    public Cfg onChange(Runnable listener) {
+    public T onChange(Runnable listener) {
         onChangeListeners.add(listener);
-        return this;
+        return (T)this;
     }
 }

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
@@ -39,7 +38,7 @@ public class ConnectController extends ControllerBase {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
 
-        Cfg cfg = SpotifyDanceInfoWebApplication.cfg();
+        CfgApp cfg = SpotifyDanceInfoWebApplication.cfg(); // TBEERNOT: this is an issue! This must be se session cfg
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
@@ -66,7 +65,7 @@ public class ConnectController extends ControllerBase {
             SpotifyApi spotifyApi = spotifyApi(session);
 
             // Load configuration
-            Cfg cfg = new Cfg("session", false, false);
+            CfgSession cfg = new CfgSession("session", false, false);
             session.setAttribute("cfg", cfg);
             String originalFilename = file.getOriginalFilename();
             if (originalFilename.endsWith(".tsv")) {
@@ -113,7 +112,7 @@ public class ConnectController extends ControllerBase {
 
     @GetMapping("/example.{filetype}")
     public void example(HttpServletResponse response, HttpSession session, @PathVariable("filetype") String filetype) throws IOException {
-        InputStream inputStream = Cfg.class.getResourceAsStream("/trackToDance." + filetype); // fetch resource from shared jar
+        InputStream inputStream = CfgSession.class.getResourceAsStream("/trackToDance." + filetype); // fetch resource from shared jar
         IOUtils.copy(inputStream, response.getOutputStream());
         response.flushBuffer();
         response.setContentType(switch (filetype) {
@@ -129,7 +128,7 @@ public class ConnectController extends ControllerBase {
         private String clientId;
         private String clientSecret;
         private String redirectUrl;
-        private List<Cfg.Abbreviation> abbreviations;
+        private List<CfgSession.Abbreviation> abbreviations;
 
         public String getClientId() {
             return clientId;
@@ -155,10 +154,10 @@ public class ConnectController extends ControllerBase {
             this.redirectUrl = redirectUrl;
         }
 
-        public List<Cfg.Abbreviation> abbreviations() {
+        public List<CfgSession.Abbreviation> abbreviations() {
             return abbreviations;
         }
-        public ConnectForm abbreviations(List<Cfg.Abbreviation> abbreviations) {
+        public ConnectForm abbreviations(List<CfgSession.Abbreviation> abbreviations) {
             this.abbreviations = abbreviations;
             return this;
         }

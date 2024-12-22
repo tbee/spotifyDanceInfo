@@ -2,18 +2,17 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.tbee.spotifyDanceInfo.Cfg;
 
 @SpringBootApplication
 public class SpotifyDanceInfoWebApplication {
 
-	static private Cfg cfg = new Cfg();
+	static private CfgApp cfg = new CfgApp();
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpotifyDanceInfoWebApplication.class, args);
 	}
 
-	static Cfg cfg() {
+	static CfgApp cfg() {
 		return cfg;
 	}
 }

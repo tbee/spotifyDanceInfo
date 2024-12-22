@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
@@ -76,7 +75,7 @@ public class SpotifyController extends ControllerBase {
     private void setDances(HttpSession session, Song song) {
 
         // First check in the session config
-        Cfg sessionCfg = (Cfg)session.getAttribute("cfg");
+        CfgSession sessionCfg = (CfgSession)session.getAttribute("cfg");
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
                 .filter(danceId -> !danceId.isBlank())
                 .map(danceId -> sessionCfg.danceIdToScreenText(danceId))
@@ -87,9 +86,9 @@ public class SpotifyController extends ControllerBase {
         }
 
         // Then in the application config
-        Cfg applicationCfg = SpotifyDanceInfoWebApplication.cfg();
-        List<String> applicationDances = applicationCfg.trackIdToDanceIds(song.trackId()).stream()
-                .map(danceId -> applicationCfg.danceIdToScreenText(danceId))
+        CfgApp cfgApp = SpotifyDanceInfoWebApplication.cfg();
+        List<String> applicationDances = cfgApp.trackIdToDanceIds(song.trackId()).stream()
+                .map(danceId -> cfgApp.danceIdToScreenText(danceId))
                 .toList();
         song.dances(applicationDances);
     }

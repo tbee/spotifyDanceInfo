@@ -27,7 +27,7 @@ public class ConnectPanel extends SMigPanel {
     private final STextField<String> refreshTokenTextField = STextField.of(String.class).columns(100);
     private final STextField<File> fileTextField = STextField.of(new FileFormat().mustExist(true).allowedType(FILE));
 
-    public ConnectPanel(Cfg cfg) {
+    public ConnectPanel(CfgDesktop cfg) {
         //debug();
         try {
             noGaps();

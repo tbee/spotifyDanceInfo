@@ -36,18 +36,18 @@ public class SpotifyWebapi extends Spotify {
     public static final int EXPIRE_MARGIN = 5 * 60;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
 
-    private final Cfg cfg;
+    private final CfgDesktop cfg;
     protected final SpotifyApi spotifyApi;
     private String refreshToken;
 
     private Song currentlyPlaying = null;
     private List<Song> nextUp = null;
 
-    public SpotifyWebapi(Cfg cfg) {
+    public SpotifyWebapi(CfgDesktop cfg) {
         this(cfg, cfg.webapiClientId(), cfg.webapiClientSecret(), cfg.webapiRedirect(), cfg.webapiRefreshToken());
     }
 
-    public SpotifyWebapi(Cfg cfg, String clientId, String clientSecret, String redirectUri, String refreshToken) {
+    public SpotifyWebapi(CfgDesktop cfg, String clientId, String clientSecret, String redirectUri, String refreshToken) {
         try {
             this.cfg = cfg;
 

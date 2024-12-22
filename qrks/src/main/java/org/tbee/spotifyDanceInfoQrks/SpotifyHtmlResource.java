@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
@@ -86,7 +85,7 @@ public class SpotifyHtmlResource extends ResourceBase {
     private void setDances(HttpSession session, Song song) {
 
         // First check in the session config
-        Cfg sessionCfg = (Cfg)session.getAttribute("cfg");
+        CfgWeb sessionCfg = (CfgWeb)session.getAttribute("cfg");
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
                 .filter(danceId -> !danceId.isBlank())
                 .map(danceId -> sessionCfg.danceIdToScreenText(danceId))
@@ -97,7 +96,7 @@ public class SpotifyHtmlResource extends ResourceBase {
         }
 
         // Then in the application config
-        Cfg applicationCfg = SpotifyDanceInfoQrks.cfg();
+        CfgWeb applicationCfg = SpotifyDanceInfoQrks.cfg();
         List<String> applicationDances = applicationCfg.trackIdToDanceIds(song.trackId()).stream()
                 .map(danceId -> applicationCfg.danceIdToScreenText(danceId))
                 .toList();

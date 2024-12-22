@@ -13,7 +13,7 @@ public class SpotifyLocalApi extends Spotify {
 
     public Spotify connect() {
 
-        Cfg cfg = new Cfg();
+        CfgDesktop cfg = new CfgDesktop();
         spotifyLocalApi = SpotifyAPIFactory.create();
         spotifyLocalApi.registerListener(new SpotifyListener() {
             @Override

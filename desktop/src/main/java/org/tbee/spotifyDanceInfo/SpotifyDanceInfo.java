@@ -53,7 +53,7 @@ public class SpotifyDanceInfo {
     public static URL BACKGROUND_IMAGE_URL;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 
-    private Cfg cfg;
+    private CfgDesktop cfg;
     // Screen
     private SLabel imageSLabel;
     private SEditorPane songSLabel;
@@ -77,7 +77,7 @@ public class SpotifyDanceInfo {
         SLookAndFeel.installDefault();
         SIconRegistry.registerDefaultIcons();
         SContextMenu.install();
-        Cfg cfg = cfg();
+        CfgDesktop cfg = cfg();
 
         try {
             WAITING_IMAGE_URL = cfg.waitingImageUrl();
@@ -141,7 +141,7 @@ public class SpotifyDanceInfo {
         scheduledExecutorService.scheduleAtFixedRate(this::updateTime, 0, 2, TimeUnit.SECONDS);
     }
 
-    private void connect(ConnectPanel connectPanel, Cfg cfg) {
+    private void connect(ConnectPanel connectPanel, CfgDesktop cfg) {
         // process file
         try {
             File file = connectPanel.file();
@@ -267,7 +267,7 @@ public class SpotifyDanceInfo {
     private void updateCurrentlyPlaying() {
 
         try {
-            Cfg cfg = cfg();
+            CfgDesktop cfg = cfg();
 
             // Determine image and text
             final StringBuilder text = new StringBuilder();
@@ -314,7 +314,7 @@ public class SpotifyDanceInfo {
     private void updateNextUp() {
 
         try {
-            Cfg cfg = cfg();
+            CfgDesktop cfg = cfg();
 
             int count = cfg.nextUpCount();
             List<Song> songs = new ArrayList<>(nextUpSongs.subList(0, Math.min(nextUpSongs.size(), count)));
@@ -367,9 +367,9 @@ public class SpotifyDanceInfo {
         }
     }
 
-    private Cfg cfg() {
+    private CfgDesktop cfg() {
         if (cfg == null) {
-            cfg = new Cfg(true).onChange(this::updateAll);
+            cfg = new CfgDesktop(true).onChange(this::updateAll);
         }
         return cfg;
     }
