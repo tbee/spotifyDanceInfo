@@ -1,5 +1,0 @@
-# Local environment
-.env
-
-# Plugin directory
-/.quarkus/cli/plugins/
