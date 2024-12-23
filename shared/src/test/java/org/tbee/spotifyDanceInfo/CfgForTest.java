@@ -1,8 +1,11 @@
 package org.tbee.spotifyDanceInfo;
 
-import java.util.prefs.Preferences;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CfgForTest extends Cfg<CfgForTest> {
+
+    private Map<String, String> storage = new HashMap<>();
 
     public CfgForTest(String configFileName, boolean moreTracksInBackground, boolean generateConfigFileIfNotFound) {
         super(configFileName, moreTracksInBackground, generateConfigFileIfNotFound);
@@ -10,13 +13,11 @@ public class CfgForTest extends Cfg<CfgForTest> {
 
     @Override
     public void remember(String id, String v) {
-        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-        preferences.put(id, v);
+        storage.put(id, v);
     }
 
     @Override
     public String recall(String id) {
-        Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-        return preferences.get(id, "");
+        return storage.getOrDefault(id, "");
     }
 }
