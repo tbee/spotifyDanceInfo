@@ -15,14 +15,13 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <apache.poi.version>5.2.5</apache.poi.version>
-        <log4j.version>2.23.1</log4j.version>
+        <apache.poi.version>5.3.0</apache.poi.version>
+        <log4j.version>2.24.3</log4j.version>
     </properties>
 
 	<modules>
 		<module>desktop</module>
 		<module>web</module>
-		<module>qrks</module>
         <module>shared</module>
     </modules>
 
@@ -63,7 +62,7 @@
             <dependency>
                 <groupId>se.michaelthelin.spotify</groupId>
                 <artifactId>spotify-web-api-java</artifactId>
-                <version>9.0.0-RC1</version>
+                <version>9.1.0</version>
             </dependency>
 
             <!-- https://github.com/LabyStudio/java-spotify-api -->
@@ -110,7 +109,7 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.9.2</version>
+                <version>5.11.4</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

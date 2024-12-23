@@ -75,7 +75,7 @@ public class SpotifyController extends ControllerBase {
     private void setDances(HttpSession session, Song song) {
 
         // First check in the session config
-        CfgSession sessionCfg = (CfgSession)session.getAttribute("cfg");
+        CfgSession sessionCfg = CfgSession.get();
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
                 .filter(danceId -> !danceId.isBlank())
                 .map(danceId -> sessionCfg.danceIdToScreenText(danceId))

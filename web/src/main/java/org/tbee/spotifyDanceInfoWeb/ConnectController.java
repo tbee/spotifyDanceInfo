@@ -38,7 +38,8 @@ public class ConnectController extends ControllerBase {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
 
-        CfgApp cfg = SpotifyDanceInfoWebApplication.cfg(); // TBEERNOT: this is an issue! This must be se session cfg
+        // If set, prepopulate the form (for development mainly)
+        CfgApp cfg = SpotifyDanceInfoWebApplication.cfg();
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
@@ -66,9 +67,11 @@ public class ConnectController extends ControllerBase {
 
             // Load configuration
             CfgSession cfg = new CfgSession("session", false, false);
-            session.setAttribute("cfg", cfg);
             String originalFilename = file.getOriginalFilename();
-            if (originalFilename.endsWith(".tsv")) {
+            if (originalFilename == null) {
+                // do nothing
+            }
+            else if (originalFilename.endsWith(".tsv")) {
                 cfg.readMoreTracksTSV("web", file.getInputStream(), 0, 1);
             }
             else if (originalFilename.endsWith(".xlsx")) {

@@ -1,5 +1,7 @@
 package org.tbee.spotifyDanceInfo.spotifyDanceInfoWeb;
 
+import org.junit.jupiter.api.Test;
+
 //@SpringBootTest
 class SpotifyDanceInfoWebApplicationTests {
 
@@ -7,4 +9,8 @@ class SpotifyDanceInfoWebApplicationTests {
 	void contextLoads() {
 	}
 
+	@Test
+	public void dummy() {
+
+	}
 }

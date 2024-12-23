@@ -12,7 +12,7 @@
     <artifactId>spotifyDanceInfoWeb</artifactId>
 
     <properties>
-        <springboot.version>3.3.0</springboot.version>
+        <springboot.version>3.4.1</springboot.version>
     </properties>
 
     <dependencyManagement>
