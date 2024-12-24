@@ -243,7 +243,7 @@ public abstract class Cfg<T> {
         }
         loadPlaylistsOnce.set(true);
 
-        tecl.grps("/playlists").forEach(playlistTecl -> {
+        tecl.grps(PLAYLISTS).forEach(playlistTecl -> {
             runInBackground(() -> readPlaylist(spotifyApi, playlistTecl));
         });
     }
