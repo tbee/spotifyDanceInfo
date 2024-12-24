@@ -132,7 +132,7 @@ public abstract class Cfg<T> {
             readMoreTracksTSV(uri, inputStream, idIdx, danceIdx);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Reading TSV failed", e);
         }
     }
 
@@ -180,7 +180,7 @@ public abstract class Cfg<T> {
             readMoreTracksExcel(moreTrack, uri, xssfWorkbook);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Reading XSLX failed", e);
         }
     }
 
@@ -198,7 +198,7 @@ public abstract class Cfg<T> {
             readMoreTracksExcel(moreTrack, uri, hssfWorkbook);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Reading XSL failed", e);
         }
     }
 
@@ -238,10 +238,9 @@ public abstract class Cfg<T> {
      * This method must be called after the spotify api was connected.
      */
     public void readPlaylists(SpotifyApi spotifyApi) {
-        if (loadPlaylistsOnce.get()) {
+        if (loadPlaylistsOnce.getAndSet(true)) {
             return;
         }
-        loadPlaylistsOnce.set(true);
 
         tecl.grps(PLAYLISTS).forEach(playlistTecl -> {
             runInBackground(() -> readPlaylist(spotifyApi, playlistTecl));
