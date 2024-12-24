@@ -109,6 +109,7 @@ public class ConnectController extends ControllerBase {
 //            SpotifyDanceInfoWebApplication.cfg().readPlaylists(spotifyApi); // this is done once for the whole application
 //            CfgSession.get().readPlaylists(spotifyApi);
 
+            // redirect to our spotify page, showing the track information
             return "redirect:/spotify";
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
