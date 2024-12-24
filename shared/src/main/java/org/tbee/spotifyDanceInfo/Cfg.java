@@ -259,7 +259,7 @@ public abstract class Cfg<T> {
 
             String playlistId = playlistTecl.str("id");
 
-            final int limit = 10;
+            final int limit = 100;
             int offset = 0;
             while (offset >= 0) {
                 Paging<PlaylistTrack> playlistTrackPaging = spotifyApi
