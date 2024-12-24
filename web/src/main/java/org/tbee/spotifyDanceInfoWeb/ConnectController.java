@@ -2,7 +2,6 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -53,19 +52,9 @@ public class ConnectController extends ControllerBase {
     }
 
     @PostMapping("/")
-    public String connectSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
+    public String connectSubmit(Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
         try {
-            // store connection data
-            spotifyConnectData(session)
-                    .clientId(connectForm.getClientId())
-                    .clientSecret(connectForm.getClientSecret())
-                    .redirectUrl(connectForm.getRedirectUrl())
-                    .connectTime(LocalDateTime.now());
-
-            // Spotify API
-            SpotifyApi spotifyApi = spotifyApi(session);
-
-            // Load configuration
+            // Load submitted configuration
             CfgSession cfg = new CfgSession("session", false, false);
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null) {
@@ -81,7 +70,18 @@ public class ConnectController extends ControllerBase {
                 cfg.readMoreTracksExcel("web", new HSSFWorkbook(file.getInputStream()), 0, 0, 1);
             }
 
+            // store connection data
+            SpotifyConnectData.get()
+                    .clientId(connectForm.getClientId())
+                    .clientSecret(connectForm.getClientSecret())
+                    .redirectUrl(connectForm.getRedirectUrl())
+                    .connectTime(LocalDateTime.now());
+
+            // Spotify API
+            SpotifyApi spotifyApi = spotifyApi();
+
             // Forward to Spotify
+            // https://developer.spotify.com/documentation/web-api/concepts/scopes
             URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
                     .scope("user-read-playback-state,user-read-currently-playing")
                     .build().execute();
@@ -93,17 +93,21 @@ public class ConnectController extends ControllerBase {
     }
 
     @GetMapping("/spotifyCallback")
-    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
+    public String spotifyCallback(@RequestParam("code") String authorizationCode) {
         try {
-            SpotifyApi spotifyApi = spotifyApi(session);
+            SpotifyApi spotifyApi = spotifyApi();
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
             LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
 
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken())
                     .accessTokenExpireDateTime(expiresAt);
+
+            // Now that the spotify API is active, read config data that requires spotify access
+//            SpotifyDanceInfoWebApplication.cfg().readPlaylists(spotifyApi); // this is done once for the whole application
+//            CfgSession.get().readPlaylists(spotifyApi);
 
             return "redirect:/spotify";
         }
@@ -114,7 +118,7 @@ public class ConnectController extends ControllerBase {
 
 
     @GetMapping("/example.{filetype}")
-    public void example(HttpServletResponse response, HttpSession session, @PathVariable("filetype") String filetype) throws IOException {
+    public void example(HttpServletResponse response, @PathVariable("filetype") String filetype) throws IOException {
         InputStream inputStream = CfgSession.class.getResourceAsStream("/trackToDance." + filetype); // fetch resource from shared jar
         IOUtils.copy(inputStream, response.getOutputStream());
         response.flushBuffer();

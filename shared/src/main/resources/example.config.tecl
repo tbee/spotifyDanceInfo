@@ -106,3 +106,9 @@ moreTracks {
         | sheetIdx | idIdx | danceIdx | uri                                                                                                                                              |
     }
 }
+
+playlists {
+    | id                     | dance                |
+    | 0iefVqixKEXpvhVV9U7Wmf | sw                   | # BallroomSW https://open.spotify.com/playlist/0iefVqixKEXpvhVV9U7Wmf?si=5d93271140914c2d
+}
+

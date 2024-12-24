@@ -5,6 +5,7 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.hc.core5.http.ParseException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -12,8 +13,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.tecl.TECL;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
 
-import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -37,37 +42,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Cfg<T> {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
 
     private static final String CONFIG_TECL = "config.tecl";
-    private static final String CONNECT_LOCAL = "local";
     private static final String WEBAPI = "/spotify/webapi";
-    private static final String SCREEN = "/screen";
-    private static final String BACKGROUNDIMAGE = SCREEN + "/backgroundImage";
+    protected static final String SCREEN = "/screen";
+    protected static final String BACKGROUNDIMAGE = SCREEN + "/backgroundImage";
     private static final String TRACKS = "/tracks";
     private static final String DANCES = "/dances";
+    private static final String PLAYLISTS = "/playlists";
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private final List<Runnable> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
-    private final boolean moreTracksInBackground;
+    private final boolean runInBackground;
+    private final AtomicBoolean loadPlaylistsOnce = new AtomicBoolean(false);
 
-    private TECL tecl;
-    private Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
-
+    protected TECL tecl;
+    protected Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
 
     public Cfg() {
         this(CONFIG_TECL, true, false);
     }
 
-    public Cfg( boolean generateConfigFileIfNotFound) {
+    public Cfg(boolean generateConfigFileIfNotFound) {
         this(CONFIG_TECL, true, generateConfigFileIfNotFound);
     }
 
-    public Cfg(String configFileName, boolean moreTracksInBackground, boolean generateConfigFileIfNotFound) {
-        this.moreTracksInBackground = moreTracksInBackground;
+    public Cfg(String configFileName, boolean runInBackground, boolean generateConfigFileIfNotFound) {
+        this.runInBackground = runInBackground;
         try {
             tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
@@ -81,6 +87,7 @@ public abstract class Cfg<T> {
                 }
             }
 
+            // This will read other track sources and populate songIdToDanceNames
             readMoreTracks(tecl);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -101,23 +108,14 @@ public abstract class Cfg<T> {
     private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
         // Loop over the moreTrack configurations
         tecl.grps("/moreTracks/tsv").forEach(moreTrackTecl -> {
-            runReadMoreTracks(() -> readMoreTracksTSV(moreTrackTecl));
+            runInBackground(() -> readMoreTracksTSV(moreTrackTecl));
         });
         tecl.grps("/moreTracks/xslx").forEach(moreTrackTecl -> {
-            runReadMoreTracks(() -> readMoreTracksXSLX(moreTrackTecl));
+            runInBackground(() -> readMoreTracksXSLX(moreTrackTecl));
         });
         tecl.grps("/moreTracks/xsl").forEach(moreTrackTecl -> {
-            runReadMoreTracks(() -> readMoreTracksXSL(moreTrackTecl));
+            runInBackground(() -> readMoreTracksXSL(moreTrackTecl));
         });
-    }
-
-    private void runReadMoreTracks(Runnable runnable) {
-        if (moreTracksInBackground) {
-            executorService.submit(runnable);
-        }
-        else {
-            runnable.run();
-        }
     }
 
     private void readMoreTracksTSV(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop
@@ -204,7 +202,6 @@ public abstract class Cfg<T> {
         }
     }
 
-
     private void readMoreTracksExcel(TECL moreTrack, String uri, Workbook workbook) {
         int sheetIdx = moreTrack.integer("sheetIdx", 0);
         int idIdx = moreTrack.integer("idIdx", 0);
@@ -237,6 +234,55 @@ public abstract class Cfg<T> {
         onChangeListeners.forEach(l -> l.run());
     }
 
+    /**
+     * This method must be called after the spotify api was connected.
+     */
+    public void readPlaylists(SpotifyApi spotifyApi) {
+        if (loadPlaylistsOnce.get()) {
+            return;
+        }
+        loadPlaylistsOnce.set(true);
+
+        tecl.grps("/playlists").forEach(playlistTecl -> {
+            runInBackground(() -> readPlaylist(spotifyApi, playlistTecl));
+        });
+    }
+
+    private void readPlaylist(SpotifyApi spotifyApi, TECL playlistTecl) {
+        String danceText = playlistTecl.str("dance");
+        List<String> dances = danceTextToDances(danceText);
+
+        try {
+            Paging<PlaylistSimplified> playlistSimplifiedPaging = spotifyApi.getListOfCurrentUsersPlaylists().build().execute();
+            for (PlaylistSimplified playlistSimplified : playlistSimplifiedPaging.getItems()) {
+                System.out.println(playlistSimplified.getName() + " " + playlistSimplified.getId());
+            }
+
+            String playlistId = playlistTecl.str("id");
+
+            final int limit = 10;
+            int offset = 0;
+            while (offset >= 0) {
+                Paging<PlaylistTrack> playlistTrackPaging = spotifyApi
+                        .getPlaylistsItems(playlistId)
+                        .limit(limit)
+                        .offset(offset)
+                        .build().execute();
+                for (PlaylistTrack playlistTrack : playlistTrackPaging.getItems()) {
+                    String trackId = playlistTrack.getTrack().getId();
+                    songIdToDanceNames.put(trackId, dances);
+                }
+                offset = (playlistTrackPaging.getNext() == null ? -1 : offset + limit);
+            }
+        }
+        catch (IOException | SpotifyWebApiException | ParseException e) {
+            logger.error("Error reading playlists", e);
+        }
+
+    }
+
+    // ===========================
+
     private InputStream readContents(URI uri) {
         if (uri.toString().startsWith("http")) {
             return readContentsHttp(uri);
@@ -254,8 +300,6 @@ public abstract class Cfg<T> {
                 throw new RuntimeException(e);
             }
         }
-
-
         throw new IllegalArgumentException("Unknown URI type " + uri);
     }
 
@@ -308,25 +352,6 @@ public abstract class Cfg<T> {
         return tecl.integer(BACKGROUNDIMAGE + "/noise", 0);
     }
 
-    public Font songFont(int def) {
-        return font(tecl.grp(SCREEN + "/song"), def);
-    }
-    public Font nextFont(int def) {
-        return font(tecl.grp(SCREEN + "/nextUp"), def);
-    }
-    public Font timeFont(int def) {
-        return font(tecl.grp(SCREEN + "/time"), def);
-    }
-    private Font font(TECL tecl, int defaultSize) {
-        return new Font(tecl.str("font", "Arial"), Font.BOLD, tecl.integer("fontSize", defaultSize));
-    }
-
-    public String connect() {
-        return tecl.str("/spotify/connect", CONNECT_LOCAL);
-    }
-    public boolean connectLocal() {
-        return CONNECT_LOCAL.equalsIgnoreCase(connect());
-    }
     public String webapiClientId() {
         return tecl.str(WEBAPI + "/clientId", recallClientId());
     }
@@ -395,7 +420,7 @@ public abstract class Cfg<T> {
     List<String> danceTextToDances(String dancesText) {
         return (dancesText.contains(",") ? Arrays.asList(dancesText.split(",")) : List.of(dancesText))
                 .stream()
-                .map(s -> s.trim())
+                .map(String::trim)
                 .toList();
     }
 
@@ -423,5 +448,14 @@ public abstract class Cfg<T> {
     public T onChange(Runnable listener) {
         onChangeListeners.add(listener);
         return (T)this;
+    }
+
+    private void runInBackground(Runnable runnable) {
+        if (runInBackground) {
+            executorService.submit(runnable);
+        }
+        else {
+            runnable.run();
+        }
     }
 }

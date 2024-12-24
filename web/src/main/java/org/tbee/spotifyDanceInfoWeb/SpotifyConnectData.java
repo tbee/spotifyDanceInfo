@@ -11,6 +11,17 @@ public class SpotifyConnectData {
     private LocalDateTime accessTokenExpireDateTime;
     private LocalDateTime connectTime = null;
 
+    static public SpotifyConnectData get() {
+        SpotifyConnectData me = (SpotifyConnectData) SpringUtil.getRequest().getSession().getAttribute(SpotifyConnectData.class.getName());
+        if (me == null) {
+            me = new SpotifyConnectData();
+        }
+        return me;
+    }
+    public SpotifyConnectData() {
+        SpringUtil.getRequest().getSession().setAttribute(SpotifyConnectData.class.getName(), this);
+    }
+
     public String clientId() {
         return clientId;
     }

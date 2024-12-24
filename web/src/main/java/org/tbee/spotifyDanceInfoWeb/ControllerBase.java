@@ -1,6 +1,5 @@
 package org.tbee.spotifyDanceInfoWeb;
 
-import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,19 +16,9 @@ public class ControllerBase {
 
     private static final Logger logger = LoggerFactory.getLogger(ControllerBase.class);
 
-    protected SpotifyConnectData spotifyConnectData(HttpSession session) {
-        String attributeName = "SpotifyConnectData";
-        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(attributeName);
-        if (spotifyConnectData == null) {
-            spotifyConnectData = new SpotifyConnectData();
-            session.setAttribute(attributeName, spotifyConnectData);
-        }
-        return spotifyConnectData;
-    }
-
-    protected SpotifyApi spotifyApi(HttpSession session) {
+    protected SpotifyApi spotifyApi() {
         try {
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
 
             SpotifyApi spotifyApi = new SpotifyApi.Builder()
                     .setClientId(spotifyConnectData.clientId())
@@ -40,7 +29,7 @@ public class ControllerBase {
                     .build();
 
             if (spotifyConnectData.accessTokenExpireDateTime() != null && spotifyConnectData.accessTokenExpireDateTime().isBefore(LocalDateTime.now())) {
-                refreshAccessToken(session, spotifyConnectData, spotifyApi);
+                refreshAccessToken(spotifyConnectData, spotifyApi);
             }
 
             return spotifyApi;
@@ -50,11 +39,11 @@ public class ControllerBase {
         }
     }
 
-    protected void refreshAccessToken(HttpSession session) {
-        refreshAccessToken(session, spotifyConnectData(session), spotifyApi(session));
+    protected void refreshAccessToken() {
+        refreshAccessToken(SpotifyConnectData.get(), spotifyApi());
     }
 
-    protected void refreshAccessToken(HttpSession session, SpotifyConnectData spotifyConnectData, SpotifyApi spotifyApi) {
+    protected void refreshAccessToken(SpotifyConnectData spotifyConnectData, SpotifyApi spotifyApi) {
         try {
             if (logger.isInfoEnabled()) logger.info("Refreshing access token");
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh().build().execute();
@@ -64,7 +53,7 @@ public class ControllerBase {
                     .accessToken(authorizationCodeCredentials.getAccessToken())
                     .accessTokenExpireDateTime(expiresAt);
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            logException(session, e);
+            logException(e);
         }
     }
 
@@ -72,12 +61,12 @@ public class ControllerBase {
         return LocalDateTime.now().plusSeconds(expiresIn).minusMinutes(10);
     }
 
-    protected <T> T logException(HttpSession session, Throwable t) {
+    protected <T> T logException(Throwable t) {
         t.printStackTrace();
 
         // just in case something went wrong with scheduled refreshing
         if (t.getMessage().contains("The access token expired")) {
-            refreshAccessToken(session);
+            refreshAccessToken();
         }
 
         return null;

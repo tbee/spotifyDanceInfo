@@ -26,7 +26,7 @@ public class SpotifyController extends ControllerBase {
         try {
             updateCurrentlyPlaying(session);
 
-            SpotifyConnectData spotifyConnectData = spotifyConnectData(session);
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
             ScreenData screenData = screenData(session);
             screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
             screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -41,8 +41,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        spotifyApi(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
-                .exceptionally(t -> logException(session, t))
+        spotifyApi().getUsersCurrentlyPlayingTrack().build().executeAsync()
+                .exceptionally(t -> logException(t))
                 .thenAccept(track -> {
                     synchronized (session) {
 
@@ -94,8 +94,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        spotifyApi(session).getTrack(song.trackId()).build().executeAsync()
-                .exceptionally(t -> logException(session, t))
+        spotifyApi().getTrack(song.trackId()).build().executeAsync()
+                .exceptionally(t -> logException(t))
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
                     if (artists.length > 0) {
@@ -106,8 +106,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        spotifyApi(session).getTheUsersQueue().build().executeAsync()
-                .exceptionally(t -> logException(session, t))
+        spotifyApi().getTheUsersQueue().build().executeAsync()
+                .exceptionally(t -> logException(t))
                 .thenAccept(playbackQueue -> {
                     ScreenData screenData = screenData(session);
                     Song currentlyPlaying = screenData.currentlyPlaying();

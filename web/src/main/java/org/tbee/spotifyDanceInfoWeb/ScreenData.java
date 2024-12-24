@@ -9,6 +9,17 @@ public class ScreenData {
     private String time = "";
     private boolean showTips = false;
 
+    static public ScreenData get() {
+        ScreenData me = (ScreenData) SpringUtil.getRequest().getSession().getAttribute(ScreenData.class.getName());
+        if (me == null) {
+            me = new ScreenData();
+        }
+        return me;
+    }
+    public ScreenData() {
+        SpringUtil.getRequest().getSession().setAttribute(ScreenData.class.getName(), this);
+    }
+
     public Song currentlyPlaying() {
         return currentlyPlaying;
     }
@@ -40,4 +51,5 @@ public class ScreenData {
         this.showTips = v;
         return this;
     }
+
 }
