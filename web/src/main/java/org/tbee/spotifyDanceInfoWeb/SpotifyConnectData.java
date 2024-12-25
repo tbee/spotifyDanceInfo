@@ -23,10 +23,16 @@ public class SpotifyConnectData {
     private LocalDateTime accessTokenExpireDateTime;
     private LocalDateTime connectTime = null;
 
+    /**
+     * This method can only be called within a web server thread.
+     */
     static public SpotifyApi api() {
-        return get().newAPI();
+        return get().newApi();
     }
 
+    /**
+     * This method can only be called within a web server thread.
+     */
     static public SpotifyConnectData get() {
         SpotifyConnectData me = (SpotifyConnectData) SpringUtil.getRequest().getSession().getAttribute(SpotifyConnectData.class.getName());
         if (me == null) {
@@ -102,17 +108,15 @@ public class SpotifyConnectData {
         return this;
     }
 
-
-    public SpotifyApi newAPI() {
+    public SpotifyApi newApi() {
         try {
             SpotifyApi spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(clientId())
-                    .setClientSecret(clientSecret())
-                    .setRedirectUri(new URI(redirectUrl()))
-                    .setRefreshToken(refreshToken())
-                    .setAccessToken(accessToken())
-                    .build();
-
+                        .setClientId(clientId())
+                        .setClientSecret(clientSecret())
+                        .setRedirectUri(new URI(redirectUrl()))
+                        .setRefreshToken(refreshToken())
+                        .setAccessToken(accessToken())
+                        .build();
             if (accessTokenExpireDateTime() != null && accessTokenExpireDateTime().isBefore(LocalDateTime.now())) {
                 refreshAccessToken();
             }
@@ -127,7 +131,7 @@ public class SpotifyConnectData {
     public void refreshAccessToken() {
         try {
             if (logger.isInfoEnabled()) logger.info("Refreshing access token");
-            AuthorizationCodeCredentials authorizationCodeCredentials = newAPI().authorizationCodeRefresh().build().execute();
+            AuthorizationCodeCredentials authorizationCodeCredentials = api().authorizationCodeRefresh().build().execute();
             LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
             refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : refreshToken());
             accessToken(authorizationCodeCredentials.getAccessToken());

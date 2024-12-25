@@ -103,7 +103,7 @@ public class ConnectController extends ControllerBase {
                     .accessTokenExpireDateTime(expiresAt);
 
             // Now that the spotify API is active, read config data that requires spotify access
-//            SpotifyDanceInfoWebApplication.cfg().readPlaylists(spotifyApi); // this is done once for the whole application
+//            SpotifyDanceInfoWebApplication.cfg().readPlaylists(spotifyConnectData::newApi); // this is done once for the whole application
 //            CfgSession.get().readPlaylists(spotifyApi);
 
             // redirect to our spotify page, showing the track information

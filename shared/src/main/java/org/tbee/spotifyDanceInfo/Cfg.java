@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 public abstract class Cfg<T> {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
@@ -237,22 +238,22 @@ public abstract class Cfg<T> {
     /**
      * This method must be called after the spotify api was connected.
      */
-    public void readPlaylists(SpotifyApi spotifyApi) {
+    public void readPlaylists(Supplier<SpotifyApi> spotifyApiSupplier) {
         if (loadPlaylistsOnce.getAndSet(true)) {
             return;
         }
 
         tecl.grps(PLAYLISTS).forEach(playlistTecl -> {
-            runInBackground(() -> readPlaylist(spotifyApi, playlistTecl));
+            runInBackground(() -> readPlaylist(spotifyApiSupplier, playlistTecl));
         });
     }
 
-    private void readPlaylist(SpotifyApi spotifyApi, TECL playlistTecl) {
+    private void readPlaylist(Supplier<SpotifyApi> spotifyApiSupplier, TECL playlistTecl) {
         String danceText = playlistTecl.str("dance");
         List<String> dances = danceTextToDances(danceText);
 
         try {
-            Paging<PlaylistSimplified> playlistSimplifiedPaging = spotifyApi.getListOfCurrentUsersPlaylists().build().execute();
+            Paging<PlaylistSimplified> playlistSimplifiedPaging = spotifyApiSupplier.get().getListOfCurrentUsersPlaylists().build().execute();
             for (PlaylistSimplified playlistSimplified : playlistSimplifiedPaging.getItems()) {
                 System.out.println(playlistSimplified.getName() + " " + playlistSimplified.getId());
             }
@@ -262,7 +263,7 @@ public abstract class Cfg<T> {
             final int limit = 100;
             int offset = 0;
             while (offset >= 0) {
-                Paging<PlaylistTrack> playlistTrackPaging = spotifyApi
+                Paging<PlaylistTrack> playlistTrackPaging = spotifyApiSupplier.get()
                         .getPlaylistsItems(playlistId)
                         .limit(limit)
                         .offset(offset)
