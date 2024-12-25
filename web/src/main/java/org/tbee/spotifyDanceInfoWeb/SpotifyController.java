@@ -41,8 +41,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        spotifyApi().getUsersCurrentlyPlayingTrack().build().executeAsync()
-                .exceptionally(t -> logException(t))
+        SpotifyConnectData.api().getUsersCurrentlyPlayingTrack().build().executeAsync()
+                .exceptionally(ControllerBase::logException)
                 .thenAccept(track -> {
                     synchronized (session) {
 
@@ -94,8 +94,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        spotifyApi().getTrack(song.trackId()).build().executeAsync()
-                .exceptionally(t -> logException(t))
+        SpotifyConnectData.api().getTrack(song.trackId()).build().executeAsync()
+                .exceptionally(ControllerBase::logException)
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
                     if (artists.length > 0) {
@@ -106,8 +106,8 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        spotifyApi().getTheUsersQueue().build().executeAsync()
-                .exceptionally(t -> logException(t))
+        SpotifyConnectData.api().getTheUsersQueue().build().executeAsync()
+                .exceptionally(ControllerBase::logException)
                 .thenAccept(playbackQueue -> {
                     ScreenData screenData = screenData(session);
                     Song currentlyPlaying = screenData.currentlyPlaying();

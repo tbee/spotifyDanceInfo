@@ -77,12 +77,9 @@ public class ConnectController extends ControllerBase {
                     .redirectUrl(connectForm.getRedirectUrl())
                     .connectTime(LocalDateTime.now());
 
-            // Spotify API
-            SpotifyApi spotifyApi = spotifyApi();
-
             // Forward to Spotify
             // https://developer.spotify.com/documentation/web-api/concepts/scopes
-            URI authorizationCodeUri = spotifyApi.authorizationCodeUri()
+            URI authorizationCodeUri = SpotifyConnectData.api().authorizationCodeUri()
                     .scope("user-read-playback-state,user-read-currently-playing")
                     .build().execute();
             return "redirect:" + authorizationCodeUri.toURL();
@@ -95,9 +92,9 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(@RequestParam("code") String authorizationCode) {
         try {
-            SpotifyApi spotifyApi = spotifyApi();
+            SpotifyApi spotifyApi = SpotifyConnectData.api();
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-            LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
+            LocalDateTime expiresAt = SpotifyConnectData.get().expiresAt(authorizationCodeCredentials.getExpiresIn());
 
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
             spotifyConnectData
