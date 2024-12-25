@@ -2,6 +2,7 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -26,6 +27,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
 public class ConnectController extends ControllerBase {
@@ -90,7 +92,7 @@ public class ConnectController extends ControllerBase {
     }
 
     @GetMapping("/spotifyCallback")
-    public String spotifyCallback(@RequestParam("code") String authorizationCode) {
+    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
         try {
             SpotifyApi spotifyApi = SpotifyConnectData.api();
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
@@ -103,8 +105,14 @@ public class ConnectController extends ControllerBase {
                     .accessTokenExpireDateTime(expiresAt);
 
             // Now that the spotify API is active, read config data that requires spotify access
-//            SpotifyDanceInfoWebApplication.cfg().readPlaylists(spotifyConnectData::newApi); // this is done once for the whole application
-//            CfgSession.get().readPlaylists(spotifyApi);
+            if (!loadPlaylistsOnce.getAndSet(true)) {
+                SpotifyDanceInfoWebApplication.cfg()
+                        .onChange(() -> ScreenData.get(session).refresh())
+                        .readPlaylists(spotifyConnectData::newApi);
+            }
+            CfgSession.get()
+                    .onChange(() -> ScreenData.get(session).refresh())
+                    .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, showing the track information
             return "redirect:/spotify";
@@ -113,6 +121,7 @@ public class ConnectController extends ControllerBase {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
+    static private final AtomicBoolean loadPlaylistsOnce = new AtomicBoolean(false);
 
 
     @GetMapping("/example.{filetype}")

@@ -27,7 +27,7 @@ public class SpotifyController extends ControllerBase {
             updateCurrentlyPlaying(session);
 
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
-            ScreenData screenData = screenData(session);
+            ScreenData screenData = ScreenData.get(session);
             screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
             screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
 
@@ -41,12 +41,12 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        SpotifyConnectData.api().getUsersCurrentlyPlayingTrack().build().executeAsync()
+        SpotifyConnectData.api(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(track -> {
                     synchronized (session) {
 
-                        ScreenData screenData = screenData(session);
+                        ScreenData screenData = ScreenData.get(session);
 
                         boolean playing = (track != null && track.getIs_playing());
                         Song currentlyPlaying = !playing ? new Song() : new Song(track.getItem().getId(), track.getItem().getName(), "");
@@ -75,7 +75,7 @@ public class SpotifyController extends ControllerBase {
     private void setDances(HttpSession session, Song song) {
 
         // First check in the session config
-        CfgSession sessionCfg = CfgSession.get();
+        CfgSession sessionCfg = CfgSession.get(session);
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
                 .filter(danceId -> !danceId.isBlank())
                 .map(danceId -> sessionCfg.danceIdToScreenText(danceId))
@@ -94,7 +94,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        SpotifyConnectData.api().getTrack(song.trackId()).build().executeAsync()
+        SpotifyConnectData.api(session).getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
@@ -106,10 +106,10 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        SpotifyConnectData.api().getTheUsersQueue().build().executeAsync()
+        SpotifyConnectData.api(session).getTheUsersQueue().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(playbackQueue -> {
-                    ScreenData screenData = screenData(session);
+                    ScreenData screenData = ScreenData.get(session);
                     Song currentlyPlaying = screenData.currentlyPlaying();
 
                     if (currentlyPlaying != null && currentlyPlaying.trackId().equals(trackId)) {
@@ -118,10 +118,10 @@ public class SpotifyController extends ControllerBase {
                             //System.out.println("    | " + playlistItem.getId() + " | \"" + playlistItem.getName() + "\" | # " + playlistItem.getHref());
                             Song song = new Song(playlistItem.getId(), playlistItem.getName(), "");
                             songs.add(song);
-                            if (songs.size() == 3) {
-                                break; // TBEERNOT
-                            }
                             setDances(session, song);
+                            if (songs.size() == 3) {
+                                break;
+                            }
                         }
                         screenData.nextUp(songs);
 
@@ -129,16 +129,5 @@ public class SpotifyController extends ControllerBase {
                         songs.forEach(song -> pollArtist(session, song));
                     }
                 });
-    }
-
-
-    private static ScreenData screenData(HttpSession session) {
-        String attributeName = "SpotifyScreenData";
-        ScreenData screenData = (ScreenData) session.getAttribute(attributeName);
-        if (screenData == null) {
-            screenData = new ScreenData();
-            session.setAttribute(attributeName, screenData);
-        }
-        return screenData;
     }
 }

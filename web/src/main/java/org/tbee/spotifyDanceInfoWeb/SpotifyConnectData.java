@@ -1,5 +1,6 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,18 @@ public class SpotifyConnectData {
     static public SpotifyApi api() {
         return get().newApi();
     }
+    static public SpotifyApi api(HttpSession session) {
+        return get(session).newApi();
+    }
 
     /**
      * This method can only be called within a web server thread.
      */
     static public SpotifyConnectData get() {
-        SpotifyConnectData me = (SpotifyConnectData) SpringUtil.getRequest().getSession().getAttribute(SpotifyConnectData.class.getName());
+        return get(SpringUtil.getSession());
+    }
+    static public SpotifyConnectData get(HttpSession session) {
+        SpotifyConnectData me = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
         if (me == null) {
             me = new SpotifyConnectData();
         }
@@ -42,7 +49,7 @@ public class SpotifyConnectData {
     }
 
     public SpotifyConnectData() {
-        SpringUtil.getRequest().getSession().setAttribute(SpotifyConnectData.class.getName(), this);
+        SpringUtil.getSession().setAttribute(SpotifyConnectData.class.getName(), this);
     }
 
     public String clientId() {

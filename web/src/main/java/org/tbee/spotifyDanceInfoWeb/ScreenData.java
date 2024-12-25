@@ -1,5 +1,7 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import jakarta.servlet.http.HttpSession;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,15 +11,26 @@ public class ScreenData {
     private String time = "";
     private boolean showTips = false;
 
+    /**
+     * This method can only be called inside a request thread
+     */
     static public ScreenData get() {
-        ScreenData me = (ScreenData) SpringUtil.getRequest().getSession().getAttribute(ScreenData.class.getName());
+        return get(SpringUtil.getSession());
+    }
+    static public ScreenData get(HttpSession session) {
+        ScreenData me = (ScreenData) session.getAttribute(ScreenData.class.getName());
         if (me == null) {
             me = new ScreenData();
         }
         return me;
     }
+
     public ScreenData() {
-        SpringUtil.getRequest().getSession().setAttribute(ScreenData.class.getName(), this);
+        SpringUtil.getSession().setAttribute(ScreenData.class.getName(), this);
+    }
+
+    public void refresh() {
+        currentlyPlaying = new Song();
     }
 
     public Song currentlyPlaying() {
