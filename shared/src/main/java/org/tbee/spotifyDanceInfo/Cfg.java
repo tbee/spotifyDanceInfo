@@ -271,6 +271,9 @@ public abstract class Cfg<T> {
                     if (existingDances == null) {
                         existingDances = List.of();
                     }
+                    else {
+                        System.out.println(existingDances + " !!!! " + dancesForThisPlaylist + " " + playlistTrack.getTrack().getName());
+                    }
                     List<String> dances = Stream.concat(existingDances.stream(), dancesForThisPlaylist.stream())
                             .distinct()
                             .toList();
