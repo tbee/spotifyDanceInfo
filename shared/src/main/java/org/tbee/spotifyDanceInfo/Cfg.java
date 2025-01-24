@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public abstract class Cfg<T> {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
@@ -58,6 +59,8 @@ public abstract class Cfg<T> {
 
     protected TECL tecl;
     protected Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
+    // Playlist allow for the same track to be in multiple playlists, so the put behavior is different
+    protected Map<String, List<String>> songIdToDanceNamesPlaylists = Collections.synchronizedMap(new HashMap<>());
 
     public Cfg() {
         this(CONFIG_TECL, true, false);
@@ -242,7 +245,7 @@ public abstract class Cfg<T> {
 
     private void readPlaylist(Supplier<SpotifyApi> spotifyApiSupplier, TECL playlistTecl) {
         String danceText = playlistTecl.str("dance");
-        List<String> dances = danceTextToDances(danceText);
+        List<String> dancesForThisPlaylist = danceTextToDances(danceText);
 
         try {
             String playlistId = playlistTecl.str("id");
@@ -260,13 +263,24 @@ public abstract class Cfg<T> {
                         .build().execute();
                 for (PlaylistTrack playlistTrack : playlistTrackPaging.getItems()) {
                     String trackId = playlistTrack.getTrack().getId();
-                    if (logger.isDebugEnabled()) logger.debug("Adding from playlist " + playlist.getName() + ": " + playlistTrack.getTrack().getName() + " as " + dances);
-                    songIdToDanceNames.put(trackId, dances);
+                    if (logger.isDebugEnabled()) logger.debug("Adding from playlist " + playlist.getName() + ": " + playlistTrack.getTrack().getName() + " as " + dancesForThisPlaylist);
+
+                    // If there are already dances assigned, merge these with the ones for this playlist
+                    // This allows for songs to be present in, say, chacha and west coast swing playlists
+                    List<String> existingDances = songIdToDanceNamesPlaylists.get(trackId);
+                    if (existingDances == null) {
+                        existingDances = List.of();
+                    }
+                    List<String> dances = Stream.concat(existingDances.stream(), dancesForThisPlaylist.stream())
+                            .distinct()
+                            .toList();
+
+                    songIdToDanceNamesPlaylists.put(trackId, dances);
                     cnt++;
                 }
                 offset = (playlistTrackPaging.getNext() == null ? -1 : offset + limit);
             }
-            if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlist.getName());
+            if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlist.getName() + " by " + playlist.getOwner().getDisplayName());
             onChangeListeners.forEach(l -> l.run());
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
@@ -377,8 +391,11 @@ public abstract class Cfg<T> {
             return danceTextToDances(danceText);
         }
 
-        // also look in the moreTracks
+        // also look in the moreTracks and playlists
         List<String> dances = songIdToDanceNames.get(trackId);
+        if (dances == null) {
+            dances = songIdToDanceNamesPlaylists.get(trackId);
+        }
         return dances == null ? List.of("") : dances;
     }
 

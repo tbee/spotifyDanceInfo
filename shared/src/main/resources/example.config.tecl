@@ -100,30 +100,36 @@ moreTracks {
 
     # excel files
     xslx {
-        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                              |
+        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                   |
     }
     xsl {
-        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                              |
+        | sheetIdx | idIdx | danceIdx | uri                                                                                                                                   |
     }
 }
 
 playlists {
-    | id                     | dance                |
-    | 0iefVqixKEXpvhVV9U7Wmf | sw                   | # BallroomSW https://open.spotify.com/playlist/0iefVqixKEXpvhVV9U7Wmf?si=5d93271140914c2d
-    | 3uhw4hBDlXVUBMoOVTNboG | ta                   | # BallroomTA https://open.spotify.com/playlist/3uhw4hBDlXVUBMoOVTNboG?si=6dd8e203a6984f17
-    | 5HKPEuLz3YC5wsGdtrld1b | sf                   | # BallroomSF https://open.spotify.com/playlist/5HKPEuLz3YC5wsGdtrld1b?si=00e70c102b4a4e30
-    | 47KNGc8wAamlYsg5DThEKY | qs                   | # BallroomQS https://open.spotify.com/playlist/47KNGc8wAamlYsg5DThEKY?si=e6c39ae5858b4f32
-    | 7tGLp2uTF2kJc2lXUdE8xO | qs                   | # BallroomQS-light https://open.spotify.com/playlist/7tGLp2uTF2kJc2lXUdE8xO?si=85ad5eea28c8454f
-    | 0mB0ttNTLePYOvmVVLReRv | vw                   | # BallroomVW https://open.spotify.com/playlist/0mB0ttNTLePYOvmVVLReRv?si=96a1767cfb9f4811
-    | 4DJWAqHOAw9KRSgmtY9ZAL | cc                   | # LatinCC https://open.spotify.com/playlist/4DJWAqHOAw9KRSgmtY9ZAL?si=99d6ae8ef4844892
-    | 6YWL6uxZAnU0fFijOJFfnX | cc                   | # LatinCC-light https://open.spotify.com/playlist/6YWL6uxZAnU0fFijOJFfnX?si=a6c4f40ac4364351
-    | 7Dxs5pe37MdORqaPoEBgPf | ru                   | # LatinRU https://open.spotify.com/playlist/7Dxs5pe37MdORqaPoEBgPf?si=e596618104874f39
-    | 2nsjKbQr2YhQj54JQpYWdZ | sa                   | # LatinSA https://open.spotify.com/playlist/2nsjKbQr2YhQj54JQpYWdZ?si=5d2112b7772d4e1e
-    | 0flUG7npuD5TaUaySjjjoh | pd                   | # LatinPD https://open.spotify.com/playlist/0flUG7npuD5TaUaySjjjoh?si=e061a797cc3b4230
-    | 3279n0O2YCN70iRpKo4SdN | ji                   | # LatinJI https://open.spotify.com/playlist/3279n0O2YCN70iRpKo4SdN?si=04a8900be1b6483b
-    | 6thv0oLMnUjJPOJlxceIca | ji                   | # LatinJI-slow https://open.spotify.com/playlist/6thv0oLMnUjJPOJlxceIca?si=81b72eabb2254590
-    | 3kvEIDZtxUY6rH0nuyP5YY | sal                  | # SocialLatinSalsa https://open.spotify.com/playlist/3kvEIDZtxUY6rH0nuyP5YY?si=38e87fce44a249e3
-    | 6vndvXOZeoo1Mwplb5S416 | bac                  | # SocialLatinBachata https://open.spotify.com/playlist/6vndvXOZeoo1Mwplb5S416?si=683f24b9d8d94f1c
-    | 0d8itnprmtufZBYJGX7mUp | wcs                  | # WestCoastSwing https://open.spotify.com/playlist/0d8itnprmtufZBYJGX7mUp?si=b3ea20eb2d494354
+    | id                     | dance    |
+    | 0iefVqixKEXpvhVV9U7Wmf | sw       | # Tom Eugelink BallroomSW https://open.spotify.com/playlist/0iefVqixKEXpvhVV9U7Wmf?si=5d93271140914c2d
+    | 3uhw4hBDlXVUBMoOVTNboG | ta       | # Tom Eugelink BallroomTA https://open.spotify.com/playlist/3uhw4hBDlXVUBMoOVTNboG?si=6dd8e203a6984f17
+    | 5HKPEuLz3YC5wsGdtrld1b | sf       | # Tom Eugelink BallroomSF https://open.spotify.com/playlist/5HKPEuLz3YC5wsGdtrld1b?si=00e70c102b4a4e30
+    | 47KNGc8wAamlYsg5DThEKY | qs       | # Tom Eugelink BallroomQS https://open.spotify.com/playlist/47KNGc8wAamlYsg5DThEKY?si=e6c39ae5858b4f32
+    | 7tGLp2uTF2kJc2lXUdE8xO | qs       | # Tom Eugelink BallroomQS-light https://open.spotify.com/playlist/7tGLp2uTF2kJc2lXUdE8xO?si=85ad5eea28c8454f
+    | 0mB0ttNTLePYOvmVVLReRv | vw       | # Tom Eugelink BallroomVW https://open.spotify.com/playlist/0mB0ttNTLePYOvmVVLReRv?si=96a1767cfb9f4811
+    | 4DJWAqHOAw9KRSgmtY9ZAL | cc       | # Tom Eugelink LatinCC https://open.spotify.com/playlist/4DJWAqHOAw9KRSgmtY9ZAL?si=99d6ae8ef4844892
+    | 6YWL6uxZAnU0fFijOJFfnX | cc       | # Tom Eugelink LatinCC-light https://open.spotify.com/playlist/6YWL6uxZAnU0fFijOJFfnX?si=a6c4f40ac4364351
+    | 7Dxs5pe37MdORqaPoEBgPf | ru       | # Tom Eugelink LatinRU https://open.spotify.com/playlist/7Dxs5pe37MdORqaPoEBgPf?si=e596618104874f39
+    | 2nsjKbQr2YhQj54JQpYWdZ | sa       | # Tom Eugelink LatinSA https://open.spotify.com/playlist/2nsjKbQr2YhQj54JQpYWdZ?si=5d2112b7772d4e1e
+    | 0flUG7npuD5TaUaySjjjoh | pd       | # Tom Eugelink LatinPD https://open.spotify.com/playlist/0flUG7npuD5TaUaySjjjoh?si=e061a797cc3b4230
+    | 3279n0O2YCN70iRpKo4SdN | ji       | # Tom Eugelink LatinJI https://open.spotify.com/playlist/3279n0O2YCN70iRpKo4SdN?si=04a8900be1b6483b
+    | 6thv0oLMnUjJPOJlxceIca | ji       | # Tom Eugelink LatinJI-slow https://open.spotify.com/playlist/6thv0oLMnUjJPOJlxceIca?si=81b72eabb2254590
+    | 3kvEIDZtxUY6rH0nuyP5YY | sal      | # Tom Eugelink SocialLatinSalsa https://open.spotify.com/playlist/3kvEIDZtxUY6rH0nuyP5YY?si=38e87fce44a249e3
+    | 6vndvXOZeoo1Mwplb5S416 | bac      | # Tom Eugelink SocialLatinBachata https://open.spotify.com/playlist/6vndvXOZeoo1Mwplb5S416?si=683f24b9d8d94f1c
+    | 0d8itnprmtufZBYJGX7mUp | wcs      | # Tom Eugelink WestCoastSwing https://open.spotify.com/playlist/0d8itnprmtufZBYJGX7mUp?si=b3ea20eb2d494354
+    | 57dUWwWvt1RRjvR88IdRaA | sw       | # Eline van der Meer https://open.spotify.com/playlist/57dUWwWvt1RRjvR88IdRaA?si=785272a0b0034e3e
+    | 4U604M5jwJKOW7jYhAlPZQ | ta       | # Eline van der Meer https://open.spotify.com/playlist/4U604M5jwJKOW7jYhAlPZQ?si=e20251b626d84c15
+    | 6Kl4YaEOa88AI36U7yIwoa | qs       | # Eline van der Meer https://open.spotify.com/playlist/6Kl4YaEOa88AI36U7yIwoa?si=033b67faf6c447fa
+    | 6qLjFOBYlR44y6zw4xnZlZ | vw       | # Eline van der Meer https://open.spotify.com/playlist/6qLjFOBYlR44y6zw4xnZlZ?si=66fddf2b6f074eeb
+    | 0KBM6Q4T1YF9q1RlKuEZ2B | cc       | # Eline van der Meer https://open.spotify.com/playlist/0KBM6Q4T1YF9q1RlKuEZ2B?si=04da7278a6e149ae
+    | 1nghWuMPQHQYkyy1RKKpMg | ru       | # Eline van der Meer https://open.spotify.com/playlist/1nghWuMPQHQYkyy1RKKpMg?si=745eef42341c4674
+    | 6gdJG5lGsy0ptNhMPSLEwS | ji       | # Eline van der Meer https://open.spotify.com/playlist/6gdJG5lGsy0ptNhMPSLEwS?si=7fa65f09f0f54034
 }
-
