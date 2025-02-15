@@ -50,8 +50,8 @@ dances {
     | id  | text                   |
     | sw  | "Slow Walz"            |
     | ta  | "Tango"                |
-    | qs  | "Quick step"           |
-    | sqs | "Slow Quick step"      |
+    | qs  | "Quickstep"            |
+    | sqs | "Slow Quickstep"       |
     | sf  | "Slow Foxtrot"         |
     | vw  | "Viennese Walz"        |
     | ru  | "Rumba"                |
