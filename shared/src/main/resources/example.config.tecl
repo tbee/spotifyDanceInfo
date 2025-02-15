@@ -75,6 +75,7 @@ dances {
     | svw | "Smooth Viennese Walz" |
     | aru | "American Rumba"       |
     | acc | "American Cha Cha"     |
+    | dcf | "Discofox"             |
 }
 
 # If the dance is not found in the dances table, then the dance id itself is shown. See the last two lines for an example.
@@ -109,28 +110,17 @@ moreTracks {
 
 playlists {
     | id                     | dance    |
-    | 0iefVqixKEXpvhVV9U7Wmf | sw       | # Tom Eugelink BallroomSW https://open.spotify.com/playlist/0iefVqixKEXpvhVV9U7Wmf
-    | 3uhw4hBDlXVUBMoOVTNboG | ta       | # Tom Eugelink BallroomTA https://open.spotify.com/playlist/3uhw4hBDlXVUBMoOVTNboG
-    | 5HKPEuLz3YC5wsGdtrld1b | sf       | # Tom Eugelink BallroomSF https://open.spotify.com/playlist/5HKPEuLz3YC5wsGdtrld1b
-    | 47KNGc8wAamlYsg5DThEKY | qs       | # Tom Eugelink BallroomQS https://open.spotify.com/playlist/47KNGc8wAamlYsg5DThEKY
-    | 7tGLp2uTF2kJc2lXUdE8xO | qs       | # Tom Eugelink BallroomQS-light https://open.spotify.com/playlist/7tGLp2uTF2kJc2lXUdE8xO
-    | 0mB0ttNTLePYOvmVVLReRv | vw       | # Tom Eugelink BallroomVW https://open.spotify.com/playlist/0mB0ttNTLePYOvmVVLReRv
-    | 4DJWAqHOAw9KRSgmtY9ZAL | cc       | # Tom Eugelink LatinCC https://open.spotify.com/playlist/4DJWAqHOAw9KRSgmtY9ZAL
-    | 6YWL6uxZAnU0fFijOJFfnX | cc       | # Tom Eugelink LatinCC-light https://open.spotify.com/playlist/6YWL6uxZAnU0fFijOJFfnX
-    | 7Dxs5pe37MdORqaPoEBgPf | ru       | # Tom Eugelink LatinRU https://open.spotify.com/playlist/7Dxs5pe37MdORqaPoEBgPf
-    | 2nsjKbQr2YhQj54JQpYWdZ | sa       | # Tom Eugelink LatinSA https://open.spotify.com/playlist/2nsjKbQr2YhQj54JQpYWdZ
-    | 0flUG7npuD5TaUaySjjjoh | pd       | # Tom Eugelink LatinPD https://open.spotify.com/playlist/0flUG7npuD5TaUaySjjjoh
-    | 3279n0O2YCN70iRpKo4SdN | ji       | # Tom Eugelink LatinJI https://open.spotify.com/playlist/3279n0O2YCN70iRpKo4SdN
-    | 6thv0oLMnUjJPOJlxceIca | ji       | # Tom Eugelink LatinJI-slow https://open.spotify.com/playlist/6thv0oLMnUjJPOJlxceIca
-    | 3kvEIDZtxUY6rH0nuyP5YY | sal      | # Tom Eugelink SocialLatinSalsa https://open.spotify.com/playlist/3kvEIDZtxUY6rH0nuyP5YY
-    | 6vndvXOZeoo1Mwplb5S416 | bac      | # Tom Eugelink SocialLatinBachata https://open.spotify.com/playlist/6vndvXOZeoo1Mwplb5S416
-    | 0d8itnprmtufZBYJGX7mUp | wcs      | # Tom Eugelink WestCoastSwing https://open.spotify.com/playlist/0d8itnprmtufZBYJGX7mUp
-    | 57dUWwWvt1RRjvR88IdRaA | sw       | # Eline van der Meer https://open.spotify.com/playlist/57dUWwWvt1RRjvR88IdRaA
-    | 4U604M5jwJKOW7jYhAlPZQ | ta       | # Eline van der Meer https://open.spotify.com/playlist/4U604M5jwJKOW7jYhAlPZQ
-    | 7yoO3UCk6bgEctJPG0I91K | sf       | # Eline van der Meer https://open.spotify.com/playlist/7yoO3UCk6bgEctJPG0I91K
-    | 6Kl4YaEOa88AI36U7yIwoa | qs       | # Eline van der Meer https://open.spotify.com/playlist/6Kl4YaEOa88AI36U7yIwoa
-    | 6qLjFOBYlR44y6zw4xnZlZ | vw       | # Eline van der Meer https://open.spotify.com/playlist/6qLjFOBYlR44y6zw4xnZlZ
-    | 0KBM6Q4T1YF9q1RlKuEZ2B | cc       | # Eline van der Meer https://open.spotify.com/playlist/0KBM6Q4T1YF9q1RlKuEZ2B
-    | 1nghWuMPQHQYkyy1RKKpMg | ru       | # Eline van der Meer https://open.spotify.com/playlist/1nghWuMPQHQYkyy1RKKpMg
-    | 6gdJG5lGsy0ptNhMPSLEwS | ji       | # Eline van der Meer https://open.spotify.com/playlist/6gdJG5lGsy0ptNhMPSLEwS
+    | 5oS2GQMRySgZJzLYAL2LI1 | sw       | # SpotifyDanceInfo https://open.spotify.com/playlist/5oS2GQMRySgZJzLYAL2LI1
+    | 4E73Sr5lYEDd6ovFQWIzyK | ta       | # SpotifyDanceInfo https://open.spotify.com/playlist/4E73Sr5lYEDd6ovFQWIzyK
+    | 5zCg9r6RBnD67ZbsOTkexY | sf       | # SpotifyDanceInfo https://open.spotify.com/playlist/5zCg9r6RBnD67ZbsOTkexY
+    | 63FMjAbnivjuEtchEyl41g | qs       | # SpotifyDanceInfo https://open.spotify.com/playlist/63FMjAbnivjuEtchEyl41g
+    | 6DVBwLomv8Ze15dPPCOVHp | vw       | # SpotifyDanceInfo https://open.spotify.com/playlist/6DVBwLomv8Ze15dPPCOVHp
+    | 7xKTnMEFPy2wL1muP53iqk | cc       | # SpotifyDanceInfo https://open.spotify.com/playlist/7xKTnMEFPy2wL1muP53iqk
+    | 3Ph083r3rGV6z8naAvORig | ru       | # SpotifyDanceInfo https://open.spotify.com/playlist/3Ph083r3rGV6z8naAvORig
+    | 3zY3p7QQgr5Jjd6F2dAtoK | sa       | # SpotifyDanceInfo https://open.spotify.com/playlist/3zY3p7QQgr5Jjd6F2dAtoK
+    | 5pPYjcVo2t11be2bEBZwNv | pd       | # SpotifyDanceInfo https://open.spotify.com/playlist/5pPYjcVo2t11be2bEBZwNv
+    | 2MDyJWt1SK1bHdivVsJykt | ji       | # SpotifyDanceInfo https://open.spotify.com/playlist/2MDyJWt1SK1bHdivVsJykt
+    | 3WJ93LZw80gS0USQB30jfV | sal      | # SpotifyDanceInfo https://open.spotify.com/playlist/3WJ93LZw80gS0USQB30jfV
+    | 3AWxTJCKZYTUvr5aWCaiBl | bac      | # SpotifyDanceInfo https://open.spotify.com/playlist/3AWxTJCKZYTUvr5aWCaiBl
+    | 7gsf8rnk0fX8IomqkNsRUf | wcs      | # SpotifyDanceInfo https://open.spotify.com/playlist/7gsf8rnk0fX8IomqkNsRUf
 }
