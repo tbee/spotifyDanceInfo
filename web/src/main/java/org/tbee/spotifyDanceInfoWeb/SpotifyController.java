@@ -74,23 +74,13 @@ public class SpotifyController extends ControllerBase {
 
     private void setDances(HttpSession session, Song song) {
 
-        // First check in the session config
+        // The CfgSession also loaded the config.tecl file, so there is no need to look into AppCfg.
         CfgSession sessionCfg = CfgSession.get(session);
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
                 .filter(danceId -> !danceId.isBlank())
                 .map(danceId -> sessionCfg.danceIdToScreenText(danceId))
                 .toList();
-        if (!sessionDances.isEmpty()) {
-            song.dances(sessionDances);
-            return;
-        }
-
-        // Then in the application config
-        CfgApp cfgApp = SpotifyDanceInfoWebApplication.cfg();
-        List<String> applicationDances = cfgApp.trackIdToDanceIds(song.trackId()).stream()
-                .map(danceId -> cfgApp.danceIdToScreenText(danceId))
-                .toList();
-        song.dances(applicationDances);
+        song.dances(sessionDances);
     }
 
     private void pollArtist(HttpSession session, Song song) {

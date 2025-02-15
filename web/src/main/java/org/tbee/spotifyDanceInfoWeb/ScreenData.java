@@ -20,13 +20,17 @@ public class ScreenData {
     static public ScreenData get(HttpSession session) {
         ScreenData me = (ScreenData) session.getAttribute(ScreenData.class.getName());
         if (me == null) {
-            me = new ScreenData();
+            me = new ScreenData(session);
         }
         return me;
     }
 
     public ScreenData() {
-        SpringUtil.getSession().setAttribute(ScreenData.class.getName(), this);
+        this(SpringUtil.getSession());
+    }
+
+    public ScreenData(HttpSession session) {
+        session.setAttribute(ScreenData.class.getName(), this);
     }
 
     public void refresh() {

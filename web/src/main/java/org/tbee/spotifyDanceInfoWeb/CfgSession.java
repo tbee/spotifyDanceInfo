@@ -15,9 +15,8 @@ public class CfgSession extends Cfg<CfgSession> {
         return (CfgSession)session.getAttribute("cfg");
     }
 
-    public CfgSession(String configFileName, boolean moreTracksInBackground, boolean generateConfigFileIfNotFound) {
-        super(configFileName, moreTracksInBackground, generateConfigFileIfNotFound);
-
+    public CfgSession() {
+        super();
         SpringUtil.getSession().setAttribute("cfg", this);
     }
 

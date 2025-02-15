@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Controller
 public class ConnectController extends ControllerBase {
@@ -62,7 +61,10 @@ public class ConnectController extends ControllerBase {
     public String connectSubmit(Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
         try {
             // Load submitted configuration
-            CfgSession cfg = new CfgSession("session", false, false);
+            // Each time CfgSession is created, it will load the config.tecl.
+            // So every CfgSession contains the application level information, and is then augmented with the uploaded data.
+            // This also facilitates that if one of the external sources is altered, a login suffices to get the latest.
+            CfgSession cfg = new CfgSession();
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null) {
                 // do nothing
@@ -99,6 +101,7 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
         try {
+            // Spotify has accepted, remember that
             SpotifyApi spotifyApi = SpotifyConnectData.api();
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
             LocalDateTime expiresAt = SpotifyConnectData.get().expiresAt(authorizationCodeCredentials.getExpiresIn());
@@ -110,11 +113,7 @@ public class ConnectController extends ControllerBase {
                     .accessTokenExpireDateTime(expiresAt);
 
             // Now that the spotify API is active, read config data that requires spotify access
-            if (!loadPlaylistsOnce.getAndSet(true)) {
-                SpotifyDanceInfoWebApplication.cfg()
-                        .onChange(() -> ScreenData.get(session).refresh())
-                        .readPlaylists(spotifyConnectData::newApi);
-            }
+            // See connectSubmit for the initial setup.
             CfgSession.get()
                     .onChange(() -> ScreenData.get(session).refresh())
                     .readPlaylists(spotifyConnectData::newApi);
@@ -127,7 +126,6 @@ public class ConnectController extends ControllerBase {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
-    static private final AtomicBoolean loadPlaylistsOnce = new AtomicBoolean(false);
 
 
     @GetMapping("/example.{filetype}")
