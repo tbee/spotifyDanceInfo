@@ -9,6 +9,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ConnectController extends ControllerBase {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectController.class);
+
+    @Autowired
+    private Environment environment;
 
     @GetMapping("/")
     public String connect(HttpServletRequest request, Model model) {
@@ -115,7 +120,8 @@ public class ConnectController extends ControllerBase {
                     .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, showing the track information
-            return "redirect:/spotify";
+            String baseUrl = environment.getProperty("baseUrl");
+            return String.format("redirect:%s/spotify", (baseUrl == null ? "" : baseUrl));
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
