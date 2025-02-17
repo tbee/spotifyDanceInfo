@@ -10,6 +10,8 @@ public class ScreenData {
     private List<Song> nextUp = new ArrayList<>();
     private String time = "";
     private boolean showTips = false;
+    private int maxNumberOfActiveBackgroundTasks = 0;
+    private int numberOfActiveBackgroundTasks = 0;
 
     static public ScreenData get(HttpSession session) {
         return (ScreenData) session.getAttribute(ScreenData.class.getName());
@@ -19,7 +21,11 @@ public class ScreenData {
         session.setAttribute(ScreenData.class.getName(), this);
     }
 
-    public void refresh() {
+    public void refresh(int numberOfActiveBackgroundTasks) {
+        this.numberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
+        if (numberOfActiveBackgroundTasks > maxNumberOfActiveBackgroundTasks) {
+            maxNumberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
+        }
         currentlyPlaying = new Song();
     }
 
@@ -55,4 +61,7 @@ public class ScreenData {
         return this;
     }
 
+    public String status() {
+        return numberOfActiveBackgroundTasks == 0 ? "" : "Loading " + numberOfActiveBackgroundTasks + "/" + maxNumberOfActiveBackgroundTasks;
+    }
 }

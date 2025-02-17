@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -54,7 +55,8 @@ public abstract class Cfg<T> {
     private static final String PLAYLISTS = "/playlists";
 
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final List<Runnable> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
+    private final AtomicInteger numberOfBackgroundTasksCounter = new AtomicInteger(0);
+    private final List<Consumer<Cfg<?>>> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
     private final boolean runInBackground;
 
     protected TECL tecl;
@@ -159,7 +161,7 @@ public abstract class Cfg<T> {
                 songIdToDanceNames.put(id, dances);
             });
             if (logger.isInfoEnabled()) logger.info("Read " + (csvReader.getLinesRead() - 1) + " track id(s) from " + uri);
-            onChangeListeners.forEach(l -> l.run());
+            notifyOnChangeListeners();
         }
     }
 
@@ -229,7 +231,7 @@ public abstract class Cfg<T> {
             songIdToDanceNames.put(id, dances);
         });
         if (logger.isInfoEnabled()) logger.info("Read " + (cnt.get() - 1) + " track id(s) from " + uri);
-        onChangeListeners.forEach(l -> l.run());
+        notifyOnChangeListeners();
     }
 
     /**
@@ -279,7 +281,7 @@ public abstract class Cfg<T> {
                 offset = (playlistTrackPaging.getNext() == null ? -1 : offset + limit);
             }
             if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlist.getName() + " by " + playlist.getOwner().getDisplayName());
-            onChangeListeners.forEach(l -> l.run());
+            notifyOnChangeListeners();
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             logger.error("Error reading playlists", e);
@@ -425,17 +427,35 @@ public abstract class Cfg<T> {
      * @param listener
      * @return
      */
-    public T onChange(Runnable listener) {
+    public T onChange(Consumer<Cfg<?>> listener) {
         onChangeListeners.add(listener);
         return (T)this;
     }
 
     private void runInBackground(Runnable runnable) {
         if (runInBackground) {
-            executorService.submit(runnable);
+            numberOfBackgroundTasksCounter.incrementAndGet();
+            notifyOnChangeListeners();
+            executorService.submit(() -> {
+                try {
+                    runnable.run();
+                }
+                finally {
+                    numberOfBackgroundTasksCounter.decrementAndGet();
+                    notifyOnChangeListeners();
+                }
+            });
         }
         else {
             runnable.run();
         }
+    }
+
+    public int getNumberOfActiveBackgroundTasks() {
+        return numberOfBackgroundTasksCounter.get();
+    }
+
+    private void notifyOnChangeListeners() {
+        onChangeListeners.forEach(l -> l.accept(Cfg.this));
     }
 }

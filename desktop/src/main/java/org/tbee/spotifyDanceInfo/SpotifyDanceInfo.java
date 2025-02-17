@@ -199,6 +199,9 @@ public class SpotifyDanceInfo {
     }
 
     private void updateAll() {
+        updateAll(null);
+    }
+    private void updateAll(Cfg<?> cfg) {
         SwingUtilities.invokeLater(() -> {
             setFonts();
             updateCurrentlyPlaying();
