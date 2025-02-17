@@ -24,32 +24,12 @@ public class SpotifyConnectData {
     private LocalDateTime accessTokenExpireDateTime;
     private LocalDateTime connectTime = null;
 
-    /**
-     * This method can only be called within a web server thread.
-     */
-    static public SpotifyApi api() {
-        return get().newApi();
-    }
-    static public SpotifyApi api(HttpSession session) {
-        return get(session).newApi();
-    }
-
-    /**
-     * This method can only be called within a web server thread.
-     */
-    static public SpotifyConnectData get() {
-        return get(SpringUtil.getSession());
-    }
     static public SpotifyConnectData get(HttpSession session) {
-        SpotifyConnectData me = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
-        if (me == null) {
-            me = new SpotifyConnectData();
-        }
-        return me;
+        return (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
     }
 
-    public SpotifyConnectData() {
-        SpringUtil.getSession().setAttribute(SpotifyConnectData.class.getName(), this);
+    public SpotifyConnectData(HttpSession session) {
+        session.setAttribute(SpotifyConnectData.class.getName(), this);
     }
 
     public String clientId() {
@@ -138,8 +118,8 @@ public class SpotifyConnectData {
     public void refreshAccessToken() {
         try {
             if (logger.isInfoEnabled()) logger.info("Refreshing access token");
-            AuthorizationCodeCredentials authorizationCodeCredentials = api().authorizationCodeRefresh().build().execute();
-            LocalDateTime expiresAt = expiresAt(authorizationCodeCredentials.getExpiresIn());
+            AuthorizationCodeCredentials authorizationCodeCredentials = get(SpringUtil.getSession()).newApi().authorizationCodeRefresh().build().execute();
+            LocalDateTime expiresAt = calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : refreshToken());
             accessToken(authorizationCodeCredentials.getAccessToken());
             accessTokenExpireDateTime(expiresAt);
@@ -148,7 +128,7 @@ public class SpotifyConnectData {
         }
     }
 
-    protected LocalDateTime expiresAt(int expiresIn) {
+    protected LocalDateTime calculateExpiresAt(int expiresIn) {
         return LocalDateTime.now().plusSeconds(expiresIn).minusMinutes(10);
     }
 

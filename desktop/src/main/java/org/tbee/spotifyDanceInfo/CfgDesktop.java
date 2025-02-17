@@ -15,10 +15,12 @@ public class CfgDesktop extends org.tbee.spotifyDanceInfo.Cfg<CfgDesktop> {
 
     public CfgDesktop() {
         super();
+        readMoreTracks();
     }
 
     public CfgDesktop(boolean generateConfigFileIfNotFound) {
         super(generateConfigFileIfNotFound);
+        readMoreTracks();
     }
 
     @Override

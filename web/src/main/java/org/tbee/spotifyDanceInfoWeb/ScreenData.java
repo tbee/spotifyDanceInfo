@@ -11,22 +11,8 @@ public class ScreenData {
     private String time = "";
     private boolean showTips = false;
 
-    /**
-     * This method can only be called inside a request thread
-     */
-    static public ScreenData get() {
-        return get(SpringUtil.getSession());
-    }
     static public ScreenData get(HttpSession session) {
-        ScreenData me = (ScreenData) session.getAttribute(ScreenData.class.getName());
-        if (me == null) {
-            me = new ScreenData(session);
-        }
-        return me;
-    }
-
-    public ScreenData() {
-        this(SpringUtil.getSession());
+        return (ScreenData) session.getAttribute(ScreenData.class.getName());
     }
 
     public ScreenData(HttpSession session) {

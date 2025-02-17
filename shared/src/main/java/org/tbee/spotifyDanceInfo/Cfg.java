@@ -84,9 +84,6 @@ public abstract class Cfg<T> {
                     tecl = new TECL("notfound");
                 }
             }
-
-            // This will read other track sources and populate songIdToDanceNames
-            readMoreTracks(tecl);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -103,7 +100,7 @@ public abstract class Cfg<T> {
         }
     }
 
-    private void readMoreTracks(TECL tecl) { // can't use the tecl() call here
+    public T readMoreTracks() {
         // Loop over the moreTrack configurations
         tecl.grp("/moreTracks/tsv").rows().forEach(moreTrackTecl -> {
             runInBackground(() -> readMoreTracksTSV(moreTrackTecl));
@@ -114,6 +111,7 @@ public abstract class Cfg<T> {
         tecl.grp("/moreTracks/xsl").rows().forEach(moreTrackTecl -> {
             runInBackground(() -> readMoreTracksXSL(moreTrackTecl));
         });
+        return (T)this;
     }
 
     private void readMoreTracksTSV(TECL moreTrack) { // can't use the tecl() call here otherwise there would be an endless loop

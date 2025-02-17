@@ -5,19 +5,13 @@ import org.tbee.spotifyDanceInfo.Cfg;
 
 public class CfgSession extends Cfg<CfgSession> {
 
-    /**
-     * This method can only be called within a web server thread.
-     */
-    static public CfgSession get() {
-        return get(SpringUtil.getSession());
-    }
     static public CfgSession get(HttpSession session) {
-        return (CfgSession)session.getAttribute("cfg");
+        return (CfgSession)session.getAttribute(CfgSession.class.getName());
     }
 
-    public CfgSession() {
+    public CfgSession(HttpSession session) {
         super();
-        SpringUtil.getSession().setAttribute("cfg", this);
+        session.setAttribute(CfgSession.class.getName(), this);
     }
 
     @Override

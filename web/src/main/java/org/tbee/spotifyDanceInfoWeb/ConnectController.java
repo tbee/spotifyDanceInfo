@@ -58,13 +58,13 @@ public class ConnectController extends ControllerBase {
     }
 
     @PostMapping("/")
-    public String connectSubmit(Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
+    public String connectSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
         try {
             // Load submitted configuration
             // Each time CfgSession is created, it will load the config.tecl.
             // So every CfgSession contains the application level information, and is then augmented with the uploaded data.
             // This also facilitates that if one of the external sources is altered, a login suffices to get the latest.
-            CfgSession cfg = new CfgSession();
+            CfgSession cfg = new CfgSession(session).readMoreTracks();
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null) {
                 // do nothing
@@ -80,7 +80,7 @@ public class ConnectController extends ControllerBase {
             }
 
             // store connection data
-            SpotifyConnectData.get()
+            new SpotifyConnectData(session)
                     .clientId(connectForm.getClientId())
                     .clientSecret(connectForm.getClientSecret())
                     .redirectUrl(connectForm.getRedirectUrl())
@@ -88,7 +88,7 @@ public class ConnectController extends ControllerBase {
 
             // Forward to Spotify
             // https://developer.spotify.com/documentation/web-api/concepts/scopes
-            URI authorizationCodeUri = SpotifyConnectData.api().authorizationCodeUri()
+            URI authorizationCodeUri = SpotifyConnectData.get(session).newApi().authorizationCodeUri()
                     .scope("user-read-playback-state,user-read-currently-playing")
                     .build().execute();
             return "redirect:" + authorizationCodeUri.toURL();
@@ -101,24 +101,25 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
         try {
-            // Spotify has accepted, remember that
-            SpotifyApi spotifyApi = SpotifyConnectData.api();
+            // Spotify has accepted the connection, remember the details
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session); // This was already created in connectSubmit
+            SpotifyApi spotifyApi = spotifyConnectData.newApi();
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
-            LocalDateTime expiresAt = SpotifyConnectData.get().expiresAt(authorizationCodeCredentials.getExpiresIn());
-
-            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
+            LocalDateTime expiresAt = spotifyConnectData.calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken())
                     .accessTokenExpireDateTime(expiresAt);
 
+            // Create and store the object that holds the screen data
+            ScreenData screenData = new ScreenData(session);
+
             // Now that the spotify API is active, read config data that requires spotify access
-            // See connectSubmit for the initial setup.
-            CfgSession.get()
-                    .onChange(() -> ScreenData.get(session).refresh())
+            CfgSession.get(session) // This was already created in connectSubmit
+                    .onChange(() -> screenData.refresh())
                     .readPlaylists(spotifyConnectData::newApi);
 
-            // redirect to our spotify page, showing the track information
+            // redirect to our spotify page, start showing the track information
             String baseUrl = environment.getProperty("baseUrl");
             return String.format("redirect:%s/spotify", (baseUrl == null ? "" : baseUrl));
         }

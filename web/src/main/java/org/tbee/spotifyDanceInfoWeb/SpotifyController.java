@@ -26,7 +26,7 @@ public class SpotifyController extends ControllerBase {
         try {
             updateCurrentlyPlaying(session);
 
-            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get();
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
             ScreenData screenData = ScreenData.get(session);
             screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
             screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -41,7 +41,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        SpotifyConnectData.api(session).getUsersCurrentlyPlayingTrack().build().executeAsync()
+        SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(track -> {
                     synchronized (session) {
@@ -84,7 +84,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        SpotifyConnectData.api(session).getTrack(song.trackId()).build().executeAsync()
+        SpotifyConnectData.get(session).newApi().getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(t -> {
                     ArtistSimplified[] artists = t.getArtists();
@@ -96,7 +96,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        SpotifyConnectData.api(session).getTheUsersQueue().build().executeAsync()
+        SpotifyConnectData.get(session).newApi().getTheUsersQueue().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(playbackQueue -> {
                     ScreenData screenData = ScreenData.get(session);

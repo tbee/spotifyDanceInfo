@@ -13,7 +13,7 @@ public class ControllerBase {
 
         // just in case something went wrong with scheduled refreshing
         if (t.getMessage().contains("The access token expired")) {
-            SpotifyConnectData.get().refreshAccessToken();
+            SpotifyConnectData.get(SpringUtil.getSession()).refreshAccessToken();
         }
 
         return null;
