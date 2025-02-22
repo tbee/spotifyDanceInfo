@@ -17,7 +17,6 @@ import org.tbee.tutil.RateLimiter;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
-import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
 
 import java.io.BufferedReader;
@@ -255,9 +254,11 @@ public abstract class Cfg<T> {
 
         try {
             String playlistId = playlistTecl.str("id");
-            rateLimiter.claim("getPlaylist " + playlistId);
-            Playlist playlist = spotifyApiSupplier.get()
-                    .getPlaylist(playlistId).build().execute();
+            String playlistName = playlistTecl.str("name", playlistId);
+// Not doing this saves one API call which doubles the startup speed
+//            rateLimiter.claim("getPlaylist " + playlistId);
+//            Playlist playlist = spotifyApiSupplier.get()
+//                    .getPlaylist(playlistId).build().execute();
 
             final int limit = 100;
             int offset = 0;
@@ -271,7 +272,7 @@ public abstract class Cfg<T> {
                         .build().execute();
                 for (PlaylistTrack playlistTrack : playlistTrackPaging.getItems()) {
                     String trackId = playlistTrack.getTrack().getId();
-                    if (logger.isDebugEnabled()) logger.debug("Adding from playlist " + playlist.getName() + ": " + playlistTrack.getTrack().getName() + " as " + dancesForThisPlaylist);
+                    if (logger.isDebugEnabled()) logger.debug("Adding from playlist " + playlistName + ": " + playlistTrack.getTrack().getName() + " as " + dancesForThisPlaylist);
 
                     // If there are already dances assigned, merge these with the ones for this playlist
                     // This allows for songs to be present in, say, chacha and west coast swing playlists
@@ -288,7 +289,7 @@ public abstract class Cfg<T> {
                 }
                 offset = (playlistTrackPaging.getNext() == null ? -1 : offset + limit);
             }
-            if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlist.getName() + " by " + playlist.getOwner().getDisplayName());
+            if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlistName);
             notifyOnChangeListeners();
         }
         catch (IOException | SpotifyWebApiException | ParseException | RuntimeException e) {
