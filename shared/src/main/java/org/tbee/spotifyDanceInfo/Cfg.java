@@ -452,6 +452,7 @@ public abstract class Cfg<T> {
                     runnable.run();
                 }
                 catch (Exception e) {
+                    logger.error(e.getMessage(), e);
                     exceptionsInBackgroundTasks.add(e);
                 }
                 finally {
