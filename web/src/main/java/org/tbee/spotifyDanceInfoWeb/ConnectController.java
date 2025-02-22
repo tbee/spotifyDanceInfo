@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
@@ -104,6 +105,7 @@ public class ConnectController extends ControllerBase {
             // Spotify has accepted the connection, remember the details
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session); // This was already created in connectSubmit
             SpotifyApi spotifyApi = spotifyConnectData.newApi();
+            Cfg.rateLimiter.claim("authorizationCode");
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
             LocalDateTime expiresAt = spotifyConnectData.calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             spotifyConnectData

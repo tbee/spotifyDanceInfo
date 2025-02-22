@@ -54,6 +54,12 @@
                 <version>master-SNAPSHOT</version>
             </dependency>
             <dependency>
+                <groupId>org.tbee</groupId>
+                <artifactId>tutil</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.swinglabs.swingx</groupId>
                 <artifactId>swingx-core</artifactId>
                 <version>1.6.5-1</version>

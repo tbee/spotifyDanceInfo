@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScreenData {
-    private Song currentlyPlaying = new Song();
+    volatile private Song currentlyPlaying = new Song();
     private List<Song> nextUp = new ArrayList<>();
     private String time = "";
     private boolean showTips = false;
@@ -26,7 +26,8 @@ public class ScreenData {
         if (numberOfActiveBackgroundTasks > maxNumberOfActiveBackgroundTasks) {
             maxNumberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
         }
-        currentlyPlaying = new Song();
+        // put a copy in place with deviating trackid, so it will be updated, but the screen data stays the same for now.
+        currentlyPlaying = new Song("force refresh", currentlyPlaying.title(), currentlyPlaying.artist());
     }
 
     public Song currentlyPlaying() {
@@ -62,6 +63,6 @@ public class ScreenData {
     }
 
     public String status() {
-        return numberOfActiveBackgroundTasks == 0 ? "" : "Loading " + numberOfActiveBackgroundTasks + "/" + maxNumberOfActiveBackgroundTasks;
+        return numberOfActiveBackgroundTasks == 0 ? "" : "Loading playlists " + numberOfActiveBackgroundTasks + "/" + maxNumberOfActiveBackgroundTasks;
     }
 }

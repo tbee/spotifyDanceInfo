@@ -13,6 +13,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.tecl.TECL;
+import org.tbee.tutil.RateLimiter;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
@@ -32,6 +33,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +56,11 @@ public abstract class Cfg<T> {
     private static final String DANCES = "/dances";
     private static final String PLAYLISTS = "/playlists";
 
-    private static final ExecutorService executorService = Executors.newCachedThreadPool();
+    // Total is 25 per 30 seconds, but we want now playing to always be able to run.
+    public static final RateLimiter rateLimiter = new RateLimiter("Remaining", 15, Duration.ofSeconds(30));
+    public static final RateLimiter rateLimiterCurrentlyPlaying = new RateLimiter("NowPlaying", 10, Duration.ofSeconds(30));
+
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
     private final AtomicInteger numberOfBackgroundTasksCounter = new AtomicInteger(0);
     private final List<Consumer<Cfg<?>>> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
     private final boolean runInBackground;
@@ -249,6 +255,7 @@ public abstract class Cfg<T> {
 
         try {
             String playlistId = playlistTecl.str("id");
+            rateLimiter.claim("getPlaylist " + playlistId);
             Playlist playlist = spotifyApiSupplier.get()
                     .getPlaylist(playlistId).build().execute();
 
@@ -256,6 +263,7 @@ public abstract class Cfg<T> {
             int offset = 0;
             int cnt = 0;
             while (offset >= 0) {
+                rateLimiter.claim("getPlaylistsItems " + playlistId + "@" + offset);
                 Paging<PlaylistTrack> playlistTrackPaging = spotifyApiSupplier.get()
                         .getPlaylistsItems(playlistId)
                         .limit(limit)
@@ -283,7 +291,7 @@ public abstract class Cfg<T> {
             if (logger.isInfoEnabled()) logger.info("Read " + cnt + " track id(s) from playlist " + playlist.getName() + " by " + playlist.getOwner().getDisplayName());
             notifyOnChangeListeners();
         }
-        catch (IOException | SpotifyWebApiException | ParseException e) {
+        catch (IOException | SpotifyWebApiException | ParseException | RuntimeException e) {
             logger.error("Error reading playlists", e);
         }
 

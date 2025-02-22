@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
@@ -41,33 +42,31 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
+        Cfg.rateLimiterCurrentlyPlaying.claim();
         SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(track -> {
-                    synchronized (session) {
+                    ScreenData screenData = ScreenData.get(session);
 
-                        ScreenData screenData = ScreenData.get(session);
+                    boolean playing = (track != null && track.getIs_playing());
+                    Song currentlyPlaying = !playing ? new Song() : new Song(track.getItem().getId(), track.getItem().getName(), "");
 
-                        boolean playing = (track != null && track.getIs_playing());
-                        Song currentlyPlaying = !playing ? new Song() : new Song(track.getItem().getId(), track.getItem().getName(), "");
+                    // The artist changes afterward, so we cannot do an equals on the songs
+                    boolean songChanged = !Objects.equals(currentlyPlaying.trackId(), screenData.currentlyPlaying().trackId());
+                    if (!songChanged) {
+                        return;
+                    }
 
-                        // The artist changes afterward, so we cannot do an equals on the songs
-                        boolean songChanged = !Objects.equals(currentlyPlaying.trackId(), screenData.currentlyPlaying().trackId());
-                        if (!songChanged) {
-                            return;
-                        }
-
-                        screenData.currentlyPlaying(currentlyPlaying);
-                        if (currentlyPlaying.trackId().isBlank()) {
-                            //coverArtCallback.accept(cfg.waitingImageUrl());
-                            screenData.nextUp(List.of());
-                        }
-                        else {
-                            //pollCovertArt(id);
-                            pollArtist(session, currentlyPlaying);
-                            pollNextUp(session, currentlyPlaying.trackId());
-                            setDances(session, currentlyPlaying);
-                        }
+                    screenData.currentlyPlaying(currentlyPlaying);
+                    if (currentlyPlaying.trackId().isBlank()) {
+                        //coverArtCallback.accept(cfg.waitingImageUrl());
+                        screenData.nextUp(List.of());
+                    }
+                    else {
+                        //pollCovertArt(id);
+                        pollArtist(session, currentlyPlaying);
+                        pollNextUp(session, currentlyPlaying.trackId());
+                        setDances(session, currentlyPlaying);
                     }
                 });
     }

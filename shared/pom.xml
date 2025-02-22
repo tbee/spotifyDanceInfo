@@ -17,6 +17,10 @@
             <groupId>org.tbee.tecl</groupId>
             <artifactId>tecl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.tbee</groupId>
+            <artifactId>tutil</artifactId>
+        </dependency>
 
         <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
         <dependency>
