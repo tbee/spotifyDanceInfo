@@ -1,6 +1,7 @@
 package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpSession;
+import org.tbee.spotifyDanceInfo.Cfg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ public class ScreenData {
     private boolean showTips = false;
     private int maxNumberOfActiveBackgroundTasks = 0;
     private int numberOfActiveBackgroundTasks = 0;
+    private int numberOfExceptionsInBackgroundTasks = 0;
 
     static public ScreenData get(HttpSession session) {
         return (ScreenData) session.getAttribute(ScreenData.class.getName());
@@ -21,8 +23,9 @@ public class ScreenData {
         session.setAttribute(ScreenData.class.getName(), this);
     }
 
-    public void refresh(int numberOfActiveBackgroundTasks) {
-        this.numberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
+    public void refresh(Cfg cfg) {
+        this.numberOfExceptionsInBackgroundTasks = cfg.getNumberOfExceptionsInBackgroundTasks();
+        this.numberOfActiveBackgroundTasks = cfg.getNumberOfActiveBackgroundTasks();
         if (numberOfActiveBackgroundTasks > maxNumberOfActiveBackgroundTasks) {
             maxNumberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
         }
@@ -63,6 +66,8 @@ public class ScreenData {
     }
 
     public String status() {
-        return numberOfActiveBackgroundTasks == 0 ? "" : "Loading playlists " + numberOfActiveBackgroundTasks + "/" + maxNumberOfActiveBackgroundTasks;
+        return numberOfActiveBackgroundTasks == 0 ? ""
+             : "Loading playlists " + numberOfActiveBackgroundTasks + "/" + maxNumberOfActiveBackgroundTasks
+             + (numberOfExceptionsInBackgroundTasks == 0 ? "" : " (" + numberOfExceptionsInBackgroundTasks + " failed)");
     }
 }

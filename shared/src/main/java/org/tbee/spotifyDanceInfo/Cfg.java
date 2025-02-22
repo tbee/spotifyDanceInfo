@@ -61,6 +61,7 @@ public abstract class Cfg<T> {
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
     private final AtomicInteger numberOfBackgroundTasksCounter = new AtomicInteger(0);
+    private final List<Throwable> exceptionsInBackgroundTasks = Collections.synchronizedList(new ArrayList<>());
     private final List<Consumer<Cfg<?>>> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
     private final boolean runInBackground;
 
@@ -294,6 +295,7 @@ public abstract class Cfg<T> {
         }
         catch (IOException | SpotifyWebApiException | ParseException | RuntimeException e) {
             logger.error("Error reading playlists", e);
+            throw new RuntimeException(e);
         }
 
     }
@@ -449,6 +451,9 @@ public abstract class Cfg<T> {
                 try {
                     runnable.run();
                 }
+                catch (Exception e) {
+                    exceptionsInBackgroundTasks.add(e);
+                }
                 finally {
                     numberOfBackgroundTasksCounter.decrementAndGet();
                     notifyOnChangeListeners();
@@ -462,6 +467,10 @@ public abstract class Cfg<T> {
 
     public int getNumberOfActiveBackgroundTasks() {
         return numberOfBackgroundTasksCounter.get();
+    }
+
+    public int getNumberOfExceptionsInBackgroundTasks() {
+        return exceptionsInBackgroundTasks.size();
     }
 
     private void notifyOnChangeListeners() {

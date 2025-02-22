@@ -118,7 +118,7 @@ public class ConnectController extends ControllerBase {
 
             // Now that the spotify API is active, read config data that requires spotify access
             CfgSession.get(session) // This was already created in connectSubmit
-                    .onChange(cfg -> screenData.refresh(cfg.getNumberOfActiveBackgroundTasks()))
+                    .onChange(cfg -> screenData.refresh(cfg))
                     .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, start showing the track information
