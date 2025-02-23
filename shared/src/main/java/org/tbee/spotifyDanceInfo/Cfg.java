@@ -33,6 +33,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -459,7 +460,7 @@ public abstract class Cfg<T> {
                     numberOfBackgroundTasksCounter.decrementAndGet();
                     notifyOnChangeListeners();
                     if (numberOfBackgroundTasksCounter.get() == 0) {
-                        List<RateLimiter.RateLimiterToken> tokens = rateLimiterRemaining.reduceTo(1);
+                        List<LocalDateTime> tokens = rateLimiterRemaining.reduceTo(1);
                         if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
                         rateLimiterCurrentlyPlaying.add(tokens);
                     }
