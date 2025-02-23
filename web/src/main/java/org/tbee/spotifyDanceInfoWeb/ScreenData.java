@@ -1,12 +1,16 @@
 package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tbee.spotifyDanceInfo.Cfg;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ScreenData {
+    private static final Logger logger = LoggerFactory.getLogger(ScreenData.class);
+
     volatile private Song currentlyPlaying = new Song();
     private List<Song> nextUp = new ArrayList<>();
     private String time = "";
@@ -14,6 +18,7 @@ public class ScreenData {
     private int maxNumberOfActiveBackgroundTasks = 0;
     private int numberOfActiveBackgroundTasks = 0;
     private int numberOfExceptionsInBackgroundTasks = 0;
+    private boolean forceRefresh = false;
 
     static public ScreenData get(HttpSession session) {
         return (ScreenData) session.getAttribute(ScreenData.class.getName());
@@ -29,8 +34,7 @@ public class ScreenData {
         if (numberOfActiveBackgroundTasks > maxNumberOfActiveBackgroundTasks) {
             maxNumberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
         }
-        // put a copy in place with deviating trackid, so it will be updated, but the screen data stays the same for now.
-        currentlyPlaying = new Song("force refresh", currentlyPlaying.title(), currentlyPlaying.artist());
+        forceRefresh = true;
     }
 
     public Song currentlyPlaying() {
@@ -62,6 +66,14 @@ public class ScreenData {
     }
     public ScreenData showTips(boolean v) {
         this.showTips = v;
+        return this;
+    }
+
+    public boolean forceRefresh() {
+        return forceRefresh;
+    }
+    public ScreenData forceRefresh(boolean v) {
+        this.forceRefresh = v;
         return this;
     }
 

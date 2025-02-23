@@ -10,7 +10,6 @@ public class Song {
     private List<String> dances = new ArrayList<>();
 
     public Song() {
-
     }
     public Song(String trackId, String title, String artist) {
         this.trackId = trackId;

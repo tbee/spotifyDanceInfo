@@ -29,16 +29,12 @@ import java.util.concurrent.TimeUnit;
 public class SpotifyController extends ControllerBase {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
 
-    private static final String SCHEDULED_FUTURES = "scheduledFutures";
+    static final String SCHEDULED_FUTURES = "scheduledFutures";
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
         try {
-            // On the first time, setup the polling administration
-            if (session.getAttribute(SpotifyController.SCHEDULED_FUTURES) == null) {
-                session.setAttribute(SpotifyController.SCHEDULED_FUTURES, new ArrayList<ScheduledFuture<?>>());
-            }
             // Start polling
             List<ScheduledFuture<?>> scheduledFutures = (List<ScheduledFuture<?>>) session.getAttribute(SpotifyController.SCHEDULED_FUTURES);
             if (scheduledFutures.isEmpty()) {
@@ -65,7 +61,6 @@ public class SpotifyController extends ControllerBase {
             ScreenData screenData = ScreenData.get(session);
             screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
             screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
-
             model.addAttribute("ScreenData", screenData);
         }
         catch (Exception e) {
@@ -81,14 +76,16 @@ public class SpotifyController extends ControllerBase {
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
 
+            // Create the candidate song object
             boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
             Song song = !playing ? new Song() : new Song(currentlyPlaying.getItem().getId(), currentlyPlaying.getItem().getName(), "");
 
-            // The artist changes afterward, so we cannot do an equals on the songs
+            // The artist is updated async, so we cannot do an equals on the songs, only the track id
             boolean songChanged = !Objects.equals(song.trackId(), screenData.currentlyPlaying().trackId());
-            if (!songChanged) {
+            if (!songChanged && !screenData.forceRefresh()) {
                 return;
             }
+            screenData.forceRefresh(false); // clear the flag
 
             screenData.currentlyPlaying(song);
             if (song.trackId().isBlank()) {
@@ -109,7 +106,6 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void setDances(HttpSession session, Song song) {
-
         // The CfgSession also loaded the config.tecl file, so there is no need to look into AppCfg.
         CfgSession sessionCfg = CfgSession.get(session);
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
