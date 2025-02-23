@@ -78,7 +78,7 @@ public class SpotifyController extends ControllerBase {
 
     private void updateCurrentlyPlaying(HttpSession session) {
         try {
-            Cfg.rateLimiterCurrentlyPlaying.claim();
+            Cfg.rateLimiterCurrentlyPlaying.claim("CurrentlyPlaying");
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
 
@@ -121,6 +121,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
+        Cfg.rateLimiterCurrentlyPlaying.claim("getTrack");
         SpotifyConnectData.get(session).newApi().getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(t -> {
@@ -133,6 +134,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
+        Cfg.rateLimiterCurrentlyPlaying.claim("getTheUsersQueue");
         SpotifyConnectData.get(session).newApi().getTheUsersQueue().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(playbackQueue -> {
