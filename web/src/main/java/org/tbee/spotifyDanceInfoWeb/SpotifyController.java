@@ -2,30 +2,65 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.tbee.spotifyDanceInfo.Cfg;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
+import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class SpotifyController extends ControllerBase {
-
     private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
+
+    private static final String SCHEDULED_FUTURES = "scheduledFutures";
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
         try {
-            updateCurrentlyPlaying(session);
+            // On the first time, setup the polling administration
+            if (session.getAttribute(SpotifyController.SCHEDULED_FUTURES) == null) {
+                session.setAttribute(SpotifyController.SCHEDULED_FUTURES, new ArrayList<ScheduledFuture<?>>());
+            }
+            // Start polling
+            List<ScheduledFuture<?>> scheduledFutures = (List<ScheduledFuture<?>>) session.getAttribute(SpotifyController.SCHEDULED_FUTURES);
+            if (scheduledFutures.isEmpty()) {
+
+                // Remember the session weakly, so this does not lock it, for cleanup if it gets disposed by the container
+                WeakReference<HttpSession> sessionWeakReference = new WeakReference<>(session);
+                scheduledFutures.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
+
+                    // If the session was disposed by the container, stop polling
+                    HttpSession httpSession = sessionWeakReference.get();
+                    if (httpSession == null) {
+                        if (logger.isInfoEnabled()) logger.info("session is null, aborting all {} associated scheduled tasks", scheduledFutures.size());
+                        scheduledFutures.forEach(sf -> sf.cancel(true));
+                        scheduledFutures.clear();
+                        return;
+                    }
+
+                    // Poll
+                    updateCurrentlyPlaying(httpSession);
+                }, 0, 5, TimeUnit.SECONDS));
+            }
 
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
             ScreenData screenData = ScreenData.get(session);
@@ -42,33 +77,36 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
-        Cfg.rateLimiterCurrentlyPlaying.claim();
-        SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().executeAsync()
-                .exceptionally(ControllerBase::logException)
-                .thenAccept(track -> {
-                    ScreenData screenData = ScreenData.get(session);
+        try {
+            Cfg.rateLimiterCurrentlyPlaying.claim();
+            CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
+            ScreenData screenData = ScreenData.get(session);
 
-                    boolean playing = (track != null && track.getIs_playing());
-                    Song currentlyPlaying = !playing ? new Song() : new Song(track.getItem().getId(), track.getItem().getName(), "");
+            boolean playing = (currentlyPlaying != null && currentlyPlaying.getIs_playing());
+            Song song = !playing ? new Song() : new Song(currentlyPlaying.getItem().getId(), currentlyPlaying.getItem().getName(), "");
 
-                    // The artist changes afterward, so we cannot do an equals on the songs
-                    boolean songChanged = !Objects.equals(currentlyPlaying.trackId(), screenData.currentlyPlaying().trackId());
-                    if (!songChanged) {
-                        return;
-                    }
+            // The artist changes afterward, so we cannot do an equals on the songs
+            boolean songChanged = !Objects.equals(song.trackId(), screenData.currentlyPlaying().trackId());
+            if (!songChanged) {
+                return;
+            }
 
-                    screenData.currentlyPlaying(currentlyPlaying);
-                    if (currentlyPlaying.trackId().isBlank()) {
-                        //coverArtCallback.accept(cfg.waitingImageUrl());
-                        screenData.nextUp(List.of());
-                    }
-                    else {
-                        //pollCovertArt(id);
-                        pollArtist(session, currentlyPlaying);
-                        pollNextUp(session, currentlyPlaying.trackId());
-                        setDances(session, currentlyPlaying);
-                    }
-                });
+            screenData.currentlyPlaying(song);
+            if (song.trackId().isBlank()) {
+                //coverArtCallback.accept(cfg.waitingImageUrl());
+                screenData.nextUp(List.of());
+            }
+            else {
+                //pollCovertArt(id);
+                pollArtist(session, song);
+                pollNextUp(session, song.trackId());
+                setDances(session, song);
+            }
+        }
+        catch (IOException | SpotifyWebApiException | ParseException e) {
+            logger.error("Problem updating currently playing", e);
+            throw new RuntimeException(e);
+        }
     }
 
     private void setDances(HttpSession session, Song song) {

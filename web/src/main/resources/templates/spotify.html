@@ -4,7 +4,7 @@
         <link rel="stylesheet" href="/spotify.css">
     </head>
     <body>
-        <div hx-trigger="every 3s" hx-get="/spotify" hx-swap="innerHTML">
+        <div hx-trigger="every 2s" hx-get="/spotify" hx-swap="innerHTML">
             <div class="currentlyPlaying">
                 <h1 class="title is-1" th:text="${ScreenData.currentlyPlaying().title()}">?</h1>
                 <h2 class="subtitle is-1" th:text="${ScreenData.currentlyPlaying().artist()}">?</h2>
