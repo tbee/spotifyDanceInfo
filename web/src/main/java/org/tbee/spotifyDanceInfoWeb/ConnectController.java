@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
@@ -102,10 +101,12 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
         try {
+            CfgSession cfgSession = CfgSession.get(session);
+
             // Spotify has accepted the connection, remember the details
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session); // This was already created in connectSubmit
             SpotifyApi spotifyApi = spotifyConnectData.newApi();
-            Cfg.rateLimiter.claim("authorizationCode");
+            cfgSession.rateLimiterRemaining().claim("authorizationCode");
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
             LocalDateTime expiresAt = spotifyConnectData.calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             spotifyConnectData
@@ -117,7 +118,7 @@ public class ConnectController extends ControllerBase {
             ScreenData screenData = new ScreenData(session);
 
             // Now that the spotify API is active, read config data that requires spotify access
-            CfgSession.get(session) // This was already created in connectSubmit
+            cfgSession // This was already created in connectSubmit
                     .onChange(cfg -> screenData.refresh(cfg))
                     .readPlaylists(spotifyConnectData::newApi);
 

@@ -55,9 +55,9 @@ public abstract class Cfg<T> {
     private static final String DANCES = "/dances";
     private static final String PLAYLISTS = "/playlists";
 
-    // Total is 25 per 30 seconds, but we want now playing to always be able to run.
-    public static final RateLimiter rateLimiter = new RateLimiter("Remaining", 15, Duration.ofSeconds(30));
-    public static final RateLimiter rateLimiterCurrentlyPlaying = new RateLimiter("NowPlaying", 10, Duration.ofSeconds(30));
+    // Total is 25 per 30 seconds PER API TOKEN, but we want now playing to always be able to run. So we split the tokens
+    private final RateLimiter rateLimiterRemaining = new RateLimiter("Remaining", 15, Duration.ofSeconds(30));
+    private final RateLimiter rateLimiterCurrentlyPlaying = new RateLimiter("NowPlaying", 10, Duration.ofSeconds(30));
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
     private final AtomicInteger numberOfBackgroundTasksCounter = new AtomicInteger(0);
@@ -265,7 +265,7 @@ public abstract class Cfg<T> {
             int offset = 0;
             int cnt = 0;
             while (offset >= 0) {
-                rateLimiter.claim("getPlaylistsItems " + playlistId + "@" + offset);
+                rateLimiterRemaining.claim("getPlaylistsItems " + playlistId + "@" + offset);
                 Paging<PlaylistTrack> playlistTrackPaging = spotifyApiSupplier.get()
                         .getPlaylistsItems(playlistId)
                         .limit(limit)
@@ -458,12 +458,25 @@ public abstract class Cfg<T> {
                 finally {
                     numberOfBackgroundTasksCounter.decrementAndGet();
                     notifyOnChangeListeners();
+                    if (numberOfBackgroundTasksCounter.get() == 0) {
+                        List<RateLimiter.RateLimiterToken> tokens = rateLimiterRemaining.reduceTo(1);
+                        if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
+                        rateLimiterCurrentlyPlaying.add(tokens);
+                    }
                 }
             });
         }
         else {
             runnable.run();
         }
+    }
+
+    public RateLimiter rateLimiterRemaining() {
+        return rateLimiterRemaining;
+    }
+
+    public RateLimiter rateLimiterCurrentlyPlaying() {
+        return rateLimiterCurrentlyPlaying;
     }
 
     public int getNumberOfActiveBackgroundTasks() {

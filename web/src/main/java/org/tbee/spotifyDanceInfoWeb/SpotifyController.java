@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.tbee.spotifyDanceInfo.Cfg;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
@@ -78,7 +77,7 @@ public class SpotifyController extends ControllerBase {
 
     private void updateCurrentlyPlaying(HttpSession session) {
         try {
-            Cfg.rateLimiterCurrentlyPlaying.claim("CurrentlyPlaying");
+            CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("CurrentlyPlaying");
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
 
@@ -121,7 +120,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void pollArtist(HttpSession session, Song song) {
-        Cfg.rateLimiterCurrentlyPlaying.claim("getTrack");
+        CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("getTrack");
         SpotifyConnectData.get(session).newApi().getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(t -> {
@@ -134,7 +133,7 @@ public class SpotifyController extends ControllerBase {
     }
 
     public void pollNextUp(HttpSession session, String trackId) {
-        Cfg.rateLimiterCurrentlyPlaying.claim("getTheUsersQueue");
+        CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("getTheUsersQueue");
         SpotifyConnectData.get(session).newApi().getTheUsersQueue().build().executeAsync()
                 .exceptionally(ControllerBase::logException)
                 .thenAccept(playbackQueue -> {
