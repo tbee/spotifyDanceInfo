@@ -8,13 +8,13 @@
             <div class="currentlyPlaying">
                 <h1 class="title is-1" th:text="${ScreenData.currentlyPlaying().title()}">?</h1>
                 <h2 class="subtitle is-1" th:text="${ScreenData.currentlyPlaying().artist()}">?</h2>
-                <h3 class="title is-3" th:each="dance : ${ScreenData.currentlyPlaying().dances()}" th:text="${dance}">?</h3>
+                <h3 class="title is-2" th:each="dance : ${ScreenData.currentlyPlaying().dances()}" th:text="${dance}">?</h3>
                 <h4 class="title is-4" th:text="${ScreenData.status()}">?</h4>
             </div>
             <div class="upNext">
                 <div class="upNextItem" th:each="nextUp : ${ScreenData.nextUp()}">
-                    <h1 class="title is-1" th:text="${nextUp.title() + (nextUp.artist().isBlank() ? '' : ' - ' + nextUp.artist())}">?</h1>
-                    <h2 class="subtitle is-2" th:each="dance : ${nextUp.dances()}" th:text="${dance}">?</h2>
+                    <h1 class="title is-2" th:text="${nextUp.title() + (nextUp.artist().isBlank() ? '' : ' - ' + nextUp.artist())}">?</h1>
+                    <h2 class="subtitle is-3" th:each="dance : ${nextUp.dances()}" th:text="${dance}">?</h2>
                 </div>
             </div>
 
