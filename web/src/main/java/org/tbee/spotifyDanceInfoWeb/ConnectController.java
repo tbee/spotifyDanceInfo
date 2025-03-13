@@ -44,6 +44,7 @@ public class ConnectController extends ControllerBase {
     public String connect(HttpServletRequest request, Model model) {
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
+        setVersion(model);
 
         // If set, prepopulate the form (for development mainly)
         CfgApp cfg = SpotifyDanceInfoWebApplication.cfg();

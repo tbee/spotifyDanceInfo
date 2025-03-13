@@ -34,6 +34,7 @@ public class SpotifyController extends ControllerBase {
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
+        setVersion(model);
         try {
             // Start polling
             List<ScheduledFuture<?>> scheduledFutures = (List<ScheduledFuture<?>>) session.getAttribute(SpotifyController.SCHEDULED_FUTURES);

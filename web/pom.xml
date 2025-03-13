@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.tbee.spotifyDanceInfo</groupId>
         <artifactId>spotifyDanceInfoParent</artifactId>
-        <version>1.5.0</version>
+        <version>1.5.1</version>
     </parent>
     <artifactId>spotifyDanceInfoWeb</artifactId>
 
@@ -68,6 +68,20 @@
 
     <build>
         <plugins>
+            <!-- make version available via getClass().getPackage().getImplementationVersion() -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
