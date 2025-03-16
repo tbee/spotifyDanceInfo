@@ -448,28 +448,30 @@ public abstract class Cfg<T> {
             numberOfBackgroundTasksCounter.incrementAndGet();
             notifyOnChangeListeners();
             executorService.submit(() -> {
-                int retries = 5;
-                while (retries > 0) {
-                    try {
-                        runnable.run();
-                        retries = -1;
-                    }
-                    catch (Exception e) {
-                        retries--;
-                        logger.error("Background tast failed, retry=" + retries, e);
-                        if (retries <= 0) {
-                            exceptionsInBackgroundTasks.add(e);
+                try {
+                    int retries = 5;
+                    while (retries > 0) {
+                        try {
+                            runnable.run();
+                            retries = -1;
                         }
-                        sleep(retries * 1000);
-                    }
-                    finally {
-                        numberOfBackgroundTasksCounter.decrementAndGet();
-                        notifyOnChangeListeners();
-                        if (numberOfBackgroundTasksCounter.get() == 0) {
-                            List<LocalDateTime> tokens = rateLimiterRemaining.reduceTo(1);
-                            if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
-                            rateLimiterCurrentlyPlaying.add(tokens);
+                        catch (Exception e) {
+                            retries--;
+                            logger.error("Background tast failed, retry=" + retries, e);
+                            if (retries <= 0) {
+                                exceptionsInBackgroundTasks.add(e);
+                            }
+                            sleep(retries * 1000);
                         }
+                    }
+                }
+                finally {
+                    numberOfBackgroundTasksCounter.decrementAndGet();
+                    notifyOnChangeListeners();
+                    if (numberOfBackgroundTasksCounter.get() == 0) {
+                        List<LocalDateTime> tokens = rateLimiterRemaining.reduceTo(1);
+                        if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
+                        rateLimiterCurrentlyPlaying.add(tokens);
                     }
                 }
             });

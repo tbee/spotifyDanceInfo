@@ -12,9 +12,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SpotifyConnectData {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyConnectData.class);
+
+    static public SpotifyConnectData get(HttpSession session) {
+        return (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
+    }
 
     private String clientId;
     private String clientSecret;
@@ -23,13 +28,15 @@ public class SpotifyConnectData {
     private String accessToken;
     private LocalDateTime accessTokenExpireDateTime;
     private LocalDateTime connectTime = null;
+    private AtomicInteger counter = new AtomicInteger(0);
 
-    static public SpotifyConnectData get(HttpSession session) {
-        return (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
-    }
 
     public SpotifyConnectData(HttpSession session) {
         session.setAttribute(SpotifyConnectData.class.getName(), this);
+    }
+
+    public AtomicInteger counter() {
+        return counter;
     }
 
     public String clientId() {
@@ -97,32 +104,27 @@ public class SpotifyConnectData {
 
     public SpotifyApi newApi() {
         try {
-            SpotifyApi spotifyApi = new SpotifyApi.Builder()
+            return new SpotifyApi.Builder()
                         .setClientId(clientId())
                         .setClientSecret(clientSecret())
                         .setRedirectUri(new URI(redirectUrl()))
                         .setRefreshToken(refreshToken())
                         .setAccessToken(accessToken())
                         .build();
-            if (accessTokenExpireDateTime() != null && accessTokenExpireDateTime().isBefore(LocalDateTime.now())) {
-                refreshAccessToken();
-            }
-
-            return spotifyApi;
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
     }
 
-    public void refreshAccessToken() {
+    public void refreshAccessToken(HttpSession session) {
         try {
             if (logger.isInfoEnabled()) logger.info("Refreshing access token");
-            AuthorizationCodeCredentials authorizationCodeCredentials = get(SpringUtil.getSession()).newApi().authorizationCodeRefresh().build().execute();
+            AuthorizationCodeCredentials authorizationCodeCredentials = get(session).newApi().authorizationCodeRefresh().build().execute();
             LocalDateTime expiresAt = calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : refreshToken());
-            if (logger.isInfoEnabled()) logger.info("accessToken: refreshed " + refreshToken); // TBEERNOT make this debug or trace
             accessToken(authorizationCodeCredentials.getAccessToken());
+            if (logger.isDebugEnabled()) logger.debug("accessToken: refreshed " + accessToken);
             accessTokenExpireDateTime(expiresAt);
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             ControllerBase.logException(e);

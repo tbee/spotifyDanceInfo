@@ -28,9 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
 
 @Controller
 public class ConnectController extends ControllerBase {
@@ -42,9 +40,9 @@ public class ConnectController extends ControllerBase {
 
     @GetMapping("/")
     public String connect(HttpServletRequest request, Model model) {
+        setVersion(model);
         ConnectForm connectForm = new ConnectForm();
         model.addAttribute("ConnectForm", connectForm);
-        setVersion(model);
 
         // If set, prepopulate the form (for development mainly)
         CfgApp cfg = SpotifyDanceInfoWebApplication.cfg();
@@ -124,15 +122,6 @@ public class ConnectController extends ControllerBase {
             cfgSession // This was already created in connectSubmit
                     .onChange(cfg -> screenData.refresh(cfg))
                     .readPlaylists(spotifyConnectData::newApi);
-
-            // On the first time, setup the polling administration.
-            List<ScheduledFuture<?>> scheduledFutures = (List<ScheduledFuture<?>>) session.getAttribute(SpotifyController.SCHEDULED_FUTURES);
-            if (scheduledFutures == null) {
-                session.setAttribute(SpotifyController.SCHEDULED_FUTURES, scheduledFutures = new ArrayList<ScheduledFuture<?>>());
-            }
-            // Cancel any running polling
-            scheduledFutures.forEach(sf -> sf.cancel(true));
-            scheduledFutures.clear();
 
             // redirect to our spotify page, start showing the track information
             String baseUrl = environment.getProperty("baseUrl");

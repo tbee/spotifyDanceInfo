@@ -14,72 +14,62 @@ import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Controller
 public class SpotifyController extends ControllerBase {
     private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
 
-    static final String SCHEDULED_FUTURES = "scheduledFutures";
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
         setVersion(model);
-        try {
-            // Start polling
-            List<ScheduledFuture<?>> scheduledFutures = (List<ScheduledFuture<?>>) session.getAttribute(SpotifyController.SCHEDULED_FUTURES);
-            if (scheduledFutures.isEmpty()) {
-
-                // Remember the session weakly, so this does not lock it, for cleanup if it gets disposed by the container
-                WeakReference<HttpSession> sessionWeakReference = new WeakReference<>(session);
-                scheduledFutures.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
-                    try {
-                        if (logger.isInfoEnabled()) logger.info("Polling updateCurrentlyPlaying"); // TBEERNOT make this debug or trace
-
-                        // If the session was disposed by the container, stop polling
-                        HttpSession httpSession = sessionWeakReference.get();
-                        if (httpSession == null) {
-                            if (logger.isInfoEnabled()) logger.info("session is null, aborting all {} associated scheduled tasks", scheduledFutures.size());
-                            scheduledFutures.forEach(sf -> sf.cancel(true));
-                            scheduledFutures.clear();
-                            return;
-                        }
-
-                        // Poll
-                        updateCurrentlyPlaying(httpSession);
-                    }
-                    catch (RuntimeException e) {
-                        logger.error("Exception in the updateCurrentlyPlaying polling", e);
-                    }
-                }, 0, 5, TimeUnit.SECONDS));
-            }
-
-            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
-            ScreenData screenData = ScreenData.get(session);
-            screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
-            screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
-            model.addAttribute("ScreenData", screenData);
+        SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
+        if (spotifyConnectData == null) {
+            return "redirect:/";
         }
-        catch (Exception e) {
-            logger.error("Problem constructing page", e);
-            httpServletResponse.addHeader("HX-Redirect", "/");
+        ScreenData screenData = ScreenData.get(session);
+        screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
+        screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+        model.addAttribute("ScreenData", screenData);
+
+        // Poll the current song
+        AtomicInteger counter = spotifyConnectData.counter();
+        if (counter.get() > 0) {
+            if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying already in progress");
         }
+        else {
+            counter.incrementAndGet();
+            if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying scheduled");
+            executorService.execute(() -> {
+                try {
+                    if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying");
+                    updateCurrentlyPlaying(session);
+                }
+                catch (RuntimeException e) {
+                    logger.error("Exception in the updateCurrentlyPlaying polling", e);
+                }
+                finally {
+                    if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying complete");
+                    counter.decrementAndGet();
+                }
+            });
+        }
+
         return "spotify";
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
         try {
-            if (logger.isInfoEnabled()) logger.info("accessToken: using " + SpotifyConnectData.get(session).accessToken()); // TBEERNOT make this debug or trace
+            if (logger.isDebugEnabled()) logger.debug("accessToken: using " + SpotifyConnectData.get(session).accessToken());
             CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("CurrentlyPlaying");
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
@@ -109,6 +99,10 @@ public class SpotifyController extends ControllerBase {
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             logger.error("Problem updating currently playing", e);
+            // this is the place where we detect expired sessions
+            if (e.getMessage().contains("The access token expired")) {
+                SpotifyConnectData.get(session).refreshAccessToken(session);
+            }
             throw new RuntimeException(e);
         }
     }

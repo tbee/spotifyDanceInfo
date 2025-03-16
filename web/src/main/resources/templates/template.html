@@ -10,7 +10,7 @@
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="manifest" href="/site.webmanifest">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
-        <link rel="stylesheet" href="/site.css">
+        <link rel="stylesheet" th:href="${'/site.css?cachebuster='+ version}">
         <script src="https://kit.fontawesome.com/501b8808a2.js" type="text/javascript" defer=""></script>
         <script src="https://unpkg.com/htmx.org@1.9.11"></script>
         <th:block th:replace="${header}" />

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" th:replace="~{template :: template(~{::head},~{::body})}">
     <head>
-        <link rel="stylesheet" href="/connect.css">
+        <link rel="stylesheet" th:href="${'/connect.css?cachebuster=' + version}">
         <script type="application/javascript">
             function copyCode() {
                 try {

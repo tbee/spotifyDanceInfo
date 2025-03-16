@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 public class ControllerBase {
@@ -15,18 +17,12 @@ public class ControllerBase {
         if (version == null) {
             version = LocalDateTime.now().toString();
         }
-        System.out.println("version: " + version);
-        model.addAttribute("version", version);
+        String versionURL = URLEncoder.encode(version, StandardCharsets.UTF_8);
+        model.addAttribute("version", versionURL);
     }
 
     public static <T> T logException(Throwable t) {
         logger.error(t.getMessage(), t);
-
-        // just in case something went wrong with scheduled refreshing
-        if (t.getMessage().contains("The access token expired")) {
-            SpotifyConnectData.get(SpringUtil.getSession()).refreshAccessToken();
-        }
-
         return null;
     }
 }
