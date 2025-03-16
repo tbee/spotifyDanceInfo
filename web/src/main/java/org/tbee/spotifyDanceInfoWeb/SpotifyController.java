@@ -43,18 +43,24 @@ public class SpotifyController extends ControllerBase {
                 // Remember the session weakly, so this does not lock it, for cleanup if it gets disposed by the container
                 WeakReference<HttpSession> sessionWeakReference = new WeakReference<>(session);
                 scheduledFutures.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
+                    try {
+                        if (logger.isInfoEnabled()) logger.info("Polling updateCurrentlyPlaying"); // TBEERNOT make this debug or trace
 
-                    // If the session was disposed by the container, stop polling
-                    HttpSession httpSession = sessionWeakReference.get();
-                    if (httpSession == null) {
-                        if (logger.isInfoEnabled()) logger.info("session is null, aborting all {} associated scheduled tasks", scheduledFutures.size());
-                        scheduledFutures.forEach(sf -> sf.cancel(true));
-                        scheduledFutures.clear();
-                        return;
+                        // If the session was disposed by the container, stop polling
+                        HttpSession httpSession = sessionWeakReference.get();
+                        if (httpSession == null) {
+                            if (logger.isInfoEnabled()) logger.info("session is null, aborting all {} associated scheduled tasks", scheduledFutures.size());
+                            scheduledFutures.forEach(sf -> sf.cancel(true));
+                            scheduledFutures.clear();
+                            return;
+                        }
+
+                        // Poll
+                        updateCurrentlyPlaying(httpSession);
                     }
-
-                    // Poll
-                    updateCurrentlyPlaying(httpSession);
+                    catch (RuntimeException e) {
+                        logger.error("Exception in the updateCurrentlyPlaying polling", e);
+                    }
                 }, 0, 5, TimeUnit.SECONDS));
             }
 
@@ -73,6 +79,7 @@ public class SpotifyController extends ControllerBase {
 
     private void updateCurrentlyPlaying(HttpSession session) {
         try {
+            if (logger.isInfoEnabled()) logger.info("accessToken: using " + SpotifyConnectData.get(session).accessToken()); // TBEERNOT make this debug or trace
             CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("CurrentlyPlaying");
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);

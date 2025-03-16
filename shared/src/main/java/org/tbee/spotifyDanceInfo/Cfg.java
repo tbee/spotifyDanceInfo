@@ -298,7 +298,6 @@ public abstract class Cfg<T> {
             logger.error("Error reading playlists", e);
             throw new RuntimeException(e);
         }
-
     }
 
     // ===========================
@@ -449,26 +448,43 @@ public abstract class Cfg<T> {
             numberOfBackgroundTasksCounter.incrementAndGet();
             notifyOnChangeListeners();
             executorService.submit(() -> {
-                try {
-                    runnable.run();
-                }
-                catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                    exceptionsInBackgroundTasks.add(e);
-                }
-                finally {
-                    numberOfBackgroundTasksCounter.decrementAndGet();
-                    notifyOnChangeListeners();
-                    if (numberOfBackgroundTasksCounter.get() == 0) {
-                        List<LocalDateTime> tokens = rateLimiterRemaining.reduceTo(1);
-                        if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
-                        rateLimiterCurrentlyPlaying.add(tokens);
+                int retries = 5;
+                while (retries > 0) {
+                    try {
+                        runnable.run();
+                        retries = -1;
+                    }
+                    catch (Exception e) {
+                        retries--;
+                        logger.error("Background tast failed, retry=" + retries, e);
+                        if (retries <= 0) {
+                            exceptionsInBackgroundTasks.add(e);
+                        }
+                        sleep(retries * 1000);
+                    }
+                    finally {
+                        numberOfBackgroundTasksCounter.decrementAndGet();
+                        notifyOnChangeListeners();
+                        if (numberOfBackgroundTasksCounter.get() == 0) {
+                            List<LocalDateTime> tokens = rateLimiterRemaining.reduceTo(1);
+                            if (logger.isInfoEnabled()) logger.info("All background tasks completed. Moving {} tokens of remaining rate delimiter to now playing.", tokens.size());
+                            rateLimiterCurrentlyPlaying.add(tokens);
+                        }
                     }
                 }
             });
         }
         else {
             runnable.run();
+        }
+    }
+
+    private void sleep(int ms) {
+        try {
+            Thread.sleep(ms);
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

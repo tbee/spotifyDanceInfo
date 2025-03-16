@@ -121,6 +121,7 @@ public class SpotifyConnectData {
             AuthorizationCodeCredentials authorizationCodeCredentials = get(SpringUtil.getSession()).newApi().authorizationCodeRefresh().build().execute();
             LocalDateTime expiresAt = calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : refreshToken());
+            if (logger.isInfoEnabled()) logger.info("accessToken: refreshed " + refreshToken); // TBEERNOT make this debug or trace
             accessToken(authorizationCodeCredentials.getAccessToken());
             accessTokenExpireDateTime(expiresAt);
         } catch (IOException | SpotifyWebApiException | ParseException e) {

@@ -192,10 +192,15 @@ public class SpotifyDanceInfo {
     }
 
     private void updateTime() {
-        SwingUtilities.invokeLater(() -> {
-            String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-            timeSLabel.text(time);
-        });
+        try {
+            SwingUtilities.invokeLater(() -> {
+                String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+                timeSLabel.text(time);
+            });
+        }
+        catch (RuntimeException e) {
+            logger.error("Exception in the updateTime", e);
+        }
     }
 
     private void updateAll() {
