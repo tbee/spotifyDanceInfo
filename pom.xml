@@ -69,15 +69,15 @@
             <dependency>
                 <groupId>se.michaelthelin.spotify</groupId>
                 <artifactId>spotify-web-api-java</artifactId>
-                <version>9.1.0</version>
+                <version>9.3.0</version>
             </dependency>
 
-            <!-- https://github.com/LabyStudio/java-spotify-api -->
-            <dependency>
-                <groupId>com.github.LabyStudio</groupId>
-                <artifactId>java-spotify-api</artifactId>
-                <version>1.2.0</version>
-            </dependency>
+<!--            &lt;!&ndash; https://github.com/LabyStudio/java-spotify-api &ndash;&gt;-->
+<!--            <dependency>-->
+<!--                <groupId>com.github.LabyStudio</groupId>-->
+<!--                <artifactId>java-spotify-api</artifactId>-->
+<!--                <version>1.2.0</version>-->
+<!--            </dependency>-->
 
             <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
             <dependency>

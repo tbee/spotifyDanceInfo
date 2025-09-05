@@ -49,11 +49,11 @@
             <artifactId>spotify-web-api-java</artifactId>
         </dependency>
 
-        <!-- https://github.com/LabyStudio/java-spotify-api -->
-        <dependency>
-            <groupId>com.github.LabyStudio</groupId>
-            <artifactId>java-spotify-api</artifactId>
-        </dependency>
+<!--        &lt;!&ndash; https://github.com/LabyStudio/java-spotify-api &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.github.LabyStudio</groupId>-->
+<!--            <artifactId>java-spotify-api</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.slf4j</groupId>
