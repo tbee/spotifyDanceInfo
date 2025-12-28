@@ -32,9 +32,14 @@ import java.util.List;
 
 @Controller
 public class ConnectController extends ControllerBase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectController.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(ConnectController.class);
-
+    // Environment variables have higher priority than most application files, but lower than command-line arguments or system properties (in recent versions).
+    //    Replace dots (.) with underscores (_).
+    //    Remove dashes (-).
+    //    Convert to uppercase.
+    // So:
+    // - baseUrl -> BASEURL
     @Autowired
     private Environment environment;
 
@@ -125,6 +130,7 @@ public class ConnectController extends ControllerBase {
 
             // redirect to our spotify page, start showing the track information
             String baseUrl = environment.getProperty("baseUrl");
+            if (LOGGER.isInfoEnabled()) LOGGER.info("Spotify baseUrl=" + baseUrl);
             return String.format("redirect:%s/spotify", (baseUrl == null ? "" : baseUrl));
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {

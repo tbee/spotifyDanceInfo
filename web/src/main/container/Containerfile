@@ -1,0 +1,39 @@
+FROM eclipse-temurin:25-jre-alpine
+
+# Create non-root user (UID/GID 1000) - recommended for security
+RUN addgroup -g 1000 appgroup && \
+    adduser -D -u 1000 -G appgroup appuser
+
+# Create directories
+RUN mkdir -p /app /data /data-init && \
+    chown -R appuser:appgroup /app /data /data-init
+
+# Install rclone (static binary) + certificates for backup
+RUN apk add --no-cache ca-certificates curl tar zip && \
+    apk add --no-cache --virtual .build-deps unzip && \
+    curl -L --silent -o /tmp/rclone.zip https://downloads.rclone.org/rclone-current-linux-amd64.zip && \
+    unzip /tmp/rclone.zip -d /tmp && \
+    mv /tmp/rclone-*/rclone /usr/local/bin/rclone && \
+    chmod +x /usr/local/bin/rclone && \
+    rm -rf /tmp/* && \
+    apk del .build-deps
+COPY --chown=appuser:appgroup --chmod=0744 src/main/container/backup.sh /app/backup.sh
+
+# data-init
+COPY --chown=appuser:appgroup --chmod=0644 src/main/container/application-default.properties /data-init/application-default.properties
+COPY --chown=appuser:appgroup --chmod=0644 src/main/container/spotifyDanceInfo.tecl /data-init/spotifyDanceInfo.tecl
+
+# application
+COPY --chown=appuser:appgroup --chmod=0744 src/main/container/start.sh /app/start.sh
+
+COPY --chown=appuser:appgroup --chmod=0644 target/*-boot.jar /app/app.jar
+
+WORKDIR /data
+USER appuser
+EXPOSE 8080
+
+# The /data volume will be backed by Longhorn PVC
+VOLUME ["/data"]
+
+# Default command
+CMD ["/app/start.sh"]

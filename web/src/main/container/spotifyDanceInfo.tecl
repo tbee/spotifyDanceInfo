@@ -1,0 +1,131 @@
+@version 1
+
+copySongLoglineToClipboard: false
+
+spotify {
+    connect: webapi # local or webapi
+}
+
+screen {
+    waitingImage {
+        #uri: "file:///Z:/tbee/dance/images/waiting3.jpg"
+    }
+
+    backgroundImage {
+        useCovertArt: false
+        #noise: 100
+        #uri: "file:///Z:/tbee/dance/images/Dancing-couples-ardian-lumi-6Woj_wozqmA-unsplash.jpg"
+    }
+
+    song {
+        #font: Calibri
+        #fontSize: 80
+    }
+    nextUp {
+        #count: 3
+        #font: Calibri
+        #fontSize: 10
+    }
+}
+
+dances {
+    | id  | text                   |
+    | sw  | "Slow Walz"            |
+    | ta  | "Tango"                |
+    | qs  | "Quickstep"            |
+    | sqs | "Slow Quickstep"       |
+    | sf  | "Slow Foxtrot"         |
+    | vw  | "Viennese Walz"        |
+    | ru  | "Rumba"                |
+    | cc  | "Cha Cha"              |
+    | sa  | "Samba"                |
+    | ji  | "Jive"                 |
+    | sji | "Slow Jive"            |
+    | pd  | "Paso Doble"           |
+    | sal | "Salsa"                |
+    | bac | "Bachata"              |
+    | zou | "Zouk"                 |
+    | mam | "Mambo"                |
+    | kiz | "Kizomba"              |
+    | bol | "Bolero"               |
+    | ecs | "East Coast Swing"     |
+    | wcs | "West Coast Swing"     |
+    | taa | "Tango Argentine"      |
+    | fox | "Foxtrot"              |
+    | swz | "Smooth Walz"          |
+    | sta | "Smooth Tango"         |
+    | svw | "Smooth Viennese Walz" |
+    | aru | "American Rumba"       |
+    | acc | "American Cha Cha"     |
+    | dcf | "Discofox"             |
+}
+
+tracks {
+    | id                     | dance                |
+    | 7AslBsiVLQAGrmFmi79ZeK | ru                   | # Truly / https://open.spotify.com/track/7AslBsiVLQAGrmFmi79ZeK
+    | 2Br0Vp8EgpFcOVWc0NL5yt | cc                   | # Swing Supreme / https://open.spotify.com/track/2Br0Vp8EgpFcOVWc0NL5yt
+    | 0OBwxFLu6Yj61s2OagYbgY |                      | # Gimme All Your Lovin' / https://open.spotify.com/track/0OBwxFLu6Yj61s2OagYbgY
+    | 11dAtktxQQzipxuLqljEfY | sf,cc                | # Baby, What a Big Surprise - Edit / https://open.spotify.com/track/11dAtktxQQzipxuLqljEfY
+    | 4qjrCkcVbsYlitCqbBkeKe | ru,sf                | # Colors Of The Wind - End Title / https://open.spotify.com/track/4qjrCkcVbsYlitCqbBkeKe
+    | 6s8nHXTJVqFjXE4yVZPDHR | "Cha Cha"            | # Troublemaker (feat. Flo Rida) / https://open.spotify.com/track/6s8nHXTJVqFjXE4yVZPDHR
+    | 1EUdstrj3BkxNfhMXJKFAa | ru,sf                | # Billy Joel - Just the Way You Are - Radio Edit / https://open.spotify.com/track/1EUdstrj3BkxNfhMXJKFAa
+    | 3jaUZhLiZOcgoJiGGd3hFD | ru,sf                | # Whitney Houston - One Moment in Time / https://open.spotify.com/track/3jaUZhLiZOcgoJiGGd3hFD
+    | 4Fz6tlbyoHj7JxKwOHqNQq | vw                   | # Mell & Vintage Future - Happier / https://open.spotify.com/track/4Fz6tlbyoHj7JxKwOHqNQq
+    | 2Gd10PZnMktt3Cgo9s6yi0 | cc                   | # Elton John - I Don't Wanna Go On With You Like That / https://open.spotify.com/track/2Gd10PZnMktt3Cgo9s6yi0
+    | 3MrRksHupTVEQ7YbA0FsZK | "Cha cha,Salsa"      | # Europe - The Final Countdown / https://open.spotify.com/track/3MrRksHupTVEQ7YbA0FsZK
+}
+
+moreTracks {
+    tsv {
+        | idIdx | danceIdx | uri                                                                                                                                              |
+        | 0     | 1        | "https://docs.google.com/spreadsheets/d/e/2PACX-1vShRVxI2cbOLgVm002EtWm6GtKy-s0XbLg1UCppjoGPOatPh_Gbasu8QJ9LG4F0mdwLnJRk3ZbW3LbY/pub?output=tsv" |
+    }
+}
+
+# playlist must be public
+# https://open.spotify.com/playlist/...
+playlists {
+    | id                     | dance    | name                                |
+    | 5oS2GQMRySgZJzLYAL2LI1 | sw       | "SpotifyDanceInfo"                  |
+    | 4E73Sr5lYEDd6ovFQWIzyK | ta       | "SpotifyDanceInfo"                  |
+    | 5zCg9r6RBnD67ZbsOTkexY | sf       | "SpotifyDanceInfo"                  |
+    | 63FMjAbnivjuEtchEyl41g | qs       | "SpotifyDanceInfo"                  |
+    | 6DVBwLomv8Ze15dPPCOVHp | vw       | "SpotifyDanceInfo"                  |
+    | 7xKTnMEFPy2wL1muP53iqk | cc       | "SpotifyDanceInfo"                  |
+    | 3Ph083r3rGV6z8naAvORig | ru       | "SpotifyDanceInfo"                  |
+    | 3zY3p7QQgr5Jjd6F2dAtoK | sa       | "SpotifyDanceInfo"                  |
+    | 5pPYjcVo2t11be2bEBZwNv | pd       | "SpotifyDanceInfo"                  |
+    | 2MDyJWt1SK1bHdivVsJykt | ji       | "SpotifyDanceInfo"                  |
+    | 3WJ93LZw80gS0USQB30jfV | sal      | "SpotifyDanceInfo"                  |
+    | 3AWxTJCKZYTUvr5aWCaiBl | bac      | "SpotifyDanceInfo"                  |
+    | 7gsf8rnk0fX8IomqkNsRUf | wcs      | "SpotifyDanceInfo"                  |
+    | 0iefVqixKEXpvhVV9U7Wmf | sw       | "Tom Eugelink BallroomSW"           |
+    | 3uhw4hBDlXVUBMoOVTNboG | ta       | "Tom Eugelink BallroomTA"           |
+    | 5HKPEuLz3YC5wsGdtrld1b | sf       | "Tom Eugelink BallroomSF"           |
+    | 47KNGc8wAamlYsg5DThEKY | qs       | "Tom Eugelink BallroomQS"           |
+    | 7tGLp2uTF2kJc2lXUdE8xO | qs       | "Tom Eugelink BallroomQS-light"     |
+    | 0mB0ttNTLePYOvmVVLReRv | vw       | "Tom Eugelink BallroomVW"           |
+    | 4DJWAqHOAw9KRSgmtY9ZAL | cc       | "Tom Eugelink LatinCC"              |
+    | 6YWL6uxZAnU0fFijOJFfnX | cc       | "Tom Eugelink LatinCC-light"        |
+    | 7Dxs5pe37MdORqaPoEBgPf | ru       | "Tom Eugelink LatinRU"              |
+    | 2nsjKbQr2YhQj54JQpYWdZ | sa       | "Tom Eugelink LatinSA"              |
+    | 0flUG7npuD5TaUaySjjjoh | pd       | "Tom Eugelink LatinPD"              |
+    | 3279n0O2YCN70iRpKo4SdN | ji       | "Tom Eugelink LatinJI"              |
+    | 6thv0oLMnUjJPOJlxceIca | ji       | "Tom Eugelink LatinJI-slow"         |
+    | 3kvEIDZtxUY6rH0nuyP5YY | sal      | "Tom Eugelink SocialLatinSalsa"     |
+    | 6vndvXOZeoo1Mwplb5S416 | bac      | "Tom Eugelink SocialLatinBachata"   |
+    | 0d8itnprmtufZBYJGX7mUp | wcs      | "Tom Eugelink WestCoastSwing"       |
+    | 0Cp8B9AVAZKoMMH0rIvJ6M | sw       | "Jimmy Franz"                       |
+    | 2pntND8VTbADh52dY7mirf | ta       | "Jimmy Franz"                       |
+    | 5unJ2aOsqtRlRlvfrcfpjr | sf       | "Jimmy Franz"                       |
+    | 7e0MBeqZuyWsa2V38ic6bR | qs       | "Jimmy Franz"                       |
+    | 0Yu5Lu5UISV3f58A8cxDTv | vw       | "Jimmy Franz"                       |
+    | 0RI5elaplN7RGBBRSPyjQh | cc       | "Jimmy Franz"                       |
+    | 4FjBX1mYfcpTi5l179Xpeh | ru       | "Jimmy Franz"                       |
+    | 6LHCCm1kivgGSbwW1kq2Ua | sa       | "Jimmy Franz"                       |
+    | 1lxrT9yzO0jUNRRFkvrNvt | ji       | "Jimmy Franz"                       |
+    | 6NdwDxtqQpT7SrB3cC2zGN | bac      | "Jimmy Franz"                       |
+    | 1021QUS0H8AFP3ycapwmzD | sal      | "Jimmy Franz"                       |
+    | 5yKuaqvxhZBILhZw954Cxi | wcs      | "Jimmy Franz"                       |
+    | 0IsyHvHGCyzgbBk81cal0Y | kiz      | "Jimmy Franz"                       |
+}

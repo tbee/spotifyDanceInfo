@@ -5,8 +5,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.sway.SBorderPanel;
+import org.tbee.sway.SConfirmDialog;
 import org.tbee.sway.SContextMenu;
-import org.tbee.sway.SDialog;
 import org.tbee.sway.SEditorPane;
 import org.tbee.sway.SFrame;
 import org.tbee.sway.SIconRegistry;
@@ -122,7 +122,7 @@ public class SpotifyDanceInfo {
 
                 // Gather connect information
                 ConnectPanel connectPanel = new ConnectPanel(cfg);
-                SDialog dialog = SDialog.ofOkCancel(sFrame, "Connect", connectPanel)
+                SConfirmDialog.of(sFrame, "Connect", connectPanel)
                         .onCancel(() -> System.exit(0))
                         .onOk(() -> connect(connectPanel, cfg))
                         .noWindowDecoration()
