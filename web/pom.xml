@@ -111,34 +111,38 @@
 
     <profiles>
         <profile>
-            <id>build-container</id>
+            <id>container</id>
+            <properties>
+                <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.5.0</version>
+                        <groupId>org.tbee</groupId>
+                        <artifactId>podman-maven-plugin</artifactId>
+                        <version>main</version>
                         <executions>
                             <execution>
-                                <id>build</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>exec</goal>
+                                    <goal>build</goal>
+                                    <goal>push</goal>
                                 </goals>
-                                <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>build</argument>
-                                        <argument>-t</argument>
-                                        <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
-                                        <argument>-f</argument>
-                                        <!-- we must execute from project base so the Containerfile can copy from target -->
-                                        <argument>src/main/container/Containerfile</argument>
-                                        <argument>.</argument>
-                                    </arguments>
-                                </configuration>
                             </execution>
                         </executions>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <containerFile>src/main/container/Containerfile</containerFile>
+                            <tags>
+                                <tag>${containerImageId}:${project.version}</tag>
+                                <tag>${containerImageId}:latest</tag>
+                            </tags>
+                            <registry>
+                                <hostname>nexus.softworks.nl</hostname>
+                                <hostpath>/docker-private</hostpath>
+                                <url>https://nexus.softworks.nl/docker-private</url>
+                            </registry>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -166,101 +170,12 @@
                                         <argument>-it</argument>
                                         <argument>-p</argument>
                                         <argument>8080:8080</argument>
-                                        <argument>--name</argument>
-                                        <argument>sdi</argument>
                                         <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <!-- first do a: podman login nexus.softworks.nl -->
-            <id>push-container</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.5.0</version>
-                        <executions>
-<!--                            <execution>-->
-<!--                                <id>login</id>-->
-<!--                                <phase>package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>exec</goal>-->
-<!--                                </goals>-->
-<!--                                <configuration>-->
-<!--                                    <executable>podman</executable>-->
-<!--                                    <arguments>-->
-<!--                                        <argument>login</argument>-->
-<!--                                        <argument>nexus.softworks.nl</argument>-->
-<!--                                        &lt;!&ndash; TODO: login does not work like this &ndash;&gt;-->
-<!--                                    </arguments>-->
-<!--                                </configuration>-->
-<!--                            </execution>-->
-                            <execution>
-                                <id>tag</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>tag</argument>
-                                        <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
-                                        <argument>nexus.softworks.nl/docker-private/spotify-dance-info:${project.version}</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>push</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>push</argument>
-                                        <argument>nexus.softworks.nl/docker-private/spotify-dance-info:${project.version}</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-<!--                    &lt;!&ndash; https://github.com/fabric8io/docker-maven-plugin &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>io.fabric8</groupId>-->
-<!--                        <artifactId>docker-maven-plugin</artifactId>-->
-<!--                        <version>0.45.1</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>docker-push</id>-->
-<!--                                <phase>package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>build</goal>-->
-<!--                                    <goal>push</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                        <configuration>-->
-<!--                            <build>-->
-<!--                                <dockerFileDir>src/main/container/Containerfile</dockerFileDir>-->
-<!--                            </build>-->
-<!--                            <images>-->
-<!--                                <image>-->
-<!--                                    <name>nexus.softworks.nl/docker-private/org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</name>-->
-<!--                                    <alias>spotify-dance-info</alias>-->
-<!--                                </image>-->
-<!--                            </images>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
                 </plugins>
             </build>
         </profile>
