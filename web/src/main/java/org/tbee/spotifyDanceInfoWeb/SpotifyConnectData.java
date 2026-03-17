@@ -15,10 +15,12 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SpotifyConnectData {
-    private static final Logger logger = LoggerFactory.getLogger(SpotifyConnectData.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyConnectData.class);
 
     static public SpotifyConnectData get(HttpSession session) {
-        return (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
+        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
+        if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData retrieved from session " + session.getId() + " -> " + spotifyConnectData);
+        return spotifyConnectData;
     }
 
     private String clientId;
@@ -33,6 +35,7 @@ public class SpotifyConnectData {
 
     public SpotifyConnectData(HttpSession session) {
         session.setAttribute(SpotifyConnectData.class.getName(), this);
+        if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData stored in session " + session.getId() + " -> " + this);
     }
 
     public AtomicInteger counter() {
@@ -119,12 +122,12 @@ public class SpotifyConnectData {
 
     public void refreshAccessToken(HttpSession session) {
         try {
-            if (logger.isInfoEnabled()) logger.info("Refreshing access token");
+            if (LOGGER.isInfoEnabled()) LOGGER.info("Refreshing access token");
             AuthorizationCodeCredentials authorizationCodeCredentials = get(session).newApi().authorizationCodeRefresh().build().execute();
             LocalDateTime expiresAt = calculateExpiresAt(authorizationCodeCredentials.getExpiresIn());
             refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : refreshToken());
             accessToken(authorizationCodeCredentials.getAccessToken());
-            if (logger.isDebugEnabled()) logger.debug("accessToken: refreshed " + accessToken);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: refreshed " + accessToken);
             accessTokenExpireDateTime(expiresAt);
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             ControllerBase.logException(e);
