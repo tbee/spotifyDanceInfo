@@ -105,7 +105,7 @@ public class ConnectController extends ControllerBase {
     }
 
     @GetMapping("/spotifyCallback")
-    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode) {
+    public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode, @RequestParam("state") String state) {
         try {
             CfgSession cfgSession = CfgSession.get(session);
 

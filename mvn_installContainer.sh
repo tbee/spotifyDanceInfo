@@ -2,5 +2,5 @@
 
 # TODO: configure java
 
-mvnw package -DskipTests -Pbuild-container
+mvnw versions:set clean package -DskipTests -Pcontainer
 
