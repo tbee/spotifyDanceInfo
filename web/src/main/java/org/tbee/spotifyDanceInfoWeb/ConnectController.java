@@ -5,8 +5,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.http.ParseException;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,8 +52,7 @@ public class ConnectController extends ControllerBase {
         if (cfg.webapiRefreshToken() != null) {
             connectForm.setClientId(cfg.webapiClientId());
             connectForm.setClientSecret(cfg.webapiClientSecret());
-            String webapiRedirect = cfg.webapiRedirect();
-            connectForm.setRedirectUrl(webapiRedirect != null && !webapiRedirect.isBlank() ? webapiRedirect : request.getRequestURL().toString() + "spotifyCallback");
+            connectForm.setRedirectUrl(environment.getProperty("baseUrl") + "/spotifyCallback");
         }
 
         connectForm.abbreviations(cfg.getListofDanceAbbreviations());
@@ -70,23 +67,24 @@ public class ConnectController extends ControllerBase {
             // Each time CfgSession is created, it will load the config.tecl.
             // So every CfgSession contains the application level information, and is then augmented with the uploaded data.
             // This also facilitates that if one of the external sources is altered, a login suffices to get the latest.
-            CfgSession cfg = new CfgSession(session).readMoreTracks();
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null) {
-                // do nothing
-            }
-            else if (originalFilename.endsWith(".tsv")) {
-                cfg.readMoreTracksTSV("web", file.getInputStream(), 0, 1);
-            }
-            else if (originalFilename.endsWith(".xlsx")) {
-                cfg.readMoreTracksExcel("web", new XSSFWorkbook(file.getInputStream()), 0, 0, 1);
-            }
-            else if (originalFilename.endsWith(".xls")) {
-                cfg.readMoreTracksExcel("web", new HSSFWorkbook(file.getInputStream()), 0, 0, 1);
-            }
+// TBEERNOT: this needs to be make working again
+//            CfgSession cfg = new CfgSession(session).readMoreTracks();
+//            String originalFilename = file.getOriginalFilename();
+//            if (originalFilename == null) {
+//                // do nothing
+//            }
+//            else if (originalFilename.endsWith(".tsv")) {
+//                cfg.readMoreTracksTSV("web", file.getInputStream(), 0, 1);
+//            }
+//            else if (originalFilename.endsWith(".xlsx")) {
+//                cfg.readMoreTracksExcel("web", new XSSFWorkbook(file.getInputStream()), 0, 0, 1);
+//            }
+//            else if (originalFilename.endsWith(".xls")) {
+//                cfg.readMoreTracksExcel("web", new HSSFWorkbook(file.getInputStream()), 0, 0, 1);
+//            }
 
             // store connection data
-            new SpotifyConnectData(session)
+            SpotifyConnectData spotifyConnectData = new SpotifyConnectData()
                     .clientId(connectForm.getClientId())
                     .clientSecret(connectForm.getClientSecret())
                     .redirectUrl(connectForm.getRedirectUrl())
@@ -94,8 +92,9 @@ public class ConnectController extends ControllerBase {
 
             // Forward to Spotify
             // https://developer.spotify.com/documentation/web-api/concepts/scopes
-            URI authorizationCodeUri = SpotifyConnectData.get(session).newApi().authorizationCodeUri()
+            URI authorizationCodeUri = spotifyConnectData.newApi().authorizationCodeUri()
                     .scope("user-read-playback-state,user-read-currently-playing")
+                    .state(spotifyConnectData.serialize())
                     .build().execute();
             return "redirect:" + authorizationCodeUri.toURL();
         }
@@ -107,10 +106,13 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode, @RequestParam("state") String state) {
         try {
-            CfgSession cfgSession = CfgSession.get(session);
+//            CfgSession cfgSession = CfgSession.get(session);
+            CfgSession cfgSession = new CfgSession(session).readMoreTracks();
+
+            // (re)store connection data
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.deserialize(state).storeIn(session);
 
             // Spotify has accepted the connection, remember the details
-            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session); // This was already created in connectSubmit
             SpotifyApi spotifyApi = spotifyConnectData.newApi();
             cfgSession.rateLimiterRemaining().claim("authorizationCode");
             AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCode(authorizationCode).build().execute();
@@ -124,14 +126,16 @@ public class ConnectController extends ControllerBase {
             ScreenData screenData = new ScreenData(session);
 
             // Now that the spotify API is active, read config data that requires spotify access
-            cfgSession // This was already created in connectSubmit
+            cfgSession
                     .onChange(cfg -> screenData.refresh(cfg))
                     .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, start showing the track information
             String baseUrl = environment.getProperty("baseUrl");
             if (LOGGER.isInfoEnabled()) LOGGER.info("Spotify baseUrl=" + baseUrl);
-            return String.format("redirect:%s/spotify", (baseUrl == null ? "" : baseUrl));
+            String redirectUrl = String.format("redirect:%s/spotify", baseUrl);
+            if (LOGGER.isInfoEnabled()) LOGGER.info("Redirect to play information page, redirectUrl=" + redirectUrl);
+            return redirectUrl;
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);

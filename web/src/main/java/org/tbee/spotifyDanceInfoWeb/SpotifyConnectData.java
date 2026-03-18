@@ -8,19 +8,51 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SpotifyConnectData {
+public class SpotifyConnectData implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyConnectData.class);
 
     static public SpotifyConnectData get(HttpSession session) {
         SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
         if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData retrieved from session " + session.getId() + " -> " + spotifyConnectData);
         return spotifyConnectData;
+    }
+
+    static public SpotifyConnectData deserialize(String base64) {
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(base64)));
+            SpotifyConnectData spotifyConnectData = (SpotifyConnectData) objectInputStream.readObject();
+            objectInputStream.close();
+            return spotifyConnectData;
+        }
+        catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String serialize() {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(this);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+            return Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String clientId;
@@ -32,10 +64,10 @@ public class SpotifyConnectData {
     private LocalDateTime connectTime = null;
     private AtomicInteger counter = new AtomicInteger(0);
 
-
-    public SpotifyConnectData(HttpSession session) {
+    public SpotifyConnectData storeIn(HttpSession session) {
         session.setAttribute(SpotifyConnectData.class.getName(), this);
         if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData stored in session " + session.getId() + " -> " + this);
+        return this;
     }
 
     public AtomicInteger counter() {
