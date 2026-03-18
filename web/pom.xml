@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.tbee.spotifyDanceInfo</groupId>
         <artifactId>spotifyDanceInfoParent</artifactId>
-        <version>1.6.0</version>
+        <version>1.6.5</version>
     </parent>
     <artifactId>spotifyDanceInfoWeb</artifactId>
 
@@ -93,6 +93,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${springboot.version}</version>
                 <configuration>
+                    <skip>false</skip>
                     <classifier>boot</classifier>
                     <layout>ZIP</layout> <!-- required to be able to use -Dloader.main -->
                     <attach>false</attach>
