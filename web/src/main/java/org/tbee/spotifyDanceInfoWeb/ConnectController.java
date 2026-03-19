@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,14 +46,16 @@ public class ConnectController extends ControllerBase {
     public String connect(HttpServletRequest request, Model model) {
         setVersion(model);
         ConnectForm connectForm = new ConnectForm();
+        connectForm.setRedirectUrl(baseUrl() + "/spotifyCallback");
         model.addAttribute("ConnectForm", connectForm);
 
         // If set, prepopulate the form (for development mainly)
         CfgApp cfg = SpotifyDanceInfoWebApplication.cfg();
-        if (cfg.webapiRefreshToken() != null) {
+        if (cfg.webapiClientId() != null) {
             connectForm.setClientId(cfg.webapiClientId());
+        }
+        if (cfg.webapiClientSecret() != null) {
             connectForm.setClientSecret(cfg.webapiClientSecret());
-            connectForm.setRedirectUrl(environment.getProperty("baseUrl") + "/spotifyCallback");
         }
 
         connectForm.abbreviations(cfg.getListofDanceAbbreviations());
@@ -62,6 +65,7 @@ public class ConnectController extends ControllerBase {
 
     @PostMapping("/")
     public String connectSubmit(HttpSession session, Model model, @ModelAttribute ConnectForm connectForm, @RequestParam("file") MultipartFile file) {
+        if (LOGGER.isInfoEnabled()) LOGGER.info("/connectSubmit session=" + session.getId());
         try {
             // Load submitted configuration
             // Each time CfgSession is created, it will load the config.tecl.
@@ -105,8 +109,8 @@ public class ConnectController extends ControllerBase {
 
     @GetMapping("/spotifyCallback")
     public String spotifyCallback(HttpSession session, @RequestParam("code") String authorizationCode, @RequestParam("state") String state) {
+        if (LOGGER.isInfoEnabled()) LOGGER.info("/spotifyCallback session=" + session.getId());
         try {
-//            CfgSession cfgSession = CfgSession.get(session);
             CfgSession cfgSession = new CfgSession(session).readMoreTracks();
 
             // (re)store connection data
@@ -131,15 +135,20 @@ public class ConnectController extends ControllerBase {
                     .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, start showing the track information
-            String baseUrl = environment.getProperty("baseUrl");
-            if (LOGGER.isInfoEnabled()) LOGGER.info("Spotify baseUrl=" + baseUrl);
-            String redirectUrl = String.format("redirect:%s/spotify", baseUrl);
-            if (LOGGER.isInfoEnabled()) LOGGER.info("Redirect to play information page, redirectUrl=" + redirectUrl);
+            String redirectUrl = String.format("redirect:%s/spotify", baseUrl());
+            if (LOGGER.isInfoEnabled()) LOGGER.info("Redirect to spofity play page, redirectUrl=" + redirectUrl);
             return redirectUrl;
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
+    }
+
+    @Nullable
+    private String baseUrl() {
+        String baseUrl = environment.getProperty("baseUrl");
+        if (LOGGER.isInfoEnabled()) LOGGER.info("Spotify baseUrl=" + baseUrl);
+        return baseUrl;
     }
 
 

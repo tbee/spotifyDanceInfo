@@ -25,15 +25,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Controller
 public class SpotifyController extends ControllerBase {
-    private static final Logger logger = LoggerFactory.getLogger(SpotifyController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyController.class);
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
+        if (LOGGER.isInfoEnabled()) LOGGER.info("/spotify session=" + session.getId());
         setVersion(model);
         SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
         if (spotifyConnectData == null) {
+            LOGGER.warn("spotifyConnectData is null, redirecting back to connect!");
             return "redirect:/";
         }
         ScreenData screenData = ScreenData.get(session);
@@ -44,21 +46,21 @@ public class SpotifyController extends ControllerBase {
         // Poll the current song
         AtomicInteger counter = spotifyConnectData.counter();
         if (counter.get() > 0) {
-            if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying already in progress");
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying already in progress");
         }
         else {
             counter.incrementAndGet();
-            if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying scheduled");
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying scheduled");
             executorService.execute(() -> {
                 try {
-                    if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying");
+                    if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying");
                     updateCurrentlyPlaying(session);
                 }
                 catch (RuntimeException e) {
-                    logger.error("Exception in the updateCurrentlyPlaying polling", e);
+                    LOGGER.error("Exception in the updateCurrentlyPlaying polling", e);
                 }
                 finally {
-                    if (logger.isDebugEnabled()) logger.debug("Polling updateCurrentlyPlaying complete");
+                    if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying complete");
                     counter.decrementAndGet();
                 }
             });
@@ -69,7 +71,7 @@ public class SpotifyController extends ControllerBase {
 
     private void updateCurrentlyPlaying(HttpSession session) {
         try {
-            if (logger.isDebugEnabled()) logger.debug("accessToken: using " + SpotifyConnectData.get(session).accessToken());
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: using " + SpotifyConnectData.get(session).accessToken());
             CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("CurrentlyPlaying");
             CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
@@ -98,7 +100,7 @@ public class SpotifyController extends ControllerBase {
             }
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
-            logger.error("Problem updating currently playing", e);
+            LOGGER.error("Problem updating currently playing", e);
             // this is the place where we detect expired sessions
             if (e.getMessage().contains("The access token expired")) {
                 SpotifyConnectData.get(session).refreshAccessToken(session);
