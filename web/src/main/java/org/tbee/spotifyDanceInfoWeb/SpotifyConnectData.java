@@ -30,7 +30,7 @@ public class SpotifyConnectData implements Serializable {
     }
 
     static public SpotifyConnectData deserialize(String base64) {
-        try {
+        try { // TODO: encrypt
             ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(base64)));
             SpotifyConnectData spotifyConnectData = (SpotifyConnectData) objectInputStream.readObject();
             objectInputStream.close();
