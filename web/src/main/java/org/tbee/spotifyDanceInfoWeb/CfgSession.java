@@ -9,9 +9,9 @@ public class CfgSession extends Cfg<CfgSession> {
         return (CfgSession)session.getAttribute(CfgSession.class.getName());
     }
 
-    public CfgSession(HttpSession session) {
-        super();
+    public CfgSession storeIn(HttpSession session) {
         session.setAttribute(CfgSession.class.getName(), this);
+        return this;
     }
 
     @Override

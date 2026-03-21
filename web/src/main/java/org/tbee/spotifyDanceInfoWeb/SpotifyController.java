@@ -33,42 +33,48 @@ public class SpotifyController extends ControllerBase {
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
-        if (LOGGER.isInfoEnabled()) LOGGER.info("/spotify session=" + session.getId());
-        setVersion(model);
-        SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
-        if (spotifyConnectData == null) {
-            LOGGER.warn("spotifyConnectData is null, redirecting back to connect!");
-            return "redirect:/";
-        }
-        ScreenData screenData = ScreenData.get(session);
-        screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
-        screenData.time(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH:mm"))); // TBEERNOT: specify ZoneId in connect form
-        model.addAttribute("ScreenData", screenData);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("/spotify session=" + session.getId());
+        try {
+            setVersion(model);
+            SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
+            if (spotifyConnectData == null) {
+                LOGGER.warn("spotifyConnectData is null, redirecting back to connect!");
+                return "redirect:/";
+            }
+            ScreenData screenData = ScreenData.get(session);
+            screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
+            screenData.time(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH:mm"))); // TBEERNOT: specify ZoneId in connect form
+            model.addAttribute("ScreenData", screenData);
 
-        // Poll the current song
-        AtomicInteger counter = spotifyConnectData.counter();
-        if (counter.get() > 0) {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying already in progress");
-        }
-        else {
-            counter.incrementAndGet();
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying scheduled");
-            executorService.execute(() -> {
-                try {
-                    if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying");
-                    updateCurrentlyPlaying(session);
-                }
-                catch (RuntimeException e) {
-                    LOGGER.error("Exception in the updateCurrentlyPlaying polling", e);
-                }
-                finally {
-                    if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying complete");
-                    counter.decrementAndGet();
-                }
-            });
-        }
+            // Poll the current song
+            AtomicInteger counter = spotifyConnectData.counter();
+            if (counter.get() > 0) {
+                if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying already in progress");
+            }
+            else {
+                counter.incrementAndGet();
+                if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying scheduled");
+                executorService.execute(() -> {
+                    try {
+                        if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying");
+                        updateCurrentlyPlaying(session);
+                    }
+                    catch (RuntimeException e) {
+                        LOGGER.error("Exception in the updateCurrentlyPlaying polling", e);
+                    }
+                    finally {
+                        if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying complete");
+                        counter.decrementAndGet();
+                    }
+                });
+            }
 
-        return "spotify";
+            return "spotify";
+        }
+        catch (RuntimeException e) {
+            LOGGER.error("Ohoh", e);
+            throw e;
+        }
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
