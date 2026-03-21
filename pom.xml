@@ -21,9 +21,7 @@
     </properties>
 
 	<modules>
-		<module>desktop</module>
 		<module>web</module>
-        <module>shared</module>
     </modules>
 
     <repositories>
