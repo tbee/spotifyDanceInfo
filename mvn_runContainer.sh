@@ -2,5 +2,5 @@
 
 # toolchain takes care of the correct JVM
 
-mvnw clean package -DskipTests -Pcontainer
+mvnw validate -Prun-container
 

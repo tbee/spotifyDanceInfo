@@ -164,7 +164,7 @@ public class ConnectController extends ControllerBase {
     @Nullable
     private String baseUrl() {
         String baseUrl = environment.getProperty("baseUrl");
-        if (LOGGER.isInfoEnabled()) LOGGER.info("Spotify baseUrl=" + baseUrl);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("BaseUrl=" + baseUrl);
         return baseUrl;
     }
 

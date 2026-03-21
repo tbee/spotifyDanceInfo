@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO: configure java
+# toolchain takes care of the correct JVM
 
 mvnw clean install -DskipTests -Pcontainer
 
