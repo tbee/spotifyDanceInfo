@@ -1,13 +1,8 @@
-body {
+html {
     background-image: url('/backgroundDarker.png');
+}
 
-    /* https://blog.logrocket.com/css-full-page-background/ */
-    width: 100vw;
-    height: 100vh;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-
+body {
     overflow: hidden; /* Hide scrollbars */
 
     /* Hide scrollbar for IE, Edge and Firefox */
