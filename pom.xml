@@ -6,7 +6,7 @@
 
     <groupId>org.tbee.spotifyDanceInfo</groupId>
     <artifactId>spotifyDanceInfoParent</artifactId>
-    <version>1.6.5</version>
+    <version>1.7.0</version>
     <packaging>pom</packaging>
 
     <properties>
