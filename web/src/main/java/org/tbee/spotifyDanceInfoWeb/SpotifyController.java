@@ -15,6 +15,8 @@ import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +42,7 @@ public class SpotifyController extends ControllerBase {
         }
         ScreenData screenData = ScreenData.get(session);
         screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
-        screenData.time(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+        screenData.time(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH:mm"))); // TBEERNOT: specify ZoneId in connect form
         model.addAttribute("ScreenData", screenData);
 
         // Poll the current song
