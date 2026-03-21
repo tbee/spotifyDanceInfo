@@ -168,6 +168,25 @@
         </pluginManagement>
         <plugins>
             <plugin>
+                <groupId>org.mvnsearch</groupId>
+                <artifactId>toolchains-maven-plugin</artifactId>
+                <version>4.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>${maven.compiler.target}</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>

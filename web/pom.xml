@@ -124,9 +124,16 @@
                         <version>main</version>
                         <executions>
                             <execution>
+                                <id>build-container</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>build</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>deploy-container</id>
+                                <phase>install</phase>
+                                <goals>
                                     <goal>push</goal>
                                 </goals>
                             </execution>
@@ -143,6 +150,13 @@
                                 <hostpath>/docker-private</hostpath>
                                 <url>https://nexus.softworks.nl/docker-private</url>
                             </registry>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>
