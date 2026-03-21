@@ -25,7 +25,7 @@ public class SpotifyConnectData implements Serializable {
 
     static public SpotifyConnectData get(HttpSession session) {
         SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
-        if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData retrieved from session " + session.getId() + " -> " + spotifyConnectData);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData retrieved from session " + session.getId() + " -> " + spotifyConnectData);
         return spotifyConnectData;
     }
 
@@ -66,7 +66,7 @@ public class SpotifyConnectData implements Serializable {
 
     public SpotifyConnectData storeIn(HttpSession session) {
         session.setAttribute(SpotifyConnectData.class.getName(), this);
-        if (LOGGER.isInfoEnabled()) LOGGER.info("SpotifyConnectData stored in session " + session.getId() + " -> " + this);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData stored in session " + session.getId() + " -> " + this);
         return this;
     }
 
