@@ -54,21 +54,15 @@
             <groupId>org.tbee.tecl</groupId>
             <artifactId>tecl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.tbee</groupId>
+            <artifactId>tutil</artifactId>
+        </dependency>
 
         <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>
             <artifactId>spotify-web-api-java</artifactId>
-        </dependency>
-
-        <!-- https://github.com/tbee/TECL -->
-        <dependency>
-            <groupId>org.tbee.tecl</groupId>
-            <artifactId>tecl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.tbee</groupId>
-            <artifactId>tutil</artifactId>
         </dependency>
 
         <!-- https://www.baeldung.com/spring-retry -->
@@ -93,11 +87,6 @@
             <artifactId>poi-ooxml</artifactId>
         </dependency>
 
-        <!-- https://opencsv.sourceforge.net/#reading_into_an_array_of_strings -->
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -152,6 +141,17 @@
             <properties>
                 <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
             </properties>
+            <dependencies>
+                <!-- for storing the session in redis -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-data-redis</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.session</groupId>
+                    <artifactId>spring-session-data-redis</artifactId>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
@@ -188,13 +188,6 @@
                             </registry>
                         </configuration>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -208,7 +201,66 @@
                         <version>3.5.0</version>
                         <executions>
                             <execution>
-                                <id>run</id>
+                                <id>remove-pod</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>podman</executable>
+                                    <arguments>
+                                        <argument>pod</argument>
+                                        <argument>rm</argument>
+                                        <argument>-f</argument><argument>spotifydanceinfo-pod</argument>
+                                    </arguments>
+                                    <successCodes>
+                                        <successCode>0</successCode>
+                                        <successCode>125</successCode>
+                                    </successCodes>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>create-pod</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>podman</executable>
+                                    <arguments>
+                                        <argument>pod</argument>
+                                        <argument>create</argument>
+                                        <argument>--name</argument><argument>spotifydanceinfo-pod</argument>
+                                        <argument>--network</argument><argument>spotifydanceinfo-net</argument>
+                                        <argument>-p</argument><argument>6379:6379</argument>
+                                        <argument>-p</argument><argument>8080:8080</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>start-redis</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>podman</executable>
+                                    <arguments>
+                                        <argument>run</argument>
+                                        <argument>-d</argument>
+                                        <argument>--rm</argument>
+                                        <argument>--replace</argument>
+                                        <argument>--pod</argument><argument>spotifydanceinfo-pod</argument>
+                                        <argument>--name</argument><argument>spotifydanceinfo-redis</argument>
+                                        <argument>redis:7-alpine</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <execution>
+                                <id>start-application</id>
                                 <phase>validate</phase>
                                 <goals>
                                     <goal>exec</goal>
@@ -222,13 +274,14 @@
                                     <arguments>
                                         <argument>run</argument>
                                         <argument>--rm</argument>
-                                        <argument>-it</argument>
-                                        <argument>--name</argument>
-                                        <argument>spotifydanceinfo</argument>
-                                        <argument>-p</argument>
-                                        <argument>8080:8080</argument>
-                                        <argument>-e</argument>
-                                        <argument>BASEURL=http://127.0.0.1:8080</argument><!-- spotify requires this -->
+                                        <argument>--replace</argument>
+                                        <argument>--pod</argument><argument>spotifydanceinfo-pod</argument>
+                                        <argument>--name</argument><argument>spotifydanceinfo</argument>
+                                        <argument>--dns</argument><argument>8.8.8.8</argument><!--google-->
+                                        <argument>--dns</argument><argument>1.1.1.1</argument><!--cloudflare-->
+                                        <argument>-e</argument><argument>BASEURL=http://127.0.0.1:8080</argument><!-- spotify requires 127.0.0.1 -->
+                                        <argument>-e</argument><argument>SPRING_DATA_REDIS_HOST=localhost</argument>
+                                        <argument>-e</argument><argument>SPRING_DATA_REDIS_PORT=6379</argument>
                                         <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
                                     </arguments>
                                 </configuration>

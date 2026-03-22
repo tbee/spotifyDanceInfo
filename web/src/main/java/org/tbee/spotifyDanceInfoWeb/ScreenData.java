@@ -5,10 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tbee.spotifyDanceInfo.Cfg;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ScreenData {
+public class ScreenData implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(ScreenData.class);
 
     volatile private Song currentlyPlaying = new Song();
@@ -24,8 +25,9 @@ public class ScreenData {
         return (ScreenData) session.getAttribute(ScreenData.class.getName());
     }
 
-    public ScreenData(HttpSession session) {
+    public ScreenData storeIn(HttpSession session) {
         session.setAttribute(ScreenData.class.getName(), this);
+        return this;
     }
 
     public void refresh(Cfg cfg) {

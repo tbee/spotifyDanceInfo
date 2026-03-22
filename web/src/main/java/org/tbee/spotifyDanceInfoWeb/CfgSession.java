@@ -3,7 +3,9 @@ package org.tbee.spotifyDanceInfoWeb;
 import jakarta.servlet.http.HttpSession;
 import org.tbee.spotifyDanceInfo.Cfg;
 
-public class CfgSession extends Cfg<CfgSession> {
+import java.io.Serializable;
+
+public class CfgSession extends Cfg<CfgSession> implements Serializable {
 
     static public CfgSession get(HttpSession session) {
         return (CfgSession)session.getAttribute(CfgSession.class.getName());

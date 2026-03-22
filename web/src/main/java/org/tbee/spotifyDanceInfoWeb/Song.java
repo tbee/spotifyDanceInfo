@@ -1,9 +1,10 @@
 package org.tbee.spotifyDanceInfoWeb;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Song {
+public class Song implements Serializable {
     private String trackId = "";
     private String title = "";
     private String artist = "";

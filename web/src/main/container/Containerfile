@@ -21,4 +21,4 @@ USER appuser
 EXPOSE 8080
 
 # Default command
-CMD ["java", "-jar", "/app/app.jar"]
+CMD ["java", "-Dlogging.config=/data/logback.xml", "-Dlogback.statusListenerClass=ch.qos.logback.core.status.OnConsoleStatusListener", "-jar", "/app/app.jar"]

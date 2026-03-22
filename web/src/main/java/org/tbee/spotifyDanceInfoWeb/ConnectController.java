@@ -137,10 +137,11 @@ public class ConnectController extends ControllerBase {
             spotifyConnectData
                     .refreshToken(authorizationCodeCredentials.getRefreshToken() != null ? authorizationCodeCredentials.getRefreshToken() : spotifyConnectData.refreshToken())
                     .accessToken(authorizationCodeCredentials.getAccessToken())
-                    .accessTokenExpireDateTime(expiresAt);
+                    .accessTokenExpireDateTime(expiresAt)
+                    .storeIn(session);  // on redis this is required
 
             // Create and store the object that holds the screen data
-            ScreenData screenData = new ScreenData(session);
+            ScreenData screenData = new ScreenData().storeIn(session);
 
             // Now that the spotify API is active, read config data that requires spotify access
             cfgSession

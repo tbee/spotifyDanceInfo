@@ -115,6 +115,8 @@ public class SpotifyConnectData implements Serializable {
     }
 
     public SpotifyConnectData accessToken(String v) {
+        if (LOGGER.isInfoEnabled()) LOGGER.debug("accesstoken: got from spotify " + v);
+        if (LOGGER.isInfoEnabled()) LOGGER.debug("accesstoken: stored in " + this);
         this.accessToken = v;
         return this;
     }
@@ -161,6 +163,8 @@ public class SpotifyConnectData implements Serializable {
             accessToken(authorizationCodeCredentials.getAccessToken());
             if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: refreshed " + accessToken);
             accessTokenExpireDateTime(expiresAt);
+
+            storeIn(session); // on redis this is required
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             ControllerBase.logException(e);
         }

@@ -2,9 +2,10 @@ package org.tbee.spotifyDanceInfoWeb;
 
 import org.tbee.spotifyDanceInfo.Cfg;
 
+import java.io.Serializable;
 import java.util.prefs.Preferences;
 
-public class CfgApp extends Cfg<CfgApp> {
+public class CfgApp extends Cfg<CfgApp> implements Serializable {
 
     public CfgApp() {
         super();

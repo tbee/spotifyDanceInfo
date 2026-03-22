@@ -41,9 +41,9 @@ public class SpotifyController extends ControllerBase {
                 LOGGER.warn("spotifyConnectData is null, redirecting back to connect!");
                 return "redirect:/";
             }
-            ScreenData screenData = ScreenData.get(session);
-            screenData.showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)));
-            screenData.time(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH:mm"))); // TBEERNOT: specify ZoneId in connect form
+            ScreenData screenData = ScreenData.get(session)
+                    .showTips(LocalDateTime.now().isBefore(spotifyConnectData.connectTime().plusSeconds(10)))
+                    .time(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH:mm"))); // TBEERNOT: specify ZoneId in connect form
             model.addAttribute("ScreenData", screenData);
 
             // Poll the current song
@@ -78,10 +78,11 @@ public class SpotifyController extends ControllerBase {
     }
 
     private void updateCurrentlyPlaying(HttpSession session) {
+        SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
         try {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: using " + SpotifyConnectData.get(session).accessToken());
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: using " + spotifyConnectData.accessToken());
             CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("CurrentlyPlaying");
-            CurrentlyPlaying currentlyPlaying = SpotifyConnectData.get(session).newApi().getUsersCurrentlyPlayingTrack().build().execute();
+            CurrentlyPlaying currentlyPlaying = spotifyConnectData.newApi().getUsersCurrentlyPlayingTrack().build().execute();
             ScreenData screenData = ScreenData.get(session);
 
             // Create the candidate song object
@@ -106,12 +107,13 @@ public class SpotifyController extends ControllerBase {
                 pollNextUp(session, song.trackId());
                 setDances(session, song);
             }
+            screenData.storeIn(session); // On redis this is required
         }
         catch (IOException | SpotifyWebApiException | ParseException e) {
             LOGGER.error("Problem updating currently playing", e);
             // this is the place where we detect expired sessions
             if (e.getMessage().contains("The access token expired")) {
-                SpotifyConnectData.get(session).refreshAccessToken(session);
+                spotifyConnectData.refreshAccessToken(session);
             }
             throw new RuntimeException(e);
         }
@@ -159,7 +161,7 @@ public class SpotifyController extends ControllerBase {
                                 break;
                             }
                         }
-                        screenData.nextUp(songs);
+                        screenData.nextUp(songs).storeIn(session); // On redis this is required
 
                         // Update artist
                         songs.forEach(song -> pollArtist(session, song));
