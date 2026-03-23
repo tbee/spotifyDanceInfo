@@ -30,13 +30,14 @@ public class ScreenData implements Serializable {
         return this;
     }
 
-    public void refresh(Cfg cfg) {
+    public ScreenData refresh(Cfg cfg) {
         this.numberOfExceptionsInBackgroundTasks = cfg.getNumberOfExceptionsInBackgroundTasks();
         this.numberOfActiveBackgroundTasks = cfg.getNumberOfActiveBackgroundTasks();
         if (numberOfActiveBackgroundTasks > maxNumberOfActiveBackgroundTasks) {
             maxNumberOfActiveBackgroundTasks = numberOfActiveBackgroundTasks;
         }
         forceRefresh = true;
+        return this;
     }
 
     public Song currentlyPlaying() {

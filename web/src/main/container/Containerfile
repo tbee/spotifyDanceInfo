@@ -19,6 +19,7 @@ COPY --chown=appuser:appgroup --chmod=0644 target/*-boot.jar /app/app.jar
 WORKDIR /data
 USER appuser
 EXPOSE 8080
+EXPOSE 5005
 
 # Default command
-CMD ["java", "-Dlogging.config=/data/logback.xml", "-Dlogback.statusListenerClass=ch.qos.logback.core.status.OnConsoleStatusListener", "-jar", "/app/app.jar"]
+CMD ["java", "-Dlogging.config=/data/logback.xml", "-Dlogback.statusListenerClass=ch.qos.logback.core.status.OnConsoleStatusListener", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "/app/app.jar"]

@@ -145,7 +145,9 @@ public class ConnectController extends ControllerBase {
 
             // Now that the spotify API is active, read config data that requires spotify access
             cfgSession
-                    .onChange(screenData::refresh)
+                    .onChange(cfg -> {
+                        screenData.refresh(cfg).storeIn(session); // TBEERNOT, the storeIn of course is not working, the session object is already expired.
+                    })
                     .readPlaylists(spotifyConnectData::newApi);
 
             // redirect to our spotify page, start showing the track information

@@ -233,6 +233,7 @@
                                         <argument>create</argument>
                                         <argument>--name</argument><argument>spotifydanceinfo-pod</argument>
                                         <argument>--network</argument><argument>spotifydanceinfo-net</argument>
+                                        <argument>-p</argument><argument>5005:5005</argument>
                                         <argument>-p</argument><argument>6379:6379</argument>
                                         <argument>-p</argument><argument>8080:8080</argument>
                                     </arguments>
