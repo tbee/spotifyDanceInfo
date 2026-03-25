@@ -5,9 +5,13 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.IPlaylistItem;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
@@ -29,7 +33,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SpotifyController extends ControllerBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpotifyController.class);
 
+//    private final FindByIndexNameSessionRepository<?> sessionRepository;
+
     private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
+
+//    public SpotifyController(FindByIndexNameSessionRepository<?> sessionRepository) {
+//        this.sessionRepository = sessionRepository;
+//    }
 
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
@@ -167,5 +177,28 @@ public class SpotifyController extends ControllerBase {
                         songs.forEach(song -> pollArtist(session, song));
                     }
                 });
+    }
+
+    public class SessionAwareRunnableDecorator implements TaskDecorator {
+
+        @Override
+        public Runnable decorate(Runnable runnable) {
+            RequestAttributes context = RequestContextHolder.getRequestAttributes();
+            HttpSession session = context instanceof ServletRequestAttributes att
+                                  ? att.getRequest().getSession(false)
+                                  : null;
+            String sessionId = session != null ? session.getId() : null;
+
+            return () -> {
+                try {
+                    if (sessionId != null) {
+                        // Optional: you can set MDC or SecurityContext here too
+                    }
+                    runnable.run();
+                } finally {
+                    RequestContextHolder.resetRequestAttributes();
+                }
+            };
+        }
     }
 }
