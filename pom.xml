@@ -34,12 +34,6 @@
     <dependencyManagement>
         <dependencies>
 
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>spotifyDanceInfoShared</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- https://github.com/tbee/TECL -->
             <dependency>
                 <groupId>org.tbee.tecl</groupId>
@@ -47,20 +41,9 @@
                 <version>1.8.0</version>
             </dependency>
             <dependency>
-                <groupId>org.tbee.sway</groupId>
-                <artifactId>sway</artifactId>
-                <version>master-SNAPSHOT</version>
-            </dependency>
-            <dependency>
                 <groupId>org.tbee</groupId>
                 <artifactId>tutil</artifactId>
                 <version>1.0.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.swinglabs.swingx</groupId>
-                <artifactId>swingx-core</artifactId>
-                <version>1.6.5-1</version>
             </dependency>
 
             <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
@@ -182,13 +165,6 @@
                             <version>${maven.compiler.target}</version>
                         </jdk>
                     </toolchains>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>  <!-- skip per default -->
                 </configuration>
             </plugin>
         </plugins>
