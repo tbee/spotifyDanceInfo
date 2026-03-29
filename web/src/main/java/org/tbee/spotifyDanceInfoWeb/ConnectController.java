@@ -47,10 +47,18 @@ public class ConnectController extends ControllerBase {
     @GetMapping("/")
     public String connect(HttpSession session, HttpServletRequest request, Model model) {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("/connect session=" + session.getId());
+
+        String baseUrl = baseUrl();
+        String requestURL = request.getRequestURL().toString();
+        if (!requestURL.equals(baseUrl) && !requestURL.equals(baseUrl + "/")) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("We're not at the baseurl, redirecting (" + requestURL + ")");
+            return "redirect:" + baseUrl;
+        }
+
         try {
             setVersion(model);
             ConnectForm connectForm = new ConnectForm();
-            connectForm.setRedirectUrl(baseUrl() + "/spotifyCallback");
+            connectForm.setRedirectUrl(baseUrl + "/spotifyCallback");
             model.addAttribute("ConnectForm", connectForm);
 
             // If set, prepopulate the form (for development mainly)
@@ -159,7 +167,7 @@ public class ConnectController extends ControllerBase {
             throw new RuntimeException("Problem connecting to Spotify webapi", e);
         }
         catch (RuntimeException e) {
-            LOGGER.error("Ohoh", e);
+            LOGGER.error("Oh oh", e);
             throw e;
         }
     }
@@ -186,7 +194,7 @@ public class ConnectController extends ControllerBase {
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"example." + filetype + "\"");
         }
         catch (RuntimeException e) {
-            LOGGER.error("Ohoh", e);
+            LOGGER.error("Oh oh", e);
             throw e;
         }
     }
