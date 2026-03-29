@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.session.Session;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
@@ -25,8 +26,24 @@ public class SpotifyConnectData implements Serializable {
 
     static public SpotifyConnectData get(HttpSession session) {
         SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData retrieved from session " + session.getId() + " -> " + spotifyConnectData);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData retrieved from HTTP session " + session.getId() + " -> " + spotifyConnectData);
         return spotifyConnectData;
+    }
+    static public SpotifyConnectData get(Session session) {
+        SpotifyConnectData spotifyConnectData = (SpotifyConnectData) session.getAttribute(SpotifyConnectData.class.getName());
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData retrieved from Spring session " + session.getId() + " -> " + spotifyConnectData);
+        return spotifyConnectData;
+    }
+
+    public SpotifyConnectData storeIn(HttpSession session) {
+        session.setAttribute(SpotifyConnectData.class.getName(), this);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData stored in HTTP session " + session.getId() + " -> " + this);
+        return this;
+    }
+    public SpotifyConnectData storeIn(Session session) {
+        session.setAttribute(SpotifyConnectData.class.getName(), this);
+        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData stored in Spring session " + session.getId() + " -> " + this);
+        return this;
     }
 
     static public SpotifyConnectData deserialize(String base64) {
@@ -63,12 +80,6 @@ public class SpotifyConnectData implements Serializable {
     private LocalDateTime accessTokenExpireDateTime;
     private LocalDateTime connectTime = null;
     private AtomicInteger counter = new AtomicInteger(0);
-
-    public SpotifyConnectData storeIn(HttpSession session) {
-        session.setAttribute(SpotifyConnectData.class.getName(), this);
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("SpotifyConnectData stored in session " + session.getId() + " -> " + this);
-        return this;
-    }
 
     public AtomicInteger counter() {
         return counter;
@@ -154,7 +165,7 @@ public class SpotifyConnectData implements Serializable {
         }
     }
 
-    public void refreshAccessToken(HttpSession session) {
+    public void refreshAccessToken(Session session) {
         try {
             if (LOGGER.isInfoEnabled()) LOGGER.info("Refreshing access token");
             AuthorizationCodeCredentials authorizationCodeCredentials = get(session).newApi().authorizationCodeRefresh().build().execute();

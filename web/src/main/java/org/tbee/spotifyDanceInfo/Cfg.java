@@ -64,7 +64,9 @@ public abstract class Cfg<T> {
     private final AtomicInteger numberOfBackgroundTasksCounter = new AtomicInteger(0);
     private final List<Throwable> exceptionsInBackgroundTasks = Collections.synchronizedList(new ArrayList<>());
     private final List<Consumer<Cfg<?>>> onChangeListeners = Collections.synchronizedList(new ArrayList<>());
+    private final String configFileName;
     private final boolean runInBackground;
+    private final boolean generateConfigFileIfNotFound;
 
     protected TECL tecl;
     protected Map<String, List<String>> songIdToDanceNames = Collections.synchronizedMap(new HashMap<>());
@@ -80,7 +82,12 @@ public abstract class Cfg<T> {
     }
 
     public Cfg(String configFileName, boolean runInBackground, boolean generateConfigFileIfNotFound) {
+        this.configFileName = configFileName;
         this.runInBackground = runInBackground;
+        this.generateConfigFileIfNotFound = generateConfigFileIfNotFound;
+    }
+
+    public T read() {
         try {
             tecl = TECL.parser().findAndParse(configFileName);
             if (tecl == null) {
@@ -96,6 +103,7 @@ public abstract class Cfg<T> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return (T)this;
     }
 
     private static void createFromExampleConfigFile(String configFileName) throws IOException {
@@ -109,16 +117,25 @@ public abstract class Cfg<T> {
         }
     }
 
-    public T readMoreTracks() {
+    public T readMoreTracks(Consumer<Cfg<T>> storeInSession) {
         // Loop over the moreTrack configurations
         tecl.grp("/moreTracks/tsv").rows().forEach(moreTrackTecl -> {
-            runInBackground(() -> readMoreTracksTSV(moreTrackTecl));
+            runInBackground(() -> {
+                readMoreTracksTSV(moreTrackTecl);
+                storeInSession.accept(this);
+            });
         });
         tecl.grp("/moreTracks/xslx").rows().forEach(moreTrackTecl -> {
-            runInBackground(() -> readMoreTracksXSLX(moreTrackTecl));
+            runInBackground(() -> {
+                readMoreTracksXSLX(moreTrackTecl);
+                storeInSession.accept(this);
+            });
         });
         tecl.grp("/moreTracks/xsl").rows().forEach(moreTrackTecl -> {
-            runInBackground(() -> readMoreTracksXSL(moreTrackTecl));
+            runInBackground(() -> {
+                readMoreTracksXSL(moreTrackTecl);
+                storeInSession.accept(this);
+            });
         });
         return (T)this;
     }

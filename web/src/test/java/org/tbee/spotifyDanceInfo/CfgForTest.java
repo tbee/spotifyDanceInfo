@@ -9,7 +9,7 @@ public class CfgForTest extends Cfg<CfgForTest> {
 
     public CfgForTest(String configFileName, boolean moreTracksInBackground, boolean generateConfigFileIfNotFound) {
         super(configFileName, moreTracksInBackground, generateConfigFileIfNotFound);
-        readMoreTracks();
+        readMoreTracks(cfg -> {});
     }
 
     @Override

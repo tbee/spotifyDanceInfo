@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SpotifyDanceInfoWebApplication {
 
-	static private CfgApp cfg = new CfgApp();
+	static private CfgApp cfg = new CfgApp().read();
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpotifyDanceInfoWebApplication.class, args);
