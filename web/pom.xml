@@ -36,10 +36,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.session</groupId>
-            <artifactId>spring-session-core</artifactId>
-        </dependency>
 
 <!--        &lt;!&ndash; for gathering metrics and logging via http https://www.baeldung.com/spring-boot-actuators &ndash;&gt;-->
 <!--        <dependency>-->
@@ -97,26 +93,6 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </dependency>
-
-        <!-- run a redis during development -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-testcontainers</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>2.0.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.redis</groupId>
-            <artifactId>testcontainers-redis</artifactId>
-            <version>2.2.4</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -165,20 +141,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>redis</id>
-            <dependencies>
-                <!-- for storing the session in redis -->
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-data-redis</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>org.springframework.session</groupId>
-                    <artifactId>spring-session-data-redis</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
         <profile>
             <id>container</id>
             <properties>
@@ -275,26 +237,6 @@
                             </execution>
 
                             <execution>
-                                <id>start-redis</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>run</argument>
-                                        <argument>-d</argument>
-                                        <argument>--rm</argument>
-                                        <argument>--replace</argument>
-                                        <argument>--pod</argument><argument>spotifydanceinfo-pod</argument>
-                                        <argument>--name</argument><argument>spotifydanceinfo-redis</argument>
-                                        <argument>redis:7-alpine</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-
-                            <execution>
                                 <id>start-application</id>
                                 <phase>validate</phase>
                                 <goals>
@@ -315,8 +257,6 @@
                                         <argument>--dns</argument><argument>8.8.8.8</argument><!--google-->
                                         <argument>--dns</argument><argument>1.1.1.1</argument><!--cloudflare-->
                                         <argument>-e</argument><argument>BASEURL=http://127.0.0.1:8080</argument><!-- spotify requires 127.0.0.1 -->
-                                        <argument>-e</argument><argument>SPRING_DATA_REDIS_HOST=localhost</argument>
-                                        <argument>-e</argument><argument>SPRING_DATA_REDIS_PORT=6379</argument>
                                         <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
                                     </arguments>
                                 </configuration>

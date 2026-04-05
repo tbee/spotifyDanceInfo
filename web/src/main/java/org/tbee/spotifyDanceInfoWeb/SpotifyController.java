@@ -6,8 +6,6 @@ import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskDecorator;
-import org.springframework.session.FindByIndexNameSessionRepository;
-import org.springframework.session.Session;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,12 +35,6 @@ public class SpotifyController extends ControllerBase {
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(3); // newCachedThreadPool();
 
-    private final FindByIndexNameSessionRepository<?> sessionRepository;
-
-    public SpotifyController(FindByIndexNameSessionRepository<?> sessionRepository) {
-        this.sessionRepository = sessionRepository;
-    }
-
     @GetMapping("/spotify")
     public String spotify(HttpSession session, HttpServletResponse httpServletResponse, Model model) {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("/spotify session=" + session.getId());
@@ -69,7 +61,7 @@ public class SpotifyController extends ControllerBase {
                 executorService.execute(() -> {
                     try {
                         if (LOGGER.isDebugEnabled()) LOGGER.debug("Polling updateCurrentlyPlaying");
-                        updateCurrentlyPlaying(session.getId());
+                        updateCurrentlyPlaying(session);
                     }
                     catch (RuntimeException e) {
                         LOGGER.error("Exception in the updateCurrentlyPlaying polling", e);
@@ -89,8 +81,7 @@ public class SpotifyController extends ControllerBase {
         }
     }
 
-    private void updateCurrentlyPlaying(String sessionid) {
-        Session session = sessionRepository.findById(sessionid);
+    private void updateCurrentlyPlaying(HttpSession session) {
         SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
         try {
             if (LOGGER.isDebugEnabled()) LOGGER.debug("accessToken: using " + spotifyConnectData.accessToken());
@@ -133,7 +124,7 @@ public class SpotifyController extends ControllerBase {
         }
     }
 
-    private void setDances(Session session, Song song) {
+    private void setDances(HttpSession session, Song song) {
         // The CfgSession also loaded the config.tecl file, so there is no need to look into AppCfg.
         CfgSession sessionCfg = CfgSession.get(session);
         List<String> sessionDances = sessionCfg.trackIdToDanceIds(song.trackId()).stream()
@@ -143,7 +134,7 @@ public class SpotifyController extends ControllerBase {
         song.dances(sessionDances);
     }
 
-    private void pollArtist(Session session, Song song) {
+    private void pollArtist(HttpSession session, Song song) {
         CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("getTrack");
         SpotifyConnectData.get(session).newApi().getTrack(song.trackId()).build().executeAsync()
                 .exceptionally(ControllerBase::logException)
@@ -156,7 +147,7 @@ public class SpotifyController extends ControllerBase {
                 });
     }
 
-    public void pollNextUp(Session session, String trackId) {
+    public void pollNextUp(HttpSession session, String trackId) {
         CfgSession.get(session).rateLimiterCurrentlyPlaying().claim("getTheUsersQueue");
         SpotifyConnectData.get(session).newApi().getTheUsersQueue().build().executeAsync()
                 .exceptionally(ControllerBase::logException)

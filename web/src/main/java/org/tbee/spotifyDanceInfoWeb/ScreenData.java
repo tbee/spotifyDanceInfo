@@ -3,7 +3,6 @@ package org.tbee.spotifyDanceInfoWeb;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.session.Session;
 import org.tbee.spotifyDanceInfo.Cfg;
 
 import java.io.Serializable;
@@ -27,20 +26,10 @@ public class ScreenData implements Serializable {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("ScreenData retrieved from HTTP session " + session.getId() + " -> " + screenData);
         return screenData;
     }
-    static public ScreenData get(Session session) {
-        ScreenData screenData = session.getAttribute(ScreenData.class.getName());
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("ScreenData retrieved from Spring session " + session.getId() + " -> " + screenData);
-        return screenData;
-    }
 
     public ScreenData storeIn(HttpSession session) {
         session.setAttribute(ScreenData.class.getName(), this);
         if (LOGGER.isDebugEnabled()) LOGGER.debug("ScreenData stored in HTTP session " + session.getId() + " -> " + this);
-        return this;
-    }
-    public ScreenData storeIn(Session session) {
-        session.setAttribute(ScreenData.class.getName(), this);
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("ScreenData stored in Spring session " + session.getId() + " -> " + this);
         return this;
     }
 

@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -47,7 +48,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class Cfg<T> {
+public abstract class Cfg<T> implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(Cfg.class);
 
     private static final String CONFIG_TECL = "config.tecl";

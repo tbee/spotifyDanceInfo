@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
-import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,12 +43,6 @@ public class ConnectController extends ControllerBase {
     // - baseUrl -> BASEURL
     @Autowired
     private Environment environment;
-
-    private final FindByIndexNameSessionRepository<?> sessionRepository;
-
-    public ConnectController(FindByIndexNameSessionRepository<?> sessionRepository) {
-        this.sessionRepository = sessionRepository;
-    }
 
     @GetMapping("/")
     public String connect(HttpSession session, HttpServletRequest request, Model model) {
@@ -95,7 +88,7 @@ public class ConnectController extends ControllerBase {
             // Each time CfgSession is created, it will load the config.tecl.
             // So every CfgSession contains the application level information, and is then augmented with the uploaded data.
             // This also facilitates that if one of the external sources is altered, a login suffices to get the latest.
-            CfgSession cfgSession = new CfgSession().read().storeIn(session).readMoreTracks(cfg -> ((CfgSession)cfg).storeIn(sessionRepository.findById(session.getId())));
+            CfgSession cfgSession = new CfgSession().read().storeIn(session).readMoreTracks(cfg -> ((CfgSession)cfg).storeIn(session));
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null) {
                 // do nothing
@@ -142,7 +135,6 @@ public class ConnectController extends ControllerBase {
         if (LOGGER.isDebugEnabled()) LOGGER.debug("/spotifyCallback session=" + session.getId());
         try {
             CfgSession cfgSession = CfgSession.get(session);
-            // TBEERNOT TECL is not serialized. Why?
             SpotifyConnectData spotifyConnectData = SpotifyConnectData.get(session);
 
             // Spotify has accepted the connection, remember the details

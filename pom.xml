@@ -38,12 +38,12 @@
             <dependency>
                 <groupId>org.tbee.tecl</groupId>
                 <artifactId>tecl</artifactId>
-                <version>1.8.1</version>
+                <version>1.8.0</version>
             </dependency>
             <dependency>
                 <groupId>org.tbee</groupId>
                 <artifactId>tutil</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.1</version>
             </dependency>
 
             <!-- https://github.com/spotify-web-api-java/spotify-web-api-java -->
