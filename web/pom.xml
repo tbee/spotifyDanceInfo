@@ -192,73 +192,29 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.6.3</version>
+                        <groupId>org.tbee</groupId>
+                        <artifactId>podman-maven-plugin</artifactId>
+                        <version>main</version>
                         <executions>
                             <execution>
-                                <id>remove-pod</id>
-                                <phase>validate</phase>
+                                <id>run-pod</id>
                                 <goals>
-                                    <goal>exec</goal>
+                                    <goal>runPod</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>pod</argument>
-                                        <argument>rm</argument>
-                                        <argument>-f</argument><argument>spotifydanceinfo-pod</argument>
-                                    </arguments>
-                                    <successCodes>
-                                        <successCode>0</successCode>
-                                        <successCode>125</successCode>
-                                    </successCodes>
-                                </configuration>
-                            </execution>
-
-                            <execution>
-                                <id>create-pod</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>pod</argument>
-                                        <argument>create</argument>
-                                        <argument>--name</argument><argument>spotifydanceinfo-pod</argument>
-                                        <argument>--network</argument><argument>spotifydanceinfo-net</argument>
-                                        <argument>-p</argument><argument>5005:5005</argument>
-                                        <argument>-p</argument><argument>6379:6379</argument>
-                                        <argument>-p</argument><argument>8080:8080</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-
-                            <execution>
-                                <id>start-application</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <!--
-                                    Access via: http://127.0.0.1:8080
-                                    Running the container on Windows in WSL: make sure mirrored networking is active.
-                                    -->
-                                    <executable>podman</executable>
-                                    <arguments>
-                                        <argument>run</argument>
-                                        <argument>--rm</argument>
-                                        <argument>--replace</argument>
-                                        <argument>--pod</argument><argument>spotifydanceinfo-pod</argument>
-                                        <argument>--name</argument><argument>spotifydanceinfo</argument>
-                                        <argument>--dns</argument><argument>8.8.8.8</argument><!--google-->
-                                        <argument>--dns</argument><argument>1.1.1.1</argument><!--cloudflare-->
-                                        <argument>-e</argument><argument>BASEURL=http://127.0.0.1:8080</argument><!-- spotify requires 127.0.0.1 -->
-                                        <argument>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</argument>
-                                    </arguments>
+                                    <verbose>true</verbose>
+                                    <pod>
+                                        <publish>5005:5005</publish><!-- java remote debugging -->
+                                        <publish>8080:8080</publish>
+                                    </pod>
+                                    <containers>
+                                        <container>
+                                            <image>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</image>
+                                            <dns>8.8.8.8</dns>
+                                            <dns>1.1.1.1</dns>
+                                            <env>BASEURL=http://127.0.0.1:8080</env>
+                                        </container>
+                                    </containers>
                                 </configuration>
                             </execution>
                         </executions>
