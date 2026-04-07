@@ -13,6 +13,7 @@
 
     <properties>
         <springboot.version>3.5.9</springboot.version>
+        <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
     </properties>
 
     <dependencyManagement>
@@ -143,9 +144,6 @@
     <profiles>
         <profile>
             <id>container</id>
-            <properties>
-                <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
-            </properties>
             <dependencies>
             </dependencies>
             <build>
@@ -209,7 +207,7 @@
                                     </pod>
                                     <containers>
                                         <container>
-                                            <image>org.tbee.spotifydanceinfo/spotify-dance-info:${project.version}</image>
+                                            <image>${containerImageId}:${project.version}</image>
                                             <dns>8.8.8.8</dns>
                                             <dns>1.1.1.1</dns>
                                             <env>BASEURL=http://127.0.0.1:8080</env>
