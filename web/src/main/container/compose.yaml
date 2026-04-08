@@ -2,7 +2,7 @@ name: spotifydanceinfo
 
 services:
   app:
-    image: org.tbee.spotifydanceinfo/spotify-dance-info:1.7.2
+    image: org.tbee.spotifydanceinfo/spotify-dance-info:${PROJECT_VERSION}
     container_name: spotifydanceinfo
     dns:
       - 8.8.8.8
