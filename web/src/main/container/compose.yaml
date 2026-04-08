@@ -1,0 +1,14 @@
+name: spotifydanceinfo
+
+services:
+  app:
+    image: org.tbee.spotifydanceinfo/spotify-dance-info:1.7.2
+    container_name: spotifydanceinfo
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    ports:
+      - "5005:5005" # java debug
+      - "8080:8080"
+    environment:
+      BASEURL: http://127.0.0.1:8080

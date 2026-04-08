@@ -185,40 +185,5 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>run-container</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.tbee</groupId>
-                        <artifactId>podman-maven-plugin</artifactId>
-                        <version>main</version>
-                        <executions>
-                            <execution>
-                                <id>run-pod</id>
-                                <goals>
-                                    <goal>runPod</goal>
-                                </goals>
-                                <configuration>
-                                    <verbose>true</verbose>
-                                    <pod>
-                                        <publish>5005:5005</publish><!-- java remote debugging -->
-                                        <publish>8080:8080</publish>
-                                    </pod>
-                                    <containers>
-                                        <container>
-                                            <image>${containerImageId}:${project.version}</image>
-                                            <dns>8.8.8.8</dns>
-                                            <dns>1.1.1.1</dns>
-                                            <env>BASEURL=http://127.0.0.1:8080</env>
-                                        </container>
-                                    </containers>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 </project>
