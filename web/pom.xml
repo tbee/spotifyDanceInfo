@@ -13,7 +13,6 @@
 
     <properties>
         <springboot.version>3.5.9</springboot.version>
-        <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
     </properties>
 
     <dependencyManagement>
@@ -144,6 +143,9 @@
     <profiles>
         <profile>
             <id>container</id>
+            <properties>
+                <containerImageId>org.tbee.spotifydanceinfo/spotify-dance-info</containerImageId>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
